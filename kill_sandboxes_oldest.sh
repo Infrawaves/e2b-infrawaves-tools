@@ -1,14 +1,15 @@
 #!/bin/bash
 #
-# cleanup_sandboxes.sh
-# 删除最早创建的 N 个 ghl-claude-agent-runner 沙箱
+# kill_sandboxes_oldest.sh
+# 按创建时间升序，删除指定模板下最早创建的 N 个沙箱。
 #
-# 用法: ./cleanup_sandboxes.sh [NUM_TO_DELETE]
-#   NUM_TO_DELETE: 要删除的沙箱数量，默认为 5
+# 用法: ./kill_sandboxes_oldest.sh <template_name> [num_to_delete]
+#   template_name:   模板别名，用于过滤 e2b sandbox list（grep 匹配）
+#   num_to_delete:   要删除的沙箱数量，默认为 5
 #
 
-NUM_TO_DELETE=${1:-5}
-TEMPLATE="ghl-claude-agent-runner"
+TEMPLATE="${1:?Usage: $0 <template_name> [num_to_delete]}"
+NUM_TO_DELETE="${2:-5}"
 
 echo "=== E2B Sandbox Cleanup ==="
 echo "Template: $TEMPLATE"
