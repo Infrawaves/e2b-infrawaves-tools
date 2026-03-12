@@ -1,0 +1,71 @@
+name: Build nomad-nodeJob-exporter
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'nomad-nodeJob-exporter/**'
+  pull_request:
+    paths:
+      - 'nomad-nodeJob-exporter/**'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: nomad-nodeJob-exporter
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.24']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run go fmt
+        run: |
+          if [ -n "$(gofmt -s -l .)" ]; then
+            echo "Go code is not formatted, please run 'gofmt -s -w .'"
+            exit 1
+          fi
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Build
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o nomad-nodeJob-exporter-linux-amd64 .
+
+      - name: Upload binaries as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nomad-nodeJob-exporter-binaries
+          path: |
+            nomad-nodeJob-exporter/nomad-nodeJob-exporter-linux-amd64
+          retention-days: 7
