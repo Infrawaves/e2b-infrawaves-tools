@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -148,18 +149,33 @@ func getClockTicks() int64 {
 
 // getNodeIP gets the node's IP address
 func getNodeIP() string {
-	// Try multiple methods to get the IP
-	// Method 1: Check from Nomad node info if available
-	// Method 2: Get from hostname -i
-	// Method 3: Use a default fallback
-
-	// Try to get from environment
+	// Try to get from environment first
 	if ip := os.Getenv("NODE_IP"); ip != "" {
 		return ip
 	}
 
-	// Try to parse from hostname -i
-	// This is a simplified approach - in production, you might want more robust detection
+	// Get IPv4 address from eth0 interface
+	iface, err := net.InterfaceByName("eth0")
+	if err != nil {
+		log.Printf("Failed to get eth0 interface: %v", err)
+		return "unknown"
+	}
+
+	addrs, err := iface.Addrs()
+	if err != nil {
+		log.Printf("Failed to get addresses for eth0: %v", err)
+		return "unknown"
+	}
+
+	for _, addr := range addrs {
+		// Check if it's an IPv4 address
+		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
+			if ipNet.IP.To4() != nil {
+				return ipNet.IP.String()
+			}
+		}
+	}
+
 	return "unknown"
 }
 
