@@ -17,7 +17,7 @@
 set -euo pipefail
 
 # ---- 默认配置 ----
-INTERVAL=30           # 采集间隔（秒）
+INTERVAL=10           # 采集间隔（秒）
 OUTPUT_DIR="/mnt/nfs" # 输出目录
 
 # ---- 参数解析 ----
@@ -42,19 +42,19 @@ done
 
 # ---- 获取本机 IP ----
 get_node_ip() {
-    # 优先使用 hostname -I（Linux），取第一个非回环 IP
-    if command -v hostname &>/dev/null; then
+    # 直接从 eth0 接口获取 IP
+    if command -v ip &>/dev/null; then
         local ip
-        ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+        ip=$(ip -4 addr show dev eth0 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
         if [[ -n "$ip" ]]; then
             echo "$ip"
             return
         fi
     fi
-    # 回退: 通过 ip 命令获取
-    if command -v ip &>/dev/null; then
+    # 回退: 使用 hostname -I
+    if command -v hostname &>/dev/null; then
         local ip
-        ip=$(ip -4 addr show scope global | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -1)
+        ip=$(hostname -I 2>/dev/null | awk '{print $1}')
         if [[ -n "$ip" ]]; then
             echo "$ip"
             return
