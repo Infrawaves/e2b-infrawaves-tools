@@ -1,4 +1,18 @@
-部署步骤：
+## 使用方式
+
+### 服务模式（默认）
+持续运行 HTTP 服务，监听 `:9106` 端口：
+```bash
+./nomad-nodeJob-exporter
+```
+
+### 单次模式
+一次性采集指标并以 Prometheus 格式输出到 stdout：
+```bash
+./nomad-nodeJob-exporter -oneshot
+```
+
+## 部署步骤
 
 ### 一键安装
 
