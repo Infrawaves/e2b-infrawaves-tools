@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"flag"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/expfmt"
 )
 
 var (
@@ -214,7 +218,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	promhttp.Handler().ServeHTTP(w, r)
 }
 
-func main() {
+func registerMetrics() {
 	prometheus.MustRegister(serviceUp)
 	prometheus.MustRegister(nodeRole)
 	prometheus.MustRegister(templateroleMetric)
@@ -235,9 +239,45 @@ func main() {
 	prometheus.MustRegister(e2bFcProcessIoBytesTotal)
 	prometheus.MustRegister(e2bFcProcessIoOpsTotal)
 	prometheus.MustRegister(e2bFcProcessContextSwitchesTotal)
+}
 
-	http.HandleFunc("/metrics", metricsHandler)
+func printMetrics() error {
+	// Update metrics
+	updateMetrics()
 
-	log.Println("exporter started at :9106")
-	log.Fatal(http.ListenAndServe(":9106", nil))
+	// Gather metrics
+	metricFamilies, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		return err
+	}
+
+	// Write metrics to stdout in Prometheus text format
+	var buf bytes.Buffer
+	encoder := expfmt.NewEncoder(&buf, expfmt.NewFormat(expfmt.TypeTextPlain))
+	for _, mf := range metricFamilies {
+		if err := encoder.Encode(mf); err != nil {
+			return err
+		}
+	}
+
+	buf.WriteTo(os.Stdout)
+	return nil
+}
+
+func main() {
+	// Parse command line flags
+	oneshot := flag.Bool("oneshot", false, "Run once and print metrics to stdout instead of running as a service")
+	flag.Parse()
+
+	registerMetrics()
+
+	if *oneshot {
+		if err := printMetrics(); err != nil {
+			log.Fatalf("Failed to collect metrics: %v", err)
+		}
+	} else {
+		http.HandleFunc("/metrics", metricsHandler)
+		log.Println("exporter started at :9106")
+		log.Fatal(http.ListenAndServe(":9106", nil))
+	}
 }
