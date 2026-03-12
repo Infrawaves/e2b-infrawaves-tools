@@ -93,6 +93,11 @@ func updateMetrics() {
 	allocationMemoryLimit.Reset()
 	allocationCPUUsagePercentage.Reset()
 	allocationMemoryUsagePercentage.Reset()
+	firecrackerProcessTotal.Reset()
+	firecrackerUptimeSeconds.Reset()
+
+	// Update firecracker metrics
+	updateFirecrackerMetrics()
 
 	// Get node info
 	log.Println("Getting node info...")
@@ -210,6 +215,8 @@ func main() {
 	prometheus.MustRegister(allocationMemoryLimit)
 	prometheus.MustRegister(allocationCPUUsagePercentage)
 	prometheus.MustRegister(allocationMemoryUsagePercentage)
+	prometheus.MustRegister(firecrackerProcessTotal)
+	prometheus.MustRegister(firecrackerUptimeSeconds)
 
 	http.HandleFunc("/metrics", metricsHandler)
 
