@@ -42,10 +42,25 @@ var (
 	)
 
 	// e2b_fc_process_memory_rss_bytes: Resident memory size
+	// Note: In Firecracker environments with Hugepages enabled, RSS is typically 0
+	// because Linux kernel does not count Hugepages in standard VmRSS statistics
+	// Use e2b_fc_process_memory_vsize_bytes for actual memory allocation in Hugepages environments
 	e2bFcProcessMemoryRssBytes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_memory_rss_bytes",
-			Help: "Process resident set size in bytes",
+			Help: "Process resident set size in bytes. Note: In Hugepages-enabled Firecracker environments, this is typically 0 as Hugepages are not counted in standard VmRSS statistics",
+		},
+		[]string{"node_ip", "sandbox_id", "pid"},
+	)
+
+	// e2b_fc_process_memory_vsize_bytes: Virtual memory size
+	// Note: In Firecracker environments with Hugepages enabled (e.g., E2B, Fly.io),
+	// this is the primary memory metric since RSS shows 0 due to Hugepages not being
+	// counted in standard VmRSS statistics
+	e2bFcProcessMemoryVsizeBytes = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "e2b_fc_process_memory_vsize_bytes",
+			Help: "Process virtual memory size in bytes. In Hugepages-enabled Firecracker environments, this represents the actual memory allocation as RSS is unavailable",
 		},
 		[]string{"node_ip", "sandbox_id", "pid"},
 	)
@@ -254,11 +269,11 @@ func getProcessCmdline(pid string) (string, error) {
 }
 
 // parseStat parses /proc/[pid]/stat and returns key metrics
-func parseStat(pid string) (userTime, systemTime, uptime float64, err error) {
+func parseStat(pid string) (userTime, systemTime, uptime, vsize float64, err error) {
 	statPath := filepath.Join("/proc", pid, "stat")
 	data, err := os.ReadFile(statPath)
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, 0, 0, err
 	}
 
 	// /proc/[pid]/stat format:
@@ -269,52 +284,63 @@ func parseStat(pid string) (userTime, systemTime, uptime float64, err error) {
 	// Find the last ')' to get the end of comm
 	lastParen := strings.LastIndex(stat, ")")
 	if lastParen == -1 {
-		return 0, 0, 0, fmt.Errorf("invalid stat format")
+		return 0, 0, 0, 0, fmt.Errorf("invalid stat format")
 	}
 
 	// Get the rest after comm
 	rest := stat[lastParen+1:]
 	fields := strings.Fields(rest)
 
-	if len(fields) < 22 {
-		return 0, 0, 0, fmt.Errorf("not enough fields in stat")
+	if len(fields) < 23 {
+		return 0, 0, 0, 0, fmt.Errorf("not enough fields in stat")
 	}
 
 	// utime (field 13) and stime (field 14) are in clock ticks
-	utime, err := strconv.ParseFloat(fields[12], 64)
+	// Note: rest array skips first 3 fields (pid, comm, state), so use index 10 and 11
+	utime, err := strconv.ParseFloat(fields[10], 64)
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, 0, 0, err
 	}
 
-	stime, err := strconv.ParseFloat(fields[13], 64)
+	stime, err := strconv.ParseFloat(fields[11], 64)
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, 0, 0, err
 	}
 
 	// Convert to seconds
 	userTime = utime / float64(clockTicks)
 	systemTime = stime / float64(clockTicks)
 
-	// start_time (field 21) is in clock ticks since boot
-	startTime, err := strconv.ParseFloat(fields[20], 64)
+	// start_time (field 22) is in clock ticks since boot
+	// Note: rest array skips first 3 fields (pid, comm, state), so use index 18
+	startTime, err := strconv.ParseFloat(fields[18], 64)
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, 0, 0, err
+	}
+
+	// vsize (field 23) is virtual memory size in bytes
+	// Note: rest array skips first 3 fields (pid, comm, state), so use index 19
+	vsize, err = strconv.ParseFloat(fields[19], 64)
+	if err != nil {
+		return 0, 0, 0, 0, err
 	}
 
 	// Get current system uptime in seconds
 	btime, err := getBootTime()
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, 0, 0, err
 	}
 
 	now := float64(time.Now().Unix())
-	uptime = now - btime - (startTime / float64(clockTicks))
+	processStartTime := startTime / float64(clockTicks)
+	uptime = now - btime - processStartTime
 
 	if uptime < 0 {
+		log.Printf("DEBUG: pid=%s, now=%f, btime=%f, startTime=%f, processStartTime=%f, calc_uptime=%f", pid, now, btime, startTime, processStartTime, uptime)
 		uptime = 0
 	}
 
-	return userTime, systemTime, uptime, nil
+	return userTime, systemTime, uptime, vsize, nil
 }
 
 // getBootTime reads the boot time from /proc/stat
@@ -417,12 +443,12 @@ func parseIo(pid string) (readBytes, writeBytes, readCount, writeCount float64, 
 			if len(fields) >= 2 {
 				writeBytes, _ = strconv.ParseFloat(fields[1], 64)
 			}
-		} else if strings.HasPrefix(line, "read_count:") {
+		} else if strings.HasPrefix(line, "syscr:") {
 			fields := strings.Fields(line)
 			if len(fields) >= 2 {
 				readCount, _ = strconv.ParseFloat(fields[1], 64)
 			}
-		} else if strings.HasPrefix(line, "write_count:") {
+		} else if strings.HasPrefix(line, "syscw:") {
 			fields := strings.Fields(line)
 			if len(fields) >= 2 {
 				writeCount, _ = strconv.ParseFloat(fields[1], 64)
@@ -439,6 +465,7 @@ func updateFirecrackerMetrics() {
 	e2bFcProcessCount.Reset()
 	e2bFcProcessInfo.Reset()
 	e2bFcProcessMemoryRssBytes.Reset()
+	e2bFcProcessMemoryVsizeBytes.Reset()
 	e2bFcProcessCpuSecondsTotal.Reset()
 	e2bFcProcessUptimeSeconds.Reset()
 	e2bFcProcessThreads.Reset()
@@ -491,7 +518,7 @@ func updateFirecrackerMetrics() {
 		}
 
 		// Parse /proc/[pid]/stat for CPU and uptime
-		userTime, systemTime, uptime, err := parseStat(pid)
+		userTime, systemTime, uptime, vsize, err := parseStat(pid)
 		if err != nil {
 			log.Printf("Failed to parse stat for pid %s: %v", pid, err)
 			continue
@@ -526,6 +553,7 @@ func updateFirecrackerMetrics() {
 		// Update metrics
 		e2bFcProcessInfo.WithLabelValues(nodeIP, sandboxID, pid).Set(1)
 		e2bFcProcessMemoryRssBytes.WithLabelValues(nodeIP, sandboxID, pid).Set(float64(rssBytes))
+		e2bFcProcessMemoryVsizeBytes.WithLabelValues(nodeIP, sandboxID, pid).Set(vsize)
 		e2bFcProcessCpuSecondsTotal.WithLabelValues(nodeIP, sandboxID, pid, "user").Set(userTime)
 		e2bFcProcessCpuSecondsTotal.WithLabelValues(nodeIP, sandboxID, pid, "system").Set(systemTime)
 		e2bFcProcessUptimeSeconds.WithLabelValues(nodeIP, sandboxID, pid).Set(uptime)
