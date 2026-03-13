@@ -65,6 +65,17 @@ var (
 		[]string{"node_ip", "sandbox_id", "pid"},
 	)
 
+	// e2b_fc_process_memory_hugetlb_bytes: HugeTLB memory size
+	// Note: In Firecracker environments with Hugepages enabled, this captures
+	// the physical memory allocated through hugetlbfs, which is not counted in standard VmRSS
+	e2bFcProcessMemoryHugetlbBytes = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "e2b_fc_process_memory_hugetlb_bytes",
+			Help: "Process HugeTLB memory size in bytes. Represents physical memory allocated through Hugepages, which is not counted in standard VmRSS statistics",
+		},
+		[]string{"node_ip", "sandbox_id", "pid"},
+	)
+
 	// e2b_fc_process_cpu_seconds_total: CPU time
 	e2bFcProcessCpuSecondsTotal = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -380,12 +391,12 @@ func parseStatm(pid string) (int64, error) {
 	return rss, err
 }
 
-// parseStatus parses /proc/[pid]/status and returns threads and context switches
-func parseStatus(pid string) (threads int, voluntarySwitches, involuntarySwitches float64, err error) {
+// parseStatus parses /proc/[pid]/status and returns threads, context switches, and HugetlbPages
+func parseStatus(pid string) (threads int, voluntarySwitches, involuntarySwitches, hugetlbPages float64, err error) {
 	statusPath := filepath.Join("/proc", pid, "status")
 	data, err := os.ReadFile(statusPath)
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, 0, 0, err
 	}
 
 	lines := strings.Split(string(data), "\n")
@@ -406,10 +417,17 @@ func parseStatus(pid string) (threads int, voluntarySwitches, involuntarySwitche
 			if len(fields) >= 2 {
 				involuntarySwitches, _ = strconv.ParseFloat(fields[1], 64)
 			}
+		} else if strings.HasPrefix(line, "HugetlbPages:") {
+			fields := strings.Fields(line)
+			if len(fields) >= 2 {
+				// HugetlbPages value is in kB, convert to bytes
+				hugetlbKb, _ := strconv.ParseFloat(fields[1], 64)
+				hugetlbPages = hugetlbKb * 1024
+			}
 		}
 	}
 
-	return threads, voluntarySwitches, involuntarySwitches, nil
+	return threads, voluntarySwitches, involuntarySwitches, hugetlbPages, nil
 }
 
 // countOpenFds counts the number of open file descriptors
@@ -466,6 +484,7 @@ func updateFirecrackerMetrics() {
 	e2bFcProcessInfo.Reset()
 	e2bFcProcessMemoryRssBytes.Reset()
 	e2bFcProcessMemoryVsizeBytes.Reset()
+	e2bFcProcessMemoryHugetlbBytes.Reset()
 	e2bFcProcessCpuSecondsTotal.Reset()
 	e2bFcProcessUptimeSeconds.Reset()
 	e2bFcProcessThreads.Reset()
@@ -532,8 +551,8 @@ func updateFirecrackerMetrics() {
 		}
 		rssBytes := rssPages * pageSize
 
-		// Parse /proc/[pid]/status for threads and context switches
-		threads, voluntarySwitches, involuntarySwitches, err := parseStatus(pid)
+		// Parse /proc/[pid]/status for threads, context switches, and HugetlbPages
+		threads, voluntarySwitches, involuntarySwitches, hugetlbPages, err := parseStatus(pid)
 		if err != nil {
 			log.Printf("Failed to parse status for pid %s: %v", pid, err)
 		}
@@ -554,6 +573,7 @@ func updateFirecrackerMetrics() {
 		e2bFcProcessInfo.WithLabelValues(nodeIP, sandboxID, pid).Set(1)
 		e2bFcProcessMemoryRssBytes.WithLabelValues(nodeIP, sandboxID, pid).Set(float64(rssBytes))
 		e2bFcProcessMemoryVsizeBytes.WithLabelValues(nodeIP, sandboxID, pid).Set(vsize)
+		e2bFcProcessMemoryHugetlbBytes.WithLabelValues(nodeIP, sandboxID, pid).Set(hugetlbPages)
 		e2bFcProcessCpuSecondsTotal.WithLabelValues(nodeIP, sandboxID, pid, "user").Set(userTime)
 		e2bFcProcessCpuSecondsTotal.WithLabelValues(nodeIP, sandboxID, pid, "system").Set(systemTime)
 		e2bFcProcessUptimeSeconds.WithLabelValues(nodeIP, sandboxID, pid).Set(uptime)

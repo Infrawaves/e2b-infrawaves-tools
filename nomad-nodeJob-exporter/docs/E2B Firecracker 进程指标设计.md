@@ -189,6 +189,68 @@ e2b_fc_process_memory_vsize_bytes{sandbox_id="xxx"} / 1024 / 1024
 
 ---
 
+### 4.2 `e2b_fc_process_memory_hugetlb_bytes`
+
+| 属性 | 值 |
+|------|-----|
+| 类型 | Gauge |
+| 标签 | `node_ip`, `sandbox_id`, `pid` |
+| 说明 | 进程占用的 Hugepages 物理内存大小（字节） |
+| 数据源 | `/proc/<pid>/status` 中的 `HugetlbPages` 字段 |
+| 示例 | `e2b_fc_process_memory_hugetlb_bytes{...} 1073741824` |
+
+#### 背景与问题
+
+在开启了 Hugepages 的高性能宿主机上，Firecracker 进程通过 hugetlbfs 分配虚拟机内存。由于 Linux 内核统计机制的特性，这部分内存不会计入进程的标准 VmRSS (Resident Set Size) 指标中，导致现有的 `e2b_fc_process_memory_rss_bytes` 采集结果始终为 0。
+
+为了真实反映沙地占用的物理内存，必须采集进程级的 HugetlbPages 数据。
+
+#### 数据转换逻辑
+
+原始值单位为 kB，需乘以 1024 转换为 Bytes。
+
+**数据提取示例**：
+```bash
+# 文件内容片段
+HugetlbPages:    1048576 kB
+# 采集结果
+e2b_fc_process_memory_hugetlb_bytes{...} 1073741824
+```
+
+如果该字段不存在（非大页环境），该指标赋值为 0。
+
+#### 用途
+
+1. **计算沙箱真实的物理内存占用**
+   由于进程可能同时占用少量普通内存（RSS）和大量大页内存（Hugetlb），真实的物理内存消耗应由两者相加：
+
+   ```prometheus
+   # 计算单个沙箱的总物理内存占用 (MB)
+   (e2b_fc_process_memory_hugetlb_bytes + e2b_fc_process_memory_rss_bytes) / 1024 / 1024
+   ```
+
+2. **大页资源监控**
+   配合节点级大页指标进行资源预警：
+   ```prometheus
+   # 当剩余可用大页不足 10% 时告警
+   node_memory_HugePages_Free / node_memory_HugePages_Total < 0.1
+   ```
+
+3. **资源超分（Overcommit）预警**
+   比 vsize 更精确地捕捉已映射但尚未真正分配的大页行为，在多租户环境下具备更高的预警价值。
+
+#### 实现建议
+
+采集器（Exporter）应执行以下逻辑：
+
+1. 读取 `/proc/<pid>/status` 文件
+2. 匹配以 `HugetlbPages:` 开头的行
+3. 提取数值（例如 1048576）
+4. 计算：`value * 1024`
+5. 如果该字段不存在（非大页环境），该指标赋值为 0
+
+---
+
 ### 5. `e2b_fc_process_cpu_seconds_total`
 
 | 属性 | 值 |
