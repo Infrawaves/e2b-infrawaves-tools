@@ -107,6 +107,86 @@ rate(e2b_fc_process_parse_errors_total[5m]) > 0.1
 - 识别内存泄漏或异常增长的实例
 - 配合节点级内存指标分析内存分布
 
+**重要说明**：
+在 **启用 Hugepages（大页内存）的 Firecracker 环境中**，该指标通常显示为 **0**。这是因为 Linux 内核不将通过 Hugepages 分配的内存计入进程的标准 VmRSS 统计中（这是一个已知的内核统计特性）。
+
+验证方法：可检查 `/proc/<pid>/status` 中的 `HugetlbPages` 字段：
+```bash
+grep -i "Hugetlb" /proc/<pid>/status
+# 输出示例：
+# HugetlbPages: 1048576 kB
+```
+
+如果系统**未使用大页**：rss_bytes 会正常显示物理内存占用。
+
+因此，在启用 Hugepages 的环境中，要获取 Firecracker 沙箱的实际内存分配情况，请使用 **`e2b_fc_process_memory_vsize_bytes`** 指标。
+
+---
+
+### 4.1 `e2b_fc_process_memory_vsize_bytes`
+
+| 属性 | 值 |
+|------|-----|
+| 类型 | Gauge |
+| 标签 | `node_ip`, `sandbox_id`, `pid` |
+| 说明 | 进程虚拟内存大小（Virtual Memory Size） |
+| 数据源 | `/proc/<pid>/stat`（第 23 列：vsize） |
+| 示例 | `e2b_fc_process_memory_vsize_bytes{...} 1055960096` |
+
+**为什么要添加此指标**：
+
+1. **Hugepages 导致 RSS 统计失效**：
+   - 在高性能 Serverless 架构（如 E2B 或 Fly.io）中，普遍采用 Hugepages 优化性能（减少页表开销）
+   - 通过 Hugepages 分配的内存不计入标准 RSS 统计，导致 `e2b_fc_process_memory_rss_bytes` 显示为 0
+   - 这可以从 `pmap` 输出中验证：显示为 `anon_hugepage (deleted)` 的内存段 RSS 列为 0
+
+2. **虚拟内存大小 (vsize) 的价值**：
+   - `vsize` 代表进程地址空间的虚拟内存总大小
+   - 对于 Firecracker 进程，这个值接近 VM 的内存配置大小
+   - 当 VM 内存通过 KVM 分配后，这些内存会映射到进程的地址空间中
+
+3. **实际测试数据**：
+   ```
+   # statm 内容
+   263990 0 0 501 0 263385 0
+            ↑ RSS = 0
+
+   # status 中的 VmRSS 和 VmSize
+   VmSize:  1055960 kB  (= 1055960096 字节)
+   VmRSS:         0 kB  (= 0 字节)
+
+   # stat 中的 vsize 字段
+   1081303040  (与 VmSize 一致)
+
+   # pmap 输出示例
+   00007b92baa00000  1048576  0  0 rw--- anon_hugepage (deleted)
+                           ↑ RSS = 0 (因为使用 Hugepages)
+   ```
+
+**用途**：
+- **获取 Firecracker 沙箱的实际内存分配大小**（RSS 指标对此无效）
+- 监控虚拟机内存配置的变更
+- 配合资源限额分析内存分配效率
+- 识别异常大的内存分配配置
+
+**查询示例**：
+
+```prometheus
+# 查询所有沙箱的虚拟内存占用总和（GB）
+sum(e2b_fc_process_memory_vsize_bytes) / 1024 / 1024 / 1024
+
+# 查询高内存占用的沙箱（Top 10）
+topk(10, e2b_fc_process_memory_vsize_bytes)
+
+# 计算单个沙箱的内存占用（MB）
+e2b_fc_process_memory_vsize_bytes{sandbox_id="xxx"} / 1024 / 1024
+```
+
+**注意事项**：
+- `vsize` 是进程的虚拟内存大小，可能包含未实际物理分配的内存
+- 对于普通进程，通常 `rss_bytes < vsize_bytes`
+- 对于 Firecracker 进程，由于 RSS 为 0，`vsize_bytes` 是唯一可用的内存指标
+
 ---
 
 ### 5. `e2b_fc_process_cpu_seconds_total`
