@@ -10,6 +10,18 @@ on:
     paths:
       - 'nomad-nodeJob-exporter/**'
   workflow_dispatch:
+    inputs:
+      release:
+        description: 'Set to release to update latest release tag'
+        required: false
+        default: 'debug'
+        type: choice
+        options:
+          - 'debug'
+          - 'release'
+
+permissions:
+  contents: write
 
 defaults:
   run:
@@ -24,15 +36,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go-version }}
 
       - name: Cache Go modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -63,9 +75,47 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o nomad-nodeJob-exporter-linux-amd64 .
 
       - name: Upload binaries as artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nomad-nodeJob-exporter-binaries
           path: |
             nomad-nodeJob-exporter/nomad-nodeJob-exporter-linux-amd64
           retention-days: 7
+
+      - name: Get recent commits
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'release'
+        id: commits
+        run: |
+          git log -5 --pretty=format:"- %h %s (%ar by %an)" > commits.txt
+          cat commits.txt
+          echo "commits=$(cat commits.txt | jq -Rs .)" >> $GITHUB_OUTPUT
+
+      - name: Get build date
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'release'
+        id: date
+        run: |
+          echo "date=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
+
+      - name: Update Latest Release
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          files: nomad-nodeJob-exporter/nomad-nodeJob-exporter-linux-amd64
+          body: |
+            ## Latest Build
+            This is the latest build of nomad-nodeJob-exporter.
+
+            **Platform:** Linux AMD64
+            **Build Date:** ${{ steps.date.outputs.date }}
+            **Commit:** ${{ github.sha }}
+            **Workflow Run:** #${{ github.run_number }}
+
+            ### Recent Changes (Last 5 Commits)
+            ${{ steps.commits.outputs.commits }}
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+          overwrite_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
