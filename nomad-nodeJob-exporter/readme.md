@@ -22,6 +22,22 @@
 curl -fsSL https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/main/scripts/install-nomad-nodeJob-exporter.sh | sudo bash
 ```
 
+安装脚本会自动从 `/opt/nomad/config/default.hcl` 中读取 Nomad Token。如果找不到配置文件，需要手动配置 Token 后重启服务。
+
+### 升级
+
+在目标服务器上执行以下命令，自动下载最新版本、备份现有版本并升级：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/main/scripts/upgrade-nomad-nodeJob-exporter.sh | sudo bash
+```
+
+升级脚本会：
+- 自动备份当前版本（带时间戳）
+- 下载并安装最新版本
+- 重启服务并验证状态
+- 如遇问题可回滚到备份版本
+
 ### 手动部署
 
 1. 编译二进制文件
