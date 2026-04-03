@@ -15,9 +15,9 @@ SERVICE_NAME="nomad-nodeJob-exporter"
 
 # 4. 设置 Nomad Token (根据你的环境选择 dev 或 prod)
 # 注意：在生产环境中，建议不要将 Token 硬编码在脚本中，可以通过参数传入或使用密钥管理工具
-# NOMAD_TOKEN="91d967b9-cc7b-a61a-929e-c72ba465f631" # dev
+NOMAD_TOKEN="91d967b9-cc7b-a61a-929e-c72ba465f631" # dev
 # NOMAD_TOKEN="a5cd614a-1b91-a115-1714-df1e0d364231" # prod
-NOMAD_TOKEN="ddf43f17-95f8-2253-c965-ea753bcbd652" # hk
+# NOMAD_TOKEN="ddf43f17-95f8-2253-c965-ea753bcbd652" # hk
 
 # 5. 设置 Nomad 地址
 NOMAD_ADDR="http://127.0.0.1:4646"
