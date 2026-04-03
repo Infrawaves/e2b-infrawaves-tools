@@ -14,7 +14,7 @@ echo
 # 1. 检查是否已安装
 if [ ! -f "${INSTALL_PATH}/${BINARY_NAME}" ]; then
   echo "错误: 未检测到已安装版本，请先运行安装脚本"
-  echo "执行: curl -fsSL https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/main/scripts/install-nomad-nodeJob-exporter.sh | sudo bash"
+  echo "执行: curl -fsSL https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/gaomingxing/scripts/install-nomad-nodeJob-exporter.sh | sudo bash"
   exit 1
 fi
 
@@ -22,7 +22,7 @@ fi
 echo "1. 检查最新版本..."
 DOWNLOAD_URL=$(curl -s \
   -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest" |
+  "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/tags/v1.0.0" |
   jq -r --arg asset "$ASSET_NAME" '.assets[] | select(.name == $asset) | .browser_download_url')
 
 if [ -z "$DOWNLOAD_URL" ]; then
