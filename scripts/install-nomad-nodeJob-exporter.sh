@@ -53,7 +53,9 @@ echo
 
 # 4. 尝试从 Nomad 配置文件中获取 Token
 echo "4. 尝试获取 Nomad Token..."
-NOMAD_TOKEN="2fd71dab-2dae-e4e2-9996-ff41451ec77f" # dev
+# NOMAD_TOKEN="2fd71dab-2dae-e4e2-9996-ff41451ec77f" # dev
+# NOMAD_TOKEN="a5cd614a-1b91-a115-1714-df1e0d364231" # prod
+NOMAD_TOKEN="ddf43f17-95f8-2253-c965-ea753bcbd652" # hk
 # NOMAD_CONFIG_PATH="/opt/nomad/config/default.hcl"
 
 if [ -f "$NOMAD_CONFIG_PATH" ]; then
