@@ -110,9 +110,13 @@ func updateMetrics() {
 	e2bFcProcessIoBytesTotal.Reset()
 	e2bFcProcessIoOpsTotal.Reset()
 	e2bFcProcessContextSwitchesTotal.Reset()
+	nodePortListening.Reset()
 
 	// Update firecracker metrics
 	updateFirecrackerMetrics()
+
+	// Update port listening metrics
+	updatePortListeningMetrics()
 
 	// Get node info
 	log.Println("Getting node info...")
@@ -243,6 +247,7 @@ func registerMetrics() {
 	prometheus.MustRegister(e2bFcProcessIoBytesTotal)
 	prometheus.MustRegister(e2bFcProcessIoOpsTotal)
 	prometheus.MustRegister(e2bFcProcessContextSwitchesTotal)
+	prometheus.MustRegister(nodePortListening)
 }
 
 func printMetrics() error {
