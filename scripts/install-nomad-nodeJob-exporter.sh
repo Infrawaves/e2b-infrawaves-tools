@@ -12,17 +12,9 @@ SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 echo "=== Nomad NodeJob Exporter 安装脚本 ==="
 echo
 
-# 检查环境变量中是否有 Token，如果没有则尝试不使用 Token（受限于速率限制）
-if [ -n "$GITHUB_TOKEN" ]; then
-  AUTH_HEADER=(-u "${GITHUB_TOKEN}:")
-else
-  AUTH_HEADER=()
-fi
-
 # 1. 获取最新 Release 的下载链接
 echo "1. 检查最新版本..."
 DOWNLOAD_URL=$(curl -s \
-  "${AUTH_HEADER[@]}" \
   -H "Accept: application/vnd.github.v3+json" \
   "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/tags/v1.0.0" |
   jq -r --arg asset "$ASSET_NAME" '.assets[] | select(.name == $asset) | .browser_download_url')
