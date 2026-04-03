@@ -16,7 +16,7 @@ echo
 echo "1. 检查最新版本..."
 DOWNLOAD_URL=$(curl -s \
   -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest" |
+  "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/v1.0.0" |
   jq -r --arg asset "$ASSET_NAME" '.assets[] | select(.name == $asset) | .browser_download_url')
 
 if [ -z "$DOWNLOAD_URL" ]; then

@@ -7,13 +7,13 @@ This repo contains automation tools for serving E2B.
 ### 一键安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/main/scripts/install-nomad-nodeJob-exporter.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/gaomingxing/scripts/install-nomad-nodeJob-exporter.sh | sudo bash
 ```
 
 ### 升级
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/main/scripts/upgrade-nomad-nodeJob-exporter.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/gaomingxing/scripts/upgrade-nomad-nodeJob-exporter.sh | sudo bash
 ```
 
 详细文档：[nomad-nodeJob-exporter/readme.md](nomad-nodeJob-exporter/readme.md)
