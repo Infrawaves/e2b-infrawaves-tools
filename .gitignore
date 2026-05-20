@@ -1,1 +1,7 @@
 nomad-nodeJob-exporter/nomad-nodeJob-exporter*
+.env
+.env.local
+.DS_Store
+**/.DS_Store
+__pycache__/
+**/__pycache__/
