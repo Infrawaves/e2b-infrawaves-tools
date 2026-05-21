@@ -149,12 +149,12 @@ const (
 // runningSandbox 是单条 RunningSandbox 抽取出的关键字段。
 // 缺失字段为零值;start_time=0 表示未知,这种情况下不上报 age / overrun。
 type runningSandbox struct {
-	SandboxID       string
-	NodeID          string // RunningSandbox.client_id
-	TemplateID      string
-	TeamID          string
-	StartTimeUnix   int64
-	MaxLengthHours  int64
+	SandboxID      string
+	NodeID         string // RunningSandbox.client_id
+	TemplateID     string
+	TeamID         string
+	StartTimeUnix  int64
+	MaxLengthHours int64
 }
 
 // rawCodec 让 payload 直接以 []byte 形式收发,绕过生成的 stub 用 protowire 手工解析。
