@@ -163,4 +163,3 @@ func updateHostMetrics(nodeIP string) {
 	updateHugepagesMetrics(nodeIP)
 	updateDiskMetrics(nodeIP)
 }
-
