@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	// e2b_fc_process_count: Current node firecracker process count
+	// e2b_fc_process_count:本节点 firecracker 进程总数
 	e2bFcProcessCount = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_count",
@@ -23,7 +23,7 @@ var (
 		[]string{"node_ip"},
 	)
 
-	// e2b_fc_process_parse_errorsudation: Cumulative parse errors
+	// e2b_fc_process_parse_errors_total:累计的 sandbox_id 解析失败次数
 	e2bFcProcessParseErrorsTotal = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_parse_errors_total",
@@ -32,7 +32,7 @@ var (
 		[]string{"node_ip"},
 	)
 
-	// e2b_fc_process_info: Process info mapping
+	// e2b_fc_process_info:进程身份映射(值固定 1,用作 join key)
 	e2bFcProcessInfo = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_info",
@@ -41,10 +41,10 @@ var (
 		[]string{"node_ip", "sandbox_id", "pid"},
 	)
 
-	// e2b_fc_process_memory_rss_bytes: Resident memory size
-	// Note: In Firecracker environments with Hugepages enabled, RSS is typically 0
-	// because Linux kernel does not count Hugepages in standard VmRSS statistics
-	// Use e2b_fc_process_memory_vsize_bytes for actual memory allocation in Hugepages environments
+	// e2b_fc_process_memory_rss_bytes:进程常驻内存(RSS)字节数
+	// 注意:开启 Hugepages 的 Firecracker 环境下 RSS 通常为 0,
+	// 因为 Linux 内核不把 Hugepages 计入标准 VmRSS 统计。
+	// 此场景请改用 e2b_fc_process_memory_vsize_bytes 看实际内存分配。
 	e2bFcProcessMemoryRssBytes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_memory_rss_bytes",
@@ -53,10 +53,9 @@ var (
 		[]string{"node_ip", "sandbox_id", "pid"},
 	)
 
-	// e2b_fc_process_memory_vsize_bytes: Virtual memory size
-	// Note: In Firecracker environments with Hugepages enabled (e.g., E2B, Fly.io),
-	// this is the primary memory metric since RSS shows 0 due to Hugepages not being
-	// counted in standard VmRSS statistics
+	// e2b_fc_process_memory_vsize_bytes:进程虚拟内存(VmSize)字节数
+	// 注意:开启 Hugepages 的 Firecracker 环境(E2B、Fly.io 等)下,
+	// 由于 RSS 为 0,vsize 是观察实际分配的主指标。
 	e2bFcProcessMemoryVsizeBytes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_memory_vsize_bytes",
@@ -65,9 +64,8 @@ var (
 		[]string{"node_ip", "sandbox_id", "pid"},
 	)
 
-	// e2b_fc_process_memory_hugetlb_bytes: HugeTLB memory size
-	// Note: In Firecracker environments with Hugepages enabled, this captures
-	// the physical memory allocated through hugetlbfs, which is not counted in standard VmRSS
+	// e2b_fc_process_memory_hugetlb_bytes:HugeTLB 内存字节数
+	// 通过 hugetlbfs 分配的物理内存,不计入标准 VmRSS。
 	e2bFcProcessMemoryHugetlbBytes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_memory_hugetlb_bytes",
@@ -76,7 +74,7 @@ var (
 		[]string{"node_ip", "sandbox_id", "pid"},
 	)
 
-	// e2b_fc_process_cpu_seconds_total: CPU time
+	// e2b_fc_process_cpu_seconds_total:CPU 累计时间(秒)
 	e2bFcProcessCpuSecondsTotal = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_cpu_seconds_total",
@@ -85,7 +83,7 @@ var (
 		[]string{"node_ip", "sandbox_id", "pid", "mode"},
 	)
 
-	// e2b_fc_process_uptime_seconds: Process uptime
+	// e2b_fc_process_uptime_seconds:进程已运行时长(秒)
 	e2bFcProcessUptimeSeconds = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_uptime_seconds",
@@ -94,7 +92,7 @@ var (
 		[]string{"node_ip", "sandbox_id", "pid"},
 	)
 
-	// e2b_fc_process_threads: Thread count
+	// e2b_fc_process_threads:线程数
 	e2bFcProcessThreads = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_threads",
@@ -103,7 +101,7 @@ var (
 		[]string{"node_ip", "sandbox_id", "pid"},
 	)
 
-	// e2b_fc_process_open_fds: Open file descriptors
+	// e2b_fc_process_open_fds:已打开文件描述符数
 	e2bFcProcessOpenFds = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_open_fds",
@@ -112,7 +110,7 @@ var (
 		[]string{"node_ip", "sandbox_id", "pid"},
 	)
 
-	// e2b_fc_process_io_bytes_total: I/O bytes
+	// e2b_fc_process_io_bytes_total:I/O 字节累计
 	e2bFcProcessIoBytesTotal = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_io_bytes_total",
@@ -121,7 +119,7 @@ var (
 		[]string{"node_ip", "sandbox_id", "pid", "operation"},
 	)
 
-	// e2b_fc_process_io_ops_total: I/O operations
+	// e2b_fc_process_io_ops_total:I/O 次数累计
 	e2bFcProcessIoOpsTotal = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_io_ops_total",
@@ -130,7 +128,7 @@ var (
 		[]string{"node_ip", "sandbox_id", "pid", "operation"},
 	)
 
-	// e2b_fc_process_context_switches_total: Context switches
+	// e2b_fc_process_context_switches_total:上下文切换累计
 	e2bFcProcessContextSwitchesTotal = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "e2b_fc_process_context_switches_total",
@@ -139,48 +137,59 @@ var (
 		[]string{"node_ip", "sandbox_id", "pid", "type"},
 	)
 
-	// Page size constant for RSS calculation
+	// e2b_fc_process_state_count:按 Linux 进程状态聚合 fc 进程数。
+	// state 取自 /proc/<pid>/stat 的第 3 字段(R/S/D/Z/T/I)。
+	// Z = zombie、D = uninterruptible disk sleep,都值得告警。
+	e2bFcProcessStateCount = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "e2b_fc_process_state_count",
+			Help: "Count of firecracker processes by Linux process state (R running, S sleep, D uninterruptible, Z zombie, T stopped, I idle, X dead).",
+		},
+		[]string{"node_ip", "state"},
+	)
+
+	// pageSize:RSS 计算用的页大小常量
 	pageSize = int64(os.Getpagesize())
 
-	// System clock tick for CPU time calculation
-	clockTicks = int64(100) // Default to 100 Hz, will be updated
+	// clockTicks:CPU 时间计算用的系统时钟节拍(默认 100 Hz,init 时尝试更新)
+	clockTicks = int64(100)
 )
 
-// init initializes the clock ticks
+// init 初始化时钟节拍
 func init() {
-	// Try to get the system's HZ value
+	// 尝试获取系统的 HZ 值
 	if hz := getClockTicks(); hz > 0 {
 		clockTicks = hz
 	}
 }
 
-// getClockTicks reads the system's HZ value from /proc/stat or sysconf
+// getClockTicks 从 /proc/stat 或 sysconf 获取系统 HZ 值
 func getClockTicks() int64 {
-	// Try to read from /proc/stat
+	// 尝试从 /proc/stat 读取
 	data, err := os.ReadFile("/proc/stat")
 	if err != nil {
-		return 100 // Default fallback
+		return 100 // 兜底默认值
 	}
 
 	lines := strings.Split(string(data), "\n")
 	for _, line := range lines {
 		if strings.HasPrefix(line, "btime") {
-			// btime is in the same file, but HZ is typically 100 on most Linux systems
-			// We could try to parse CLOCKS_PER_SEC from C headers, but 100 is safe default
+			// btime 在同一文件里;主流 Linux 上 HZ 通常是 100,
+			// 严格点应该解析 C 头文件的 CLOCKS_PER_SEC,但 100 作为默认值足够安全。
 			return 100
 		}
 	}
 	return 100
 }
 
-// getNodeIP gets the node's IP address
+// getNodeIP 获取节点 IP 地址
 func getNodeIP() string {
-	// Try to get from environment first
+	// 优先读环境变量
 	if ip := os.Getenv("NODE_IP"); ip != "" {
 		return ip
 	}
 
-	// Get IPv4 address from eth0 interface
+	// 从 eth0 接口取 IPv4
 	iface, err := net.InterfaceByName("eth0")
 	if err != nil {
 		log.Printf("Failed to get eth0 interface: %v", err)
@@ -194,7 +203,7 @@ func getNodeIP() string {
 	}
 
 	for _, addr := range addrs {
-		// Check if it's an IPv4 address
+		// 仅取 IPv4(忽略 loopback)
 		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
 			if ipNet.IP.To4() != nil {
 				return ipNet.IP.String()
@@ -205,15 +214,15 @@ func getNodeIP() string {
 	return "unknown"
 }
 
-// extractSandboxID extracts the sandbox_id from the command line
+// extractSandboxID 从命令行中提取 sandbox_id
 func extractSandboxID(commandLine string) string {
-	// Find --api-sock in the command line
+	// 在命令行中找 --api-sock 参数
 	apiSockIdx := strings.Index(commandLine, "--api-sock")
 	if apiSockIdx == -1 {
 		return ""
 	}
 
-	// Get the rest of the command after --api-sock
+	// 取 --api-sock 后面的剩余部分
 	rest := commandLine[apiSockIdx+len("--api-sock"):]
 	rest = strings.TrimSpace(rest)
 
@@ -221,12 +230,11 @@ func extractSandboxID(commandLine string) string {
 		return ""
 	}
 
-	// The socket path should be the next argument
-	// Split by spaces and get the first part
+	// socket 路径是紧接着的下一个参数,按空格切首段
 	socketPath := strings.Split(rest, " ")[0]
 
-	// Extract sandbox_id from socket path
-	// Pattern: /fc-{sandboxID}-{randomID}.sock
+	// 从 socket 路径中提取 sandbox_id
+	// 格式:/fc-{sandboxID}-{randomID}.sock
 	prefix := "/fc-"
 	prefixIdx := strings.LastIndex(socketPath, prefix)
 	if prefixIdx == -1 {
@@ -241,7 +249,7 @@ func extractSandboxID(commandLine string) string {
 
 	sandboxID := afterPrefix[:dashIdx]
 
-	// Validate sandbox_id is not empty
+	// 校验非空
 	if sandboxID == "" {
 		return ""
 	}
@@ -249,24 +257,24 @@ func extractSandboxID(commandLine string) string {
 	return sandboxID
 }
 
-// isFirecrackerProcess checks if a process is a firecracker process
+// isFirecrackerProcess 判断是否是 firecracker 进程
 func isFirecrackerProcess(pid string) bool {
-	// Read the command line
+	// 读取命令行
 	cmdlinePath := filepath.Join("/proc", pid, "cmdline")
 	data, err := os.ReadFile(cmdlinePath)
 	if err != nil {
 		return false
 	}
 
-	// cmdline is a null-terminated string
+	// cmdline 是 null 分隔的字符串
 	cmdline := strings.ReplaceAll(string(data), "\x00", " ")
 	cmdline = strings.TrimSpace(cmdline)
 
-	// Check if it contains firecracker
+	// 命令行包含 firecracker 关键字即视为 fc 进程
 	return strings.Contains(strings.ToLower(cmdline), "firecracker")
 }
 
-// getProcessCmdline reads the process command line
+// getProcessCmdline 读取进程命令行
 func getProcessCmdline(pid string) (string, error) {
 	cmdlinePath := filepath.Join("/proc", pid, "cmdline")
 	data, err := os.ReadFile(cmdlinePath)
@@ -274,12 +282,29 @@ func getProcessCmdline(pid string) (string, error) {
 		return "", err
 	}
 
-	// cmdline is a null-terminated string
+	// cmdline 是 null 分隔的字符串
 	cmdline := strings.ReplaceAll(string(data), "\x00", " ")
 	return strings.TrimSpace(cmdline), nil
 }
 
-// parseStat parses /proc/[pid]/stat and returns key metrics
+// parseProcState 读取 /proc/<pid>/stat 返回单字符进程状态(R/S/D/Z/T/I/X)。
+// 文件不可读或格式异常时返回 "?"。这里独立读一次是为了不打扰 parseStat 既有逻辑;
+// 多读一次代价很低(内核 page cache 命中)。
+func parseProcState(pid string) string {
+	data, err := os.ReadFile(filepath.Join("/proc", pid, "stat"))
+	if err != nil {
+		return "?"
+	}
+	stat := string(data)
+	lastParen := strings.LastIndex(stat, ")")
+	if lastParen == -1 || lastParen+2 >= len(stat) {
+		return "?"
+	}
+	// 格式:"... ) S ppid ..."。跳过 ')' + ' ' 共 2 字节。
+	return string(stat[lastParen+2])
+}
+
+// parseStat 解析 /proc/[pid]/stat,返回关键指标
 func parseStat(pid string) (userTime, systemTime, uptime, vsize float64, err error) {
 	statPath := filepath.Join("/proc", pid, "stat")
 	data, err := os.ReadFile(statPath)
@@ -287,18 +312,18 @@ func parseStat(pid string) (userTime, systemTime, uptime, vsize float64, err err
 		return 0, 0, 0, 0, err
 	}
 
-	// /proc/[pid]/stat format:
+	// /proc/[pid]/stat 格式:
 	// pid (comm) state ppid pgrp sid ...
-	// The comm field can contain spaces, so we need to parse carefully
+	// comm 字段可能含空格,需要小心解析
 	stat := string(data)
 
-	// Find the last ')' to get the end of comm
+	// 找最后一个 ')' 作为 comm 段结尾
 	lastParen := strings.LastIndex(stat, ")")
 	if lastParen == -1 {
 		return 0, 0, 0, 0, fmt.Errorf("invalid stat format")
 	}
 
-	// Get the rest after comm
+	// 取 comm 之后的部分
 	rest := stat[lastParen+1:]
 	fields := strings.Fields(rest)
 
@@ -306,8 +331,8 @@ func parseStat(pid string) (userTime, systemTime, uptime, vsize float64, err err
 		return 0, 0, 0, 0, fmt.Errorf("not enough fields in stat")
 	}
 
-	// utime (field 13) and stime (field 14) are in clock ticks
-	// Note: rest array skips first 3 fields (pid, comm, state), so use index 10 and 11
+	// utime(字段 13)和 stime(字段 14)单位是时钟节拍。
+	// rest 数组已跳过前 3 个字段(pid、comm、state),所以这里用索引 10 和 11。
 	utime, err := strconv.ParseFloat(fields[10], 64)
 	if err != nil {
 		return 0, 0, 0, 0, err
@@ -318,25 +343,24 @@ func parseStat(pid string) (userTime, systemTime, uptime, vsize float64, err err
 		return 0, 0, 0, 0, err
 	}
 
-	// Convert to seconds
+	// 转换为秒
 	userTime = utime / float64(clockTicks)
 	systemTime = stime / float64(clockTicks)
 
-	// start_time (field 22) is in clock ticks since boot
-	// Note: rest array skips first 3 fields (pid, comm, state), so use index 18
+	// start_time(字段 22)单位是开机以来的时钟节拍数。
+	// rest 数组跳过了前 3 个字段,所以索引 18。
 	startTime, err := strconv.ParseFloat(fields[18], 64)
 	if err != nil {
 		return 0, 0, 0, 0, err
 	}
 
-	// vsize (field 23) is virtual memory size in bytes
-	// Note: rest array skips first 3 fields (pid, comm, state), so use index 19
+	// vsize(字段 23)是虚拟内存字节数。索引同上规则,18+1=19。
 	vsize, err = strconv.ParseFloat(fields[19], 64)
 	if err != nil {
 		return 0, 0, 0, 0, err
 	}
 
-	// Get current system uptime in seconds
+	// 取系统启动时间
 	btime, err := getBootTime()
 	if err != nil {
 		return 0, 0, 0, 0, err
@@ -354,7 +378,7 @@ func parseStat(pid string) (userTime, systemTime, uptime, vsize float64, err err
 	return userTime, systemTime, uptime, vsize, nil
 }
 
-// getBootTime reads the boot time from /proc/stat
+// getBootTime 从 /proc/stat 读取系统启动时间
 func getBootTime() (float64, error) {
 	data, err := os.ReadFile("/proc/stat")
 	if err != nil {
@@ -374,7 +398,7 @@ func getBootTime() (float64, error) {
 	return 0, fmt.Errorf("btime not found in /proc/stat")
 }
 
-// parseStatm parses /proc/[pid]/statm and returns RSS in pages
+// parseStatm 解析 /proc/[pid]/statm,返回 RSS 页数
 func parseStatm(pid string) (int64, error) {
 	statmPath := filepath.Join("/proc", pid, "statm")
 	data, err := os.ReadFile(statmPath)
@@ -391,7 +415,7 @@ func parseStatm(pid string) (int64, error) {
 	return rss, err
 }
 
-// parseStatus parses /proc/[pid]/status and returns threads, context switches, and HugetlbPages
+// parseStatus 解析 /proc/[pid]/status,返回线程数、上下文切换、HugetlbPages
 func parseStatus(pid string) (threads int, voluntarySwitches, involuntarySwitches, hugetlbPages float64, err error) {
 	statusPath := filepath.Join("/proc", pid, "status")
 	data, err := os.ReadFile(statusPath)
@@ -420,7 +444,7 @@ func parseStatus(pid string) (threads int, voluntarySwitches, involuntarySwitche
 		} else if strings.HasPrefix(line, "HugetlbPages:") {
 			fields := strings.Fields(line)
 			if len(fields) >= 2 {
-				// HugetlbPages value is in kB, convert to bytes
+				// HugetlbPages 单位是 kB,转成字节
 				hugetlbKb, _ := strconv.ParseFloat(fields[1], 64)
 				hugetlbPages = hugetlbKb * 1024
 			}
@@ -430,7 +454,7 @@ func parseStatus(pid string) (threads int, voluntarySwitches, involuntarySwitche
 	return threads, voluntarySwitches, involuntarySwitches, hugetlbPages, nil
 }
 
-// countOpenFds counts the number of open file descriptors
+// countOpenFds 统计已打开的文件描述符数
 func countOpenFds(pid string) (int, error) {
 	fdPath := filepath.Join("/proc", pid, "fd")
 	entries, err := os.ReadDir(fdPath)
@@ -440,7 +464,7 @@ func countOpenFds(pid string) (int, error) {
 	return len(entries), nil
 }
 
-// parseIo parses /proc/[pid]/io and returns I/O statistics
+// parseIo 解析 /proc/[pid]/io,返回 I/O 统计
 func parseIo(pid string) (readBytes, writeBytes, readCount, writeCount float64, err error) {
 	ioPath := filepath.Join("/proc", pid, "io")
 	data, err := os.ReadFile(ioPath)
@@ -477,9 +501,11 @@ func parseIo(pid string) (readBytes, writeBytes, readCount, writeCount float64, 
 	return readBytes, writeBytes, readCount, writeCount, nil
 }
 
-// updateFirecrackerMetrics collects and updates firecracker process metrics
-func updateFirecrackerMetrics() {
-	// Reset metrics first
+// updateFirecrackerMetrics 采集并更新 firecracker 进程指标。
+// 返回 nodeIP 和 sandbox_id → 该沙箱所有 pid 的映射。
+// 该映射会传给 checkSandboxLeak 与 orchestrator 权威列表对比。
+func updateFirecrackerMetrics() (string, map[string][]string) {
+	// 先 reset 所有指标
 	e2bFcProcessCount.Reset()
 	e2bFcProcessInfo.Reset()
 	e2bFcProcessMemoryRssBytes.Reset()
@@ -492,22 +518,25 @@ func updateFirecrackerMetrics() {
 	e2bFcProcessIoBytesTotal.Reset()
 	e2bFcProcessIoOpsTotal.Reset()
 	e2bFcProcessContextSwitchesTotal.Reset()
+	e2bFcProcessStateCount.Reset()
 
-	// Get node IP
+	// 取节点 IP
 	nodeIP := getNodeIP()
+	sandboxToPIDs := make(map[string][]string)
+	stateCounts := make(map[string]int)
 
-	// Scan /proc directory for processes
+	// 扫描 /proc 目录下所有进程
 	procDir := "/proc"
 	entries, err := os.ReadDir(procDir)
 	if err != nil {
 		log.Printf("Failed to read /proc directory: %v", err)
-		return
+		return nodeIP, sandboxToPIDs
 	}
 
 	processCount := 0
 
 	for _, entry := range entries {
-		// Check if it's a numeric directory (PID)
+		// 仅处理纯数字目录(对应 PID)
 		if !entry.IsDir() {
 			continue
 		}
@@ -517,12 +546,12 @@ func updateFirecrackerMetrics() {
 			continue
 		}
 
-		// Check if it's a firecracker process
+		// 是否为 firecracker 进程
 		if !isFirecrackerProcess(pid) {
 			continue
 		}
 
-		// Get command line and extract sandbox_id
+		// 取命令行并提取 sandbox_id
 		cmdline, err := getProcessCmdline(pid)
 		if err != nil {
 			continue
@@ -530,20 +559,20 @@ func updateFirecrackerMetrics() {
 
 		sandboxID := extractSandboxID(cmdline)
 
-		// If no sandbox_id found, skip this process and count error
+		// sandbox_id 解析失败:跳过该进程,累计错误计数
 		if sandboxID == "" {
 			e2bFcProcessParseErrorsTotal.WithLabelValues(nodeIP).Inc()
 			continue
 		}
 
-		// Parse /proc/[pid]/stat for CPU and uptime
+		// 解析 /proc/[pid]/stat:CPU 时间和 uptime
 		userTime, systemTime, uptime, vsize, err := parseStat(pid)
 		if err != nil {
 			log.Printf("Failed to parse stat for pid %s: %v", pid, err)
 			continue
 		}
 
-		// Parse /proc/[pid]/statm for memory
+		// 解析 /proc/[pid]/statm:内存
 		rssPages, err := parseStatm(pid)
 		if err != nil {
 			log.Printf("Failed to parse statm for pid %s: %v", pid, err)
@@ -551,25 +580,25 @@ func updateFirecrackerMetrics() {
 		}
 		rssBytes := rssPages * pageSize
 
-		// Parse /proc/[pid]/status for threads, context switches, and HugetlbPages
+		// 解析 /proc/[pid]/status:线程数、上下文切换、HugetlbPages
 		threads, voluntarySwitches, involuntarySwitches, hugetlbPages, err := parseStatus(pid)
 		if err != nil {
 			log.Printf("Failed to parse status for pid %s: %v", pid, err)
 		}
 
-		// Count open file descriptors
+		// 统计已打开的文件描述符
 		openFds, err := countOpenFds(pid)
 		if err != nil {
 			log.Printf("Failed to count fds for pid %s: %v", pid, err)
 		}
 
-		// Parse /proc/[pid]/io for I/O statistics
+		// 解析 /proc/[pid]/io:I/O 统计
 		readBytes, writeBytes, readCount, writeCount, err := parseIo(pid)
 		if err != nil {
 			log.Printf("Failed to parse io for pid %s: %v", pid, err)
 		}
 
-		// Update metrics
+		// 更新指标
 		e2bFcProcessInfo.WithLabelValues(nodeIP, sandboxID, pid).Set(1)
 		e2bFcProcessMemoryRssBytes.WithLabelValues(nodeIP, sandboxID, pid).Set(float64(rssBytes))
 		e2bFcProcessMemoryVsizeBytes.WithLabelValues(nodeIP, sandboxID, pid).Set(vsize)
@@ -586,13 +615,19 @@ func updateFirecrackerMetrics() {
 		e2bFcProcessContextSwitchesTotal.WithLabelValues(nodeIP, sandboxID, pid, "voluntary").Set(voluntarySwitches)
 		e2bFcProcessContextSwitchesTotal.WithLabelValues(nodeIP, sandboxID, pid, "involuntary").Set(involuntarySwitches)
 
+		sandboxToPIDs[sandboxID] = append(sandboxToPIDs[sandboxID], pid)
+		stateCounts[parseProcState(pid)]++
 		processCount++
 	}
 
-	// Set total count
+	// 写总数
 	e2bFcProcessCount.WithLabelValues(nodeIP).Set(float64(processCount))
+	for state, n := range stateCounts {
+		e2bFcProcessStateCount.WithLabelValues(nodeIP, state).Set(float64(n))
+	}
 
 	if processCount > 0 {
 		log.Printf("Updated firecracker metrics: %d processes on node %s", processCount, nodeIP)
 	}
+	return nodeIP, sandboxToPIDs
 }

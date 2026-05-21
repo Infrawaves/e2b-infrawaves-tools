@@ -1,0 +1,377 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "enable": true,
+        "hide": true,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "enable": true,
+        "iconColor": "orange",
+        "name": "Grafana-managed alerts",
+        "target": {"limit": 100, "matchAny": true, "tags": ["e2b"], "type": "tags"}
+      }
+    ]
+  },
+  "description": "Cluster-wide health overview: sandbox lifecycle (info/age/overrun), host capacity (HugeTLB / disk), fc process states, orchestrator latency. Designed for one-glance triage.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [{"title": "沙箱泄漏检测", "url": "/d/e2b-fc-leak", "type": "link"}],
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Total running sandboxes known to all reachable orchestrators. Aggregated from e2b_sandbox_info.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "yellow", "value": 200}, {"color": "red", "value": 500}]},
+          "unit": "short"
+        }
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"colorMode": "value", "graphMode": "area", "reduceOptions": {"calcs": ["lastNotNull"]}, "textMode": "auto"},
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}, "expr": "count(e2b_sandbox_info{node_ip=~\"$node_ip\"})", "refId": "A"}
+      ],
+      "title": "运行中沙箱总数",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Sandboxes that have lived past their declared max_sandbox_length. Suggests stuck/zombie or kept-alive misuse.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "yellow", "value": 1}, {"color": "red", "value": 5}]},
+          "unit": "short"
+        }
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "id": 2,
+      "options": {"colorMode": "background", "graphMode": "none", "reduceOptions": {"calcs": ["lastNotNull"]}, "textMode": "auto"},
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}, "expr": "count(e2b_sandbox_overrun_seconds{node_ip=~\"$node_ip\"} > 0) OR on() vector(0)", "refId": "A"}
+      ],
+      "title": "超时沙箱数(超过 max_sandbox_length)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Worst-case orchestrator List gRPC RTT across nodes. >500ms suggests orchestrator under pressure.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "yellow", "value": 0.5}, {"color": "red", "value": 1.5}]},
+          "unit": "s"
+        }
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "id": 3,
+      "options": {"colorMode": "value", "graphMode": "area", "reduceOptions": {"calcs": ["lastNotNull"]}, "textMode": "auto"},
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}, "expr": "max(e2b_orchestrator_list_duration_seconds{node_ip=~\"$node_ip\"})", "refId": "A"}
+      ],
+      "title": "Orchestrator List 最慢 RTT",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Min reachability across selected nodes — RED if any node's exporter cannot talk to its local orchestrator. When DOWN, leak/orphan/info data on that node freezes.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [{"options": {"0": {"color": "red", "text": "DOWN"}, "1": {"color": "green", "text": "OK"}}, "type": "value"}],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red"}, {"color": "green", "value": 1}]}
+        }
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+      "id": 4,
+      "options": {"colorMode": "background", "graphMode": "none", "reduceOptions": {"calcs": ["lastNotNull"]}, "textMode": "auto"},
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}, "expr": "min(e2b_orchestrator_reachable{node_ip=~\"$node_ip\"})", "refId": "A"}
+      ],
+      "title": "Orchestrator 连通性(最差)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "HugeTLB pool utilization per node × page size. fc fails to start at 100% — alert at 90%.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "yellow", "value": 0.7}, {"color": "red", "value": 0.9}]},
+          "max": 1,
+          "min": 0,
+          "unit": "percentunit"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "id": 5,
+      "options": {"orientation": "horizontal", "displayMode": "lcd", "showUnfilled": true},
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "(e2b_node_hugepages_total{node_ip=~\"$node_ip\"} - e2b_node_hugepages_free{node_ip=~\"$node_ip\"}) / (e2b_node_hugepages_total{node_ip=~\"$node_ip\"} > 0)",
+          "legendFormat": "{{node_ip}} ({{size_bytes}}B)",
+          "refId": "A"
+        }
+      ],
+      "title": "HugeTLB 使用率(每节点 × 页大小)",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Disk utilization per node × mount path. NFS is shared across the fleet, so one node's reading represents the cluster.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "yellow", "value": 0.7}, {"color": "red", "value": 0.9}]},
+          "max": 1,
+          "min": 0,
+          "unit": "percentunit"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "id": 6,
+      "options": {"orientation": "horizontal", "displayMode": "lcd", "showUnfilled": true},
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "(e2b_node_disk_total_bytes{node_ip=~\"$node_ip\"} - e2b_node_disk_free_bytes{node_ip=~\"$node_ip\"}) / (e2b_node_disk_total_bytes{node_ip=~\"$node_ip\"} > 0)",
+          "legendFormat": "{{node_ip}} {{path}}",
+          "refId": "A"
+        }
+      ],
+      "title": "磁盘使用率(每节点 × 挂载点)",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Sandboxes per node — uneven distribution may indicate a scheduler stuck targeting one node.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"axisLabel": "count", "drawStyle": "line", "fillOpacity": 15, "lineWidth": 2, "stacking": {"mode": "normal"}},
+          "unit": "short"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "id": 7,
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max"]}, "tooltip": {"mode": "multi"}},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "count by(node_ip)(e2b_sandbox_info{node_ip=~\"$node_ip\"})",
+          "legendFormat": "{{node_ip}}",
+          "refId": "A"
+        }
+      ],
+      "title": "各节点沙箱数(找过载节点)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Top 10 teams by sandbox count. Sudden growth = potential tenant abuse / runaway script.",
+      "fieldConfig": {
+        "defaults": {"custom": {"align": "auto", "displayMode": "auto"}, "unit": "short"}
+      },
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 12},
+      "id": 8,
+      "options": {"showHeader": true, "sortBy": [{"displayName": "Value", "desc": true}]},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "topk(10, count by(team_id)(e2b_sandbox_info{node_ip=~\"$node_ip\"}))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Top 10 团队(沙箱数)",
+      "transformations": [
+        {"id": "organize", "options": {"excludeByName": {"Time": true}, "renameByName": {"Value": "数量"}}}
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Top 10 templates in use right now. Use to spot accidental hot template or misconfigured default.",
+      "fieldConfig": {
+        "defaults": {"custom": {"align": "auto", "displayMode": "auto"}, "unit": "short"}
+      },
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 12},
+      "id": 9,
+      "options": {"showHeader": true, "sortBy": [{"displayName": "Value", "desc": true}]},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "topk(10, count by(template_id)(e2b_sandbox_info{node_ip=~\"$node_ip\"}))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Top 10 模板(沙箱数)",
+      "transformations": [
+        {"id": "organize", "options": {"excludeByName": {"Time": true}, "renameByName": {"Value": "数量"}}}
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Top 15 longest-running sandboxes. Joins age with team/template/node via e2b_sandbox_info.",
+      "fieldConfig": {
+        "defaults": {"custom": {"align": "auto", "displayMode": "auto"}, "unit": "s"}
+      },
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 20},
+      "id": 10,
+      "options": {"showHeader": true, "sortBy": [{"displayName": "Value", "desc": true}]},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "topk(15, e2b_sandbox_age_seconds{node_ip=~\"$node_ip\"} * on(node_ip, sandbox_id) group_left(node_id, template_id, team_id) e2b_sandbox_info)",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "存活最久的 15 个沙箱(可能卡住)",
+      "transformations": [
+        {"id": "organize", "options": {"excludeByName": {"Time": true, "__name__": true, "job": true, "instance": true}, "renameByName": {"Value": "运行秒数"}}}
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "fc processes by Linux state. Z (zombie) and D (uninterruptible sleep) are red flags — kernel IO stuck or fc orphaned.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"axisLabel": "count", "drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1, "stacking": {"mode": "normal"}},
+          "unit": "short"
+        },
+        "overrides": [
+          {"matcher": {"id": "byRegexp", "options": ".*Z.*"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]},
+          {"matcher": {"id": "byRegexp", "options": ".*D.*"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}]}
+        ]
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 30},
+      "id": 11,
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max"]}, "tooltip": {"mode": "multi"}},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum by(state)(e2b_fc_process_state_count{node_ip=~\"$node_ip\"})",
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Firecracker 进程状态分布(Z/D 是红色警告)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Per-node orchestrator List RTT. Spike = orchestrator under load or stuck.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"axisLabel": "duration", "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2},
+          "unit": "s"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 30},
+      "id": 12,
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max"]}, "tooltip": {"mode": "multi"}},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "e2b_orchestrator_list_duration_seconds{node_ip=~\"$node_ip\"}",
+          "legendFormat": "{{node_ip}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Orchestrator List gRPC RTT(每节点)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Sandboxes overrunning their max_sandbox_length. value = seconds past TTL.",
+      "fieldConfig": {
+        "defaults": {"custom": {"align": "auto", "displayMode": "auto"}, "unit": "s"}
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 38},
+      "id": 13,
+      "options": {"showHeader": true, "sortBy": [{"displayName": "Value", "desc": true}]},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "(e2b_sandbox_overrun_seconds{node_ip=~\"$node_ip\"} > 0) * on(node_ip, sandbox_id) group_left(node_id, template_id, team_id) e2b_sandbox_info",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "超过 max_sandbox_length 的沙箱清单",
+      "transformations": [
+        {"id": "organize", "options": {"excludeByName": {"Time": true, "__name__": true, "job": true, "instance": true}, "renameByName": {"Value": "超时秒数"}}}
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["e2b", "firecracker", "overview"],
+  "templating": {
+    "list": [
+      {
+        "current": {"selected": true, "text": "HKProdVolc", "value": "cfmlanmx6zl6od"},
+        "hide": 0,
+        "includeAll": false,
+        "label": "数据源",
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "definition": "label_values(e2b_orchestrator_reachable, node_ip)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "节点 IP",
+        "multi": true,
+        "name": "node_ip",
+        "options": [],
+        "query": {"query": "label_values(e2b_orchestrator_reachable, node_ip)", "refId": "Q"},
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {"from": "now-1h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "E2B / 集群健康总览",
+  "uid": "e2b-cluster-overview",
+  "version": 1
+}

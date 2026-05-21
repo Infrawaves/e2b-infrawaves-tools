@@ -86,7 +86,7 @@ groups:
           project: e2b
         annotations:
           summary: "节点 {{ $labels.node_ip }} 上本机 orchestrator gRPC 不可达"
-          description: "已跳过沙箱泄露检测 —— Exporter 无法连接 127.0.0.1:5008 上的 orchestrator。"
+          description: "已跳过沙箱泄露检测 —— Exporter 无法连接 127.0.0.1:9090 上的 orchestrator。"
 
       - alert: Allocation 抖动
         uid: e2b-alloc-flapping
@@ -131,3 +131,80 @@ groups:
         annotations:
           summary: "节点 {{ $labels.node_ip }} 上 Firecracker {{ $labels.sandbox_id }} 打开了 {{ $value }} 个 FD"
           description: "单个 fc 进程的打开文件描述符 > 500(正常 p99=141),很可能是 FD 泄露。pid={{ $labels.pid }}。"
+
+      - alert: HugeTLB 池接近耗尽
+        uid: e2b-node-hugepages-saturated
+        expr: (e2b_node_hugepages_total - e2b_node_hugepages_free) / e2b_node_hugepages_total > 0.9 and e2b_node_hugepages_total > 0
+        for: 5m
+        labels:
+          severity: critical
+          project: e2b
+        annotations:
+          summary: "节点 {{ $labels.node_ip }} HugeTLB({{ $labels.size_bytes }}B) 使用率 > 90%"
+          description: "HugeTLB 池剩余 < 10%,新沙箱创建会失败。可结合 e2b_sandbox_info 查看哪些 team/template 占了。"
+
+      - alert: 节点磁盘接近写满
+        uid: e2b-node-disk-saturated
+        expr: (e2b_node_disk_total_bytes - e2b_node_disk_free_bytes) / e2b_node_disk_total_bytes > 0.9 and e2b_node_disk_total_bytes > 0
+        for: 10m
+        labels:
+          severity: warning
+          project: e2b
+        annotations:
+          summary: "节点 {{ $labels.node_ip }} 路径 {{ $labels.path }} 磁盘使用率 > 90%"
+          description: "持续超过 90% 已 10 分钟,沙箱启动可能出现 ENOSPC。"
+
+      - alert: 沙箱超过声明的 TTL
+        uid: e2b-sandbox-overrun
+        expr: e2b_sandbox_overrun_seconds > 0
+        for: 5m
+        labels:
+          severity: warning
+          project: e2b
+        annotations:
+          summary: "沙箱 {{ $labels.sandbox_id }} 已超 max_sandbox_length {{ $value }}s"
+          description: "沙箱运行已超过 SandboxConfig.max_sandbox_length 声明的上限,通常意味着客户端持续 keepalive 或 orchestrator TTL 清理失败。node={{ $labels.node_ip }}。"
+
+      - alert: 沙箱存活异常长(>4h)
+        uid: e2b-sandbox-too-old
+        expr: e2b_sandbox_age_seconds > 4 * 3600
+        for: 5m
+        labels:
+          severity: info
+          project: e2b
+        annotations:
+          summary: "沙箱 {{ $labels.sandbox_id }} 存活已 {{ $value }}s(> 4 小时)"
+          description: "存活时间异常长。node={{ $labels.node_ip }}。如果业务允许长跑,可调大此告警阈值或加 team_id 白名单。"
+
+      - alert: Firecracker 出现僵尸进程
+        uid: e2b-fc-zombie
+        expr: e2b_fc_process_state_count{state="Z"} > 0
+        for: 5m
+        labels:
+          severity: warning
+          project: e2b
+        annotations:
+          summary: "节点 {{ $labels.node_ip }} 出现 {{ $value }} 个 Z 状态 firecracker"
+          description: "fc 进程已退出但未被 reap,通常是父进程(orchestrator)漏处理 SIGCHLD。"
+
+      - alert: Firecracker 卡内核 IO
+        uid: e2b-fc-uninterruptible
+        expr: e2b_fc_process_state_count{state="D"} > 0
+        for: 5m
+        labels:
+          severity: warning
+          project: e2b
+        annotations:
+          summary: "节点 {{ $labels.node_ip }} 出现 {{ $value }} 个 D 状态 firecracker"
+          description: "fc 进程在 uninterruptible disk sleep,通常是底层 IO(NFS / 磁盘)阻塞,kill -9 也杀不掉。"
+
+      - alert: Orchestrator List gRPC 慢
+        uid: e2b-orchestrator-list-slow
+        expr: e2b_orchestrator_list_duration_seconds > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          project: e2b
+        annotations:
+          summary: "节点 {{ $labels.node_ip }} orchestrator List RTT={{ $value }}s"
+          description: "本机 orchestrator 响应 SandboxService.List 持续 > 500ms,可能是 orchestrator 内部阻塞或沙箱列表过大。"

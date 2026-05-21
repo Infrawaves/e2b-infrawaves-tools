@@ -86,8 +86,9 @@ var (
 	)
 )
 
+// updateMetrics 是每次 scrape 触发的总入口,按"先 reset、再采集、再上报"的顺序刷新所有指标。
 func updateMetrics() {
-	// Reset all metrics first
+	// 先 reset 所有指标(避免上一轮过期 series 残留)
 	nodeRole.Reset()
 	templateroleMetric.Reset()
 	serviceUp.Reset()
@@ -111,19 +112,45 @@ func updateMetrics() {
 	e2bFcProcessIoOpsTotal.Reset()
 	e2bFcProcessContextSwitchesTotal.Reset()
 	nodePortListening.Reset()
+	sandboxLeakCount.Reset()
+	sandboxOrphanCount.Reset()
+	sandboxConsistentCount.Reset()
+	sandboxLeak.Reset()
+	sandboxOrphan.Reset()
+	sandboxInfo.Reset()
+	sandboxAgeSeconds.Reset()
+	sandboxOverrunSeconds.Reset()
+	orchestratorReachable.Reset()
+	orchestratorListDurationSeconds.Reset()
+	nodeHugepagesTotal.Reset()
+	nodeHugepagesFree.Reset()
+	nodeHugepagesReserved.Reset()
+	nodeDiskFreeBytes.Reset()
+	nodeDiskTotalBytes.Reset()
 
-	// Update firecracker metrics
-	updateFirecrackerMetrics()
+	// 采集 firecracker 进程指标,顺便拿到 sandbox_id → pids 映射用于 leak 检测
+	nodeIP, fcSandboxes := updateFirecrackerMetrics()
 
-	// Update port listening metrics
+	// 节点级容量(hugepages、磁盘)——与 orchestrator 解耦,
+	// orchestrator 挂了仍然上报,保证容量类告警不被掩盖。
+	updateHostMetrics(nodeIP)
+
+	// 与 orchestrator 权威列表比对沙箱状态。
+	// orchestrator 不可达(关闭开关 / 服务挂)时静默跳过——
+	// leak/orphan 数据不刷新,e2b_orchestrator_reachable 会上报 0。
+	if os.Getenv("DISABLE_SANDBOX_LEAK_CHECK") != "1" {
+		checkSandboxLeak(nodeIP, fcSandboxes)
+	}
+
+	// 更新端口监听指标
 	updatePortListeningMetrics()
 
-	// Get node info
+	// 获取节点信息
 	log.Println("Getting node info...")
 	nodeInfo, err := getNodeInfo()
 	if err != nil {
 		log.Println("failed to get node info:", err)
-		// Even if we can't get node info, set a default metric to indicate the exporter is running
+		// 即使取不到 node info,也写一条默认指标说明 exporter 还活着
 		serviceUp.WithLabelValues("exporter", "unknown", "unknown", "error", "run").Set(1)
 		return
 	}
@@ -135,37 +162,37 @@ func updateMetrics() {
 
 	log.Printf("Node role: %s, templaterole: %s", role, templaterole)
 
-	// Update node role metrics
+	// 更新 node role 指标
 	if role != "" {
 		nodeRole.WithLabelValues(role, nodeInfo.ID, nodeInfo.Name).Set(1)
 		log.Printf("Node %s (%s) role: %s", nodeInfo.Name, nodeInfo.ID, role)
 	} else {
-		// Set default role if not found
+		// 未定义 role 时占位为 unknown
 		nodeRole.WithLabelValues("unknown", nodeInfo.ID, nodeInfo.Name).Set(1)
 		log.Printf("Node %s (%s) has no role defined", nodeInfo.Name, nodeInfo.ID)
 	}
 
-	// Update templaterole metrics
+	// 更新 templaterole 指标
 	if templaterole != "" {
 		templateroleMetric.WithLabelValues(templaterole, nodeInfo.ID, nodeInfo.Name).Set(1)
 		log.Printf("Node %s (%s) templaterole: %s", nodeInfo.Name, nodeInfo.ID, templaterole)
 	}
 
-	// Check required services based on roles
+	// 按角色巡检必需服务
 	log.Println("Checking required services...")
 	services, err := checkRequiredServices()
 	if err != nil {
 		log.Println("failed to check required services:", err)
-		// Even if we can't check services, set a default metric
+		// 巡检失败时也写一条占位指标
 		serviceUp.WithLabelValues("exporter", nodeInfo.ID, nodeInfo.Name, "error", "run").Set(1)
 		return
 	}
 
-	// Update service metrics
+	// 更新服务健康指标
 	log.Printf("Checking required services for node %s (%s):", nodeInfo.Name, nodeInfo.ID)
 	if len(services) == 0 {
 		log.Println("No required services found for this node")
-		// Set a default metric if no services are found
+		// 没有匹配角色对应的必需服务时,占位为正常
 		serviceUp.WithLabelValues("exporter", nodeInfo.ID, nodeInfo.Name, "running", "run").Set(1)
 	} else {
 		for service, allocInfo := range services {
@@ -179,7 +206,7 @@ func updateMetrics() {
 		}
 	}
 
-	// Get allocations for resource monitoring
+	// 获取 allocations 用于资源监控
 	log.Println("Getting allocations for resource monitoring...")
 	allocations, err := getAllocations()
 	if err != nil {
@@ -187,7 +214,7 @@ func updateMetrics() {
 		return
 	}
 
-	// Update allocation resource metrics
+	// 更新 allocation 资源指标
 	for service, allocInfo := range allocations {
 		if allocInfo.IsRunning && allocInfo.AllocationID != "" {
 			log.Printf("Getting resource info for allocation %s (service: %s)...", allocInfo.AllocationID, service)
@@ -197,13 +224,13 @@ func updateMetrics() {
 				continue
 			}
 
-			// Update resource usage metrics
+			// 上报资源使用量
 			allocationCPUUsage.WithLabelValues(resourceInfo.AllocationID, resourceInfo.JobName, resourceInfo.TaskName, resourceInfo.NodeID, resourceInfo.NodeName).Set(resourceInfo.CPUUsage)
 			allocationCPULimit.WithLabelValues(resourceInfo.AllocationID, resourceInfo.JobName, resourceInfo.TaskName, resourceInfo.NodeID, resourceInfo.NodeName).Set(resourceInfo.CPULimit)
 			allocationMemoryUsage.WithLabelValues(resourceInfo.AllocationID, resourceInfo.JobName, resourceInfo.TaskName, resourceInfo.NodeID, resourceInfo.NodeName).Set(resourceInfo.MemoryUsage)
 			allocationMemoryLimit.WithLabelValues(resourceInfo.AllocationID, resourceInfo.JobName, resourceInfo.TaskName, resourceInfo.NodeID, resourceInfo.NodeName).Set(resourceInfo.MemoryLimit)
 
-			// Calculate and update usage percentages
+			// 计算并上报使用率(limit=0 时跳过,避免除零)
 			if resourceInfo.CPULimit > 0 {
 				cpuPercentage := (resourceInfo.CPUUsage / resourceInfo.CPULimit) * 100
 				allocationCPUUsagePercentage.WithLabelValues(resourceInfo.AllocationID, resourceInfo.JobName, resourceInfo.TaskName, resourceInfo.NodeID, resourceInfo.NodeName).Set(cpuPercentage)
@@ -248,19 +275,36 @@ func registerMetrics() {
 	prometheus.MustRegister(e2bFcProcessIoOpsTotal)
 	prometheus.MustRegister(e2bFcProcessContextSwitchesTotal)
 	prometheus.MustRegister(nodePortListening)
+	prometheus.MustRegister(sandboxLeakCount)
+	prometheus.MustRegister(sandboxOrphanCount)
+	prometheus.MustRegister(sandboxConsistentCount)
+	prometheus.MustRegister(sandboxLeak)
+	prometheus.MustRegister(sandboxOrphan)
+	prometheus.MustRegister(sandboxInfo)
+	prometheus.MustRegister(sandboxAgeSeconds)
+	prometheus.MustRegister(sandboxOverrunSeconds)
+	prometheus.MustRegister(orchestratorReachable)
+	prometheus.MustRegister(orchestratorListDurationSeconds)
+	prometheus.MustRegister(e2bFcProcessStateCount)
+	prometheus.MustRegister(nodeHugepagesTotal)
+	prometheus.MustRegister(nodeHugepagesFree)
+	prometheus.MustRegister(nodeHugepagesReserved)
+	prometheus.MustRegister(nodeDiskFreeBytes)
+	prometheus.MustRegister(nodeDiskTotalBytes)
 }
 
+// printMetrics 用于 -oneshot 模式:跑一遍采集后把指标以 Prometheus 文本格式打到 stdout。
 func printMetrics() error {
-	// Update metrics
+	// 触发一次采集
 	updateMetrics()
 
-	// Gather metrics
+	// 收集指标
 	metricFamilies, err := prometheus.DefaultGatherer.Gather()
 	if err != nil {
 		return err
 	}
 
-	// Write metrics to stdout in Prometheus text format
+	// 以 Prometheus 文本格式写到 stdout
 	var buf bytes.Buffer
 	encoder := expfmt.NewEncoder(&buf, expfmt.NewFormat(expfmt.TypeTextPlain))
 	for _, mf := range metricFamilies {
@@ -274,7 +318,7 @@ func printMetrics() error {
 }
 
 func main() {
-	// Parse command line flags
+	// 解析命令行参数
 	oneshot := flag.Bool("oneshot", false, "Run once and print metrics to stdout instead of running as a service")
 	flag.Parse()
 

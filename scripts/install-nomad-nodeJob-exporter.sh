@@ -60,7 +60,7 @@ if [ -f "$NOMAD_CONFIG_PATH" ]; then
   # 尝试从配置文件中提取 token
   NOMAD_TOKEN=$(grep -E '^\s*token\s*=\s*"([^"]+)"' "$NOMAD_CONFIG_PATH" | sed -E 's/^\s*token\s*=\s*"([^"]+)".*/\1/')
   if [ -n "$NOMAD_TOKEN" ]; then
-    echo "✓ 从 $NOMAD_CONFIG_PATH 获取到 Token: ${NOMAD_TOKEN:0:16}..."
+    echo "✓ 从 $NOMAD_CONFIG_PATH 获取到 Token (长度 ${#NOMAD_TOKEN})"
   else
     echo "! 未找到 Token，请手动配置"
   fi

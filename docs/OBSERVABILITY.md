@@ -3,13 +3,33 @@
 参考目标系统 [`e2b_val`](../) 的内置 OTel 指标(orchestrator host/sandbox metrics、ingress proxy、NFS proxy 等),
 本仓库以 **节点侧旁路采集** 的方式补全 e2b_val 不暴露或不易暴露的视角。
 
-## 现有覆盖
+## 5 层视图(对外讲解口径)
+
+对客户/新人讲整体观测面时,按"故障从底向上传播"的顺序分 5 层。
+每一层独立,某层全红时上层指标多半会跟着失真——告警**要按层定级**,避免单一故障引发雪崩告警。
+
+| 层 | 视角 | 指标前缀 | 数据源 | 实现文件 | 详细文档 |
+| --- | --- | --- | --- | --- | --- |
+| **1** | **OS 容量(e2b 关键资源)** | `e2b_node_*` | `/sys/kernel/mm/hugepages`、`statfs(2)` | `checkNodeHost.go` | [沙箱与节点指标](../nomad-nodeJob-exporter/docs/E2B%20沙箱与节点指标设计.md) |
+| **2** | **Nomad 调度 + 端口探活** | `nomad_*`、`node_port_listening` | `nomad` CLI、TCP probe | `checkNodeAllocationStatus.go`、`checkAllocationResource.go`、`checkNodeProcessPort.go` | [Nomad 与端口探测指标](../nomad-nodeJob-exporter/docs/E2B%20Nomad%20与端口探测指标设计.md) |
+| **3** | **Orchestrator 控制面** | `e2b_orchestrator_*` | 本机 gRPC `SandboxService.List`(白盒) | `checkSandboxLeak.go` | [沙箱与节点指标](../nomad-nodeJob-exporter/docs/E2B%20沙箱与节点指标设计.md) |
+| **4** | **沙箱业务(权威列表 + 一致性)** | `e2b_sandbox_*` | orchestrator gRPC + `/proc` 比对 | `checkSandboxLeak.go` | [沙箱与节点指标](../nomad-nodeJob-exporter/docs/E2B%20沙箱与节点指标设计.md) |
+| **5** | **Firecracker 进程** | `e2b_fc_process_*` | `/proc/<pid>/` | `checkFirecracker.go` | [Firecracker 进程指标](../nomad-nodeJob-exporter/docs/E2B%20Firecracker%20进程指标设计.md) |
+| 旁路 | 沙箱 → 物理节点映射 | — | NFS 共享目录 | `scheduling_monitor` | (本文档下方) |
+
+> 说明:第 3 层和第 4 层在实现上是同一个 .go 文件、同一次 gRPC 调用产出的——**物理实现合在一起,语义分两层**。
+> 文档归档以前缀为准便于检索;本表则按层叙述便于沟通。
+
+## 现有覆盖(按实现分组)
 
 | 维度 | 来源 | 实现 |
 | --- | --- | --- |
 | Nomad allocation 健康 | `nomad-nodeJob-exporter` | `nomad_allocation_up`, `nomad_allocation_cpu/memory_*` |
 | 节点 role / templaterole | `nomad-nodeJob-exporter` | `nomad_node_role`, `nomad_node_templaterole` |
-| Firecracker 进程级 | `nomad-nodeJob-exporter` | `e2b_fc_process_*` (count / mem / cpu / io / fds / ctx switches) |
+| 关键端口监听探测 | `nomad-nodeJob-exporter` | `node_port_listening`(5016 / 9090,黑盒) |
+| Firecracker 进程级 | `nomad-nodeJob-exporter` | `e2b_fc_process_*` (count / mem / cpu / io / fds / ctx switches / state) |
+| 节点容量(HugeTLB / 磁盘) | `nomad-nodeJob-exporter` | `e2b_node_hugepages_*`、`e2b_node_disk_*` |
+| Orchestrator 探活 | `nomad-nodeJob-exporter` | `e2b_orchestrator_reachable`、`e2b_orchestrator_list_duration_seconds` |
 | 沙箱 → 物理节点映射 | `scheduling_monitor` | NFS 共享目录 + 离线脚本 |
 | **沙箱泄露检测** | `nomad-nodeJob-exporter` | 见下文 [沙箱泄露检测](#沙箱泄露检测) |
 
@@ -18,7 +38,7 @@
 每次 scrape,exporter 在节点本地比对:
 
 - **集合 A**:`/proc` 扫描出的 firecracker 进程的 `sandbox_id`(从 `--api-sock` 路径解析)
-- **集合 B**:本机 orchestrator gRPC `SandboxService.List`(127.0.0.1:5008)返回的 `sandbox_id`
+- **集合 B**:本机 orchestrator gRPC `SandboxService.List`(127.0.0.1:9090)返回的 `sandbox_id`
 
 | 集合关系 | 含义 | 指标 |
 | --- | --- | --- |
@@ -68,9 +88,11 @@ e2b_val 的 orchestrator 通过 OTLP 上报到 Mimir/Tempo/Loki:
 **为什么**:`--api-sock` 是 Firecracker 控制面;sock 存在但不响应代表进程僵死,而 `e2b_fc_process_count` 仍 +1。
 **怎么做**:`checkFirecracker.go` 已经能拿到 sock 路径,加一次 `unix.Connect` 探测,导出 `e2b_fc_socket_responsive{node_ip,sandbox_id}`。
 
-### 3. HugeTLB 节点容量
-**为什么**:HugeTLB 是 e2b 资源瓶颈,需要看节点剩余可分配容量,而不仅是已分配。
-**怎么做**:读 `/proc/meminfo` 中 `HugePages_Total/Free/Rsvd`,导出 `e2b_node_hugepages_{total,free,reserved}`,labels=`node_ip,size_kb`。
+### 3. HugeTLB 节点容量 ✅ 已完成
+
+实现:`checkNodeHost.go` 读 `/sys/kernel/mm/hugepages/hugepages-<N>kB/{nr,free,resv}_hugepages`,
+导出 `e2b_node_hugepages_{total,free,reserved}`,标签 `node_ip` + `size_bytes`(字节字符串)。
+配套告警 `e2b-node-hugepages-saturated` 已上线。详见 [沙箱与节点指标设计](../nomad-nodeJob-exporter/docs/E2B%20沙箱与节点指标设计.md#9-e2b_node_hugepages_total--_free--_reserved)。
 
 ### 4. Conntrack / TCP 连接数
 **为什么**:沙箱网络通过 NAT 出口,conntrack 表满会导致建连失败但不会有明显日志。

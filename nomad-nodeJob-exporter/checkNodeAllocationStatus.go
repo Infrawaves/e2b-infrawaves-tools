@@ -33,6 +33,8 @@ type AllocationResourceInfo struct {
 	NodeName     string
 }
 
+// getNodeInfo 通过 `nomad node status -verbose -self` 取本节点的 ID / Name / Meta。
+// Meta 里包含 role、templaterole 等业务标签,后续巡检 required services 用。
 func getNodeInfo() (*NodeInfo, error) {
 	cmd := exec.Command("nomad", "node", "status", "-verbose", "-self")
 	var out bytes.Buffer
@@ -51,7 +53,7 @@ func getNodeInfo() (*NodeInfo, error) {
 
 	inMeta := false
 	for _, line := range lines {
-		// Extract node ID
+		// 提取 node ID
 		if strings.HasPrefix(line, "ID") {
 			parts := strings.SplitN(line, "=", 2)
 			if len(parts) == 2 {
@@ -60,7 +62,7 @@ func getNodeInfo() (*NodeInfo, error) {
 			continue
 		}
 
-		// Extract node Name
+		// 提取 node Name
 		if strings.HasPrefix(line, "Name") {
 			parts := strings.SplitN(line, "=", 2)
 			if len(parts) == 2 {
@@ -69,7 +71,7 @@ func getNodeInfo() (*NodeInfo, error) {
 			continue
 		}
 
-		// Process Meta section
+		// 进入 Meta 段
 		if strings.HasPrefix(line, "Meta") {
 			inMeta = true
 			continue
@@ -92,6 +94,8 @@ func getNodeInfo() (*NodeInfo, error) {
 	return nodeInfo, nil
 }
 
+// getAllocations 从同一 `nomad node status` 输出里抓 Allocations 段,
+// 返回 task group → AllocationInfo 的映射。同一 task group 多次分配时只保留最新一次。
 func getAllocations() (map[string]*AllocationInfo, error) {
 	cmd := exec.Command("nomad", "node", "status", "-verbose", "-self")
 	var out bytes.Buffer
@@ -108,38 +112,38 @@ func getAllocations() (map[string]*AllocationInfo, error) {
 
 	inAllocations := false
 	for _, line := range lines {
-		// Check if we've reached the end of the Allocations section
+		// Allocations 段的结束:遇到下一段标题
 		if inAllocations && (strings.HasPrefix(line, "Attributes") || strings.HasPrefix(line, "Meta")) {
 			break
 		}
 
-		// Check if we're starting the Allocations section
+		// Allocations 段开始
 		if strings.HasPrefix(line, "Allocations") {
 			inAllocations = true
 			continue
 		}
 
-		// Process allocation lines
+		// 解析 allocation 行
 		if inAllocations {
 			fields := strings.Fields(line)
-			// Check if this line has enough fields to be an allocation line
+			// 字段够多才视为 allocation 行
 			if len(fields) >= 7 {
-				// Skip header line
+				// 跳过表头行
 				if fields[0] == "ID" {
 					continue
 				}
-				// Find the task group field (it's the 4th field, index 3)
+				// task group 字段(第 4 列,索引 3)
 				taskGroup := fields[3]
-				// Find desired status (6th field, index 5)
+				// desired status(第 6 列,索引 5)
 				desired := fields[5]
-				// Find actual status (7th field, index 6)
+				// 实际 status(第 7 列,索引 6)
 				status := fields[6]
-				// Get allocation ID (1st field, index 0)
+				// allocation ID(第 1 列,索引 0)
 				allocID := fields[0]
 
 				isRunning := (desired == "run" && status == "running")
 
-				// Only keep the first occurrence for each task group (newest allocation)
+				// 同一 task group 只保留首次出现的(对应最新 allocation)
 				if _, exists := allocations[taskGroup]; !exists {
 					allocations[taskGroup] = &AllocationInfo{
 						DesiredStatus: desired,
@@ -155,6 +159,8 @@ func getAllocations() (map[string]*AllocationInfo, error) {
 	return allocations, nil
 }
 
+// checkRequiredServices 按节点 role / templaterole 巡检对应角色应当运行的关键服务,
+// 缺失服务以 status="not_found" 占位返回。新增角色或调整必需服务列表都要改这里。
 func checkRequiredServices() (map[string]*AllocationInfo, error) {
 	nodeInfo, err := getNodeInfo()
 	if err != nil {
@@ -168,15 +174,16 @@ func checkRequiredServices() (map[string]*AllocationInfo, error) {
 
 	services := make(map[string]*AllocationInfo)
 
-	// Check for api role services
+	// api role 必需服务
 	if nodeInfo.Meta["role"] == "api" {
+		// 早期版本含 logs-collector / loki-service,为兼容未部署日志栈的客户环境已精简
 		// requiredServices := []string{"api-service", "client-proxy", "otel-collector", "logs-collector", "loki-service"}
 		requiredServices := []string{"api-service", "client-proxy", "otel-collector"}
 		for _, service := range requiredServices {
 			if alloc, exists := allocations[service]; exists {
 				services[service] = alloc
 			} else {
-				// Service not found, create a placeholder with false status
+				// 服务未找到,以 not_found 占位
 				services[service] = &AllocationInfo{
 					DesiredStatus: "run",
 					Status:        "not_found",
@@ -186,15 +193,16 @@ func checkRequiredServices() (map[string]*AllocationInfo, error) {
 		}
 	}
 
-	// Check for orchestrator role services
+	// orchestrator role 必需服务
 	if nodeInfo.Meta["role"] == "orchestrator" {
+		// 早期版本同样含日志栈,已精简
 		// requiredServices := []string{"client-orchestrator", "otel-collector", "logs-collector", "loki-service"}
 		requiredServices := []string{"client-orchestrator", "otel-collector"}
 		for _, service := range requiredServices {
 			if alloc, exists := allocations[service]; exists {
 				services[service] = alloc
 			} else {
-				// Service not found, create a placeholder with false status
+				// 服务未找到,以 not_found 占位
 				services[service] = &AllocationInfo{
 					DesiredStatus: "run",
 					Status:        "not_found",
@@ -204,14 +212,14 @@ func checkRequiredServices() (map[string]*AllocationInfo, error) {
 		}
 	}
 
-	// Check for template-manager role services
+	// template-manager role 必需服务
 	if nodeInfo.Meta["templaterole"] == "template-manager" {
 		requiredServices := []string{"template-manager"}
 		for _, service := range requiredServices {
 			if alloc, exists := allocations[service]; exists {
 				services[service] = alloc
 			} else {
-				// Service not found, create a placeholder with false status
+				// 服务未找到,以 not_found 占位
 				services[service] = &AllocationInfo{
 					DesiredStatus: "run",
 					Status:        "not_found",
