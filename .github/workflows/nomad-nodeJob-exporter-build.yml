@@ -6,9 +6,11 @@ on:
       - main
     paths:
       - 'nomad-nodeJob-exporter/**'
+      - '.github/workflows/nomad-nodeJob-exporter-build.yml'
   pull_request:
     paths:
       - 'nomad-nodeJob-exporter/**'
+      - '.github/workflows/nomad-nodeJob-exporter-build.yml'
   workflow_dispatch:
     inputs:
       release:
