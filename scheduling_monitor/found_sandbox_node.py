@@ -62,7 +62,7 @@ def extract_node_ip(file_path):
     if file_path == "stdin":
         return None
     
-    # 匹配IP地址格式的文件名，如 10.12.1.252.txt
+    # 匹配IP地址格式的文件名，如 10.0.0.1.txt
     basename = os.path.basename(file_path)
     ip_pattern = re.match(r'^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\.txt$', basename)
     if ip_pattern:

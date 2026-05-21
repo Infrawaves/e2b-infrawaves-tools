@@ -28,7 +28,7 @@
 
 | 标签名 | 类型 | 说明 | 示例 |
 |-------|------|------|------|
-| `node_ip` | string | 裸金属宿主机 IP 地址 | `10.12.1.252` |
+| `node_ip` | string | 裸金属宿主机 IP 地址 | `10.0.0.1` |
 | `sandbox_id` | string | 从进程启动参数提取的业务标识 | `dddklj7hkiqc8biw6ezy` |
 | `pid` | int | 宿主机上的真实进程 ID | `12345` |
 
@@ -42,7 +42,7 @@
 | 标签 | `node_ip` |
 | 说明 | 当前节点运行的 Firecracker 进程总数 |
 | 数据源 | 进程列表统计 |
-| 示例 | `e2b_fc_process_count{node_ip="10.12.1.252"} 45` |
+| 示例 | `e2b_fc_process_count{node_ip="10.0.0.1"} 45` |
 
 **用途**：
 - 监控每个节点上的 Firecracker 实例数量
@@ -59,7 +59,7 @@
 | 标签 | `node_ip` |
 | 说明 | 累计的 sandbox_id 解析失败次数（非 E2B 格式的 Firecracker 进程） |
 | 数据源 | 命令行解析异常检测 |
-| 示例 | `e2b_fc_process_parse_errors_total{node_ip="10.12.1.252"} 3` |
+| 示例 | `e2b_fc_process_parse_errors_total{node_ip="10.0.0.1"} 3` |
 
 **用途**：
 - 统计无法解析 sandbox_id 的 Firecracker 进程数量
@@ -83,7 +83,7 @@ rate(e2b_fc_process_parse_errors_total[5m]) > 0.1
 | 标签 | `node_ip`, `sandbox_id`, `pid` |
 | 说明 | 进程基础信息映射（值固定为 1，用于标签查询） |
 | 数据源 | 进程 `cmdline` |
-| 示例 | `e2b_fc_process_info{node_ip="10.12.1.252",sandbox_id="dddklj7hkiqc8biw6ezy",pid="12345"} 1` |
+| 示例 | `e2b_fc_process_info{node_ip="10.0.0.1",sandbox_id="dddklj7hkiqc8biw6ezy",pid="12345"} 1` |
 
 **用途**：
 - 提供进程到 sandbox_id 的映射查询能力
@@ -372,6 +372,36 @@ e2b_fc_process_memory_hugetlb_bytes{...} 1073741824
 - 分析进程调度行为
 - 配合 CPU 使用率指标深入诊断性能问题
 
+---
+
+### 12. `e2b_fc_process_state_count`
+
+| 属性 | 值 |
+|------|-----|
+| 类型 | Gauge |
+| 标签 | `node_ip`, `state` |
+| 说明 | 按 Linux 进程状态分组的 Firecracker 进程数（节点级聚合，不含 `sandbox_id`/`pid`） |
+| 数据源 | `/proc/<pid>/stat` 第 3 字段 |
+| state 值 | `R`(运行)/`S`(可中断睡眠)/`D`(不可中断睡眠)/`Z`(僵尸)/`T`(停止)/`I`(空闲)/`X`(已死)/`?`(读取失败) |
+| 示例 | `e2b_fc_process_state_count{node_ip="10.0.0.1",state="S"} 42` |
+
+**为什么单独加这个指标**：
+
+- `e2b_fc_process_count` 只告诉你"有多少 fc 进程"，但**僵尸（Z）和不可中断（D）是必须立刻知道的状态**，且都不应该长期存在。
+- 普通的 `process_info` 上下文做 group by 也可以，但 state 字段没收进现有的 info 标签里——把状态聚合放在节点维度，避免 `state` 进入高基数的 per-pid 时序。
+
+**典型告警**：
+
+```prometheus
+# 出现僵尸 fc:父进程(orchestrator)漏 reap 子进程
+e2b_fc_process_state_count{state="Z"} > 0
+
+# fc 卡 uninterruptible disk sleep:通常是底层 IO(NFS / 磁盘)阻塞
+e2b_fc_process_state_count{state="D"} > 0
+```
+
+详见 `grafana/alerts/firecracker.yaml` 中 `e2b-fc-zombie` / `e2b-fc-uninterruptible` 两条告警。
+
 ## Sandbox ID 提取逻辑
 
 Sandbox ID 从 Firecracker 进程的命令行参数中提取：
@@ -421,7 +451,7 @@ sum(e2b_fc_process_count)
 ### 查询单个节点的 Firecracker 进程数
 
 ```prometheus
-e2b_fc_process_count{node_ip="10.12.1.252"}
+e2b_fc_process_count{node_ip="10.0.0.1"}
 ```
 
 ### 查询运行时间超过 1 小时的沙箱
@@ -585,6 +615,9 @@ rssBytes := rssPages * pageSize
 | Nomad Allocation | `main.go` | `nomad_alloc_*` | 任务分配状态和资源使用 |
 | Node Role | `main.go` | `node_role_*` | 节点角色信息 |
 | E2B Firecracker Process | `checkFirecracker.go` | `e2b_fc_process_*` | Firecracker 进程系统监控（本文档） |
+| E2B Sandbox（业务视角） | `checkSandboxLeak.go` | `e2b_sandbox_*` | orchestrator 权威列表 + 进程比对（leak/orphan/age/overrun）。详见 [E2B 沙箱与节点指标设计.md](./E2B%20沙箱与节点指标设计.md) |
+| E2B Orchestrator 探活 | `checkSandboxLeak.go` | `e2b_orchestrator_*` | 本机 orchestrator gRPC 可达性与 List RTT |
+| E2B Node 容量 | `checkNodeHost.go` | `e2b_node_*` | 节点级 HugeTLB / 磁盘容量 |
 
 ## 注意事项
 
@@ -615,9 +648,19 @@ rssBytes := rssPages * pageSize
 
 本设计实现的纯进程层监控，聚焦于系统资源使用情况。
 
-### 阶段二：未来（业务层指标）
+### 阶段二：当前（业务沙箱视角，旁路实现）
 
-建议在未来 E2B 控制面或沙箱内实现 `e2b_sandbox_*` 系列指标：
+`e2b_sandbox_*` 系列已经通过 `checkSandboxLeak.go` 落地，但**视角与最初设想不同**：不是控制面或沙箱内 Agent 主动暴露，而是 exporter 在节点上调用本机 orchestrator gRPC `SandboxService.List`，将权威列表与 `/proc` 扫描结果做差集。覆盖：
+
+- `e2b_sandbox_{leak,orphan,consistent}_count` — 节点本地一致性
+- `e2b_sandbox_info` — 沙箱 → team / template / node 映射
+- `e2b_sandbox_{age,overrun}_seconds` — 沙箱存活时长 / 超 TTL 时长
+
+详见 [E2B 沙箱与节点指标设计.md](./E2B%20沙箱与节点指标设计.md)。
+
+### 阶段三：未来（沙箱内业务指标）
+
+仍然建议在沙箱内 Agent 实现真正的业务请求维度指标：
 
 | 指标 | 说明 |
 |------|------|

@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	// node_port_listening: Port listening status
+	// node_port_listening: 端口监听状态
 	nodePortListening = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "node_port_listening",
@@ -22,13 +22,13 @@ var (
 	)
 )
 
-// checkPortListening checks if a port is listening
+// checkPortListening 检查端口是否在监听
 func checkPortListening(port int) bool {
-	// Try multiple address formats to cover different binding scenarios
+	// 尝试多种地址格式以兼容不同绑定方式(IPv4-only / IPv6-only / dual-stack)
 	addresses := []string{
-		fmt.Sprintf(":%d", port),        // Any IP address (IPv4/IPv6)
-		fmt.Sprintf("0.0.0.0:%d", port), // IPv4 any address
-		fmt.Sprintf("[::]:%d", port),    // IPv6 any address
+		fmt.Sprintf(":%d", port),        // 任意 IP(IPv4/IPv6)
+		fmt.Sprintf("0.0.0.0:%d", port), // IPv4 任意地址
+		fmt.Sprintf("[::]:%d", port),    // IPv6 任意地址
 	}
 
 	for _, addr := range addresses {
@@ -39,22 +39,22 @@ func checkPortListening(port int) bool {
 		}
 	}
 
-	// Try using ss command as a fallback (more reliable than lsof)
+	// 回退到 ss 命令(比 lsof 更可靠)
 	cmd := exec.Command("ss", "-tuln")
 	output, err := cmd.Output()
 	if err == nil {
 		outputStr := string(output)
-		// Check if the port appears in the output
+		// 检查端口是否出现在输出中
 		portStr := fmt.Sprintf(":%d", port)
 		return strings.Contains(outputStr, portStr)
 	}
 
-	// Try using netstat command as another fallback
+	// 再回退到 netstat
 	cmd = exec.Command("netstat", "-tuln")
 	output, err = cmd.Output()
 	if err == nil {
 		outputStr := string(output)
-		// Check if the port appears in the output
+		// 检查端口是否出现在输出中
 		portStr := fmt.Sprintf(":%d", port)
 		return strings.Contains(outputStr, portStr)
 	}
@@ -62,15 +62,15 @@ func checkPortListening(port int) bool {
 	return false
 }
 
-// updatePortListeningMetrics updates port listening metrics
+// updatePortListeningMetrics 更新端口监听指标
 func updatePortListeningMetrics() {
-	// Reset metrics first
+	// 先 reset 指标
 	nodePortListening.Reset()
 
-	// Get node IP
+	// 获取节点 IP
 	nodeIP := getNodeIP()
 
-	// Check ports
+	// 探测端口
 	ports := []int{5016, 9090}
 	for _, port := range ports {
 		isListening := checkPortListening(port)

@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+// getAllocationResourceInfo 通过 `nomad alloc status -verbose` 解析单个 allocation
+// 的 CPU / 内存使用与上限。CLI 输出格式跟 Nomad 版本绑定,升级时需要回归。
 func getAllocationResourceInfo(allocID string, nodeID string, nodeName string) (*AllocationResourceInfo, error) {
 	cmd := exec.Command("nomad", "alloc", "status", "-verbose", allocID)
 	var out bytes.Buffer
@@ -29,7 +31,7 @@ func getAllocationResourceInfo(allocID string, nodeID string, nodeName string) (
 	var currentTaskName string
 
 	for _, line := range lines {
-		// Extract job ID
+		// 提取 Job ID
 		if strings.HasPrefix(line, "Job ID") {
 			parts := strings.SplitN(line, "=", 2)
 			if len(parts) == 2 {
@@ -38,7 +40,7 @@ func getAllocationResourceInfo(allocID string, nodeID string, nodeName string) (
 			}
 		}
 
-		// Extract node name
+		// 提取 Node Name
 		if strings.HasPrefix(line, "Node Name") {
 			parts := strings.SplitN(line, "=", 2)
 			if len(parts) == 2 {
@@ -46,9 +48,9 @@ func getAllocationResourceInfo(allocID string, nodeID string, nodeName string) (
 			}
 		}
 
-		// Check if we're starting a new task
+		// 进入新的 task 段
 		if strings.HasPrefix(line, "Task ") && strings.Contains(line, " is ") {
-			// Extract task name
+			// 提取 task 名
 			taskNameStart := strings.Index(line, "Task ") + 5
 			taskNameEnd := strings.Index(line, " is ")
 			if taskNameStart > 0 && taskNameEnd > taskNameStart {
@@ -57,19 +59,17 @@ func getAllocationResourceInfo(allocID string, nodeID string, nodeName string) (
 			}
 		}
 
-		// Check if we're at Task Resources section
+		// "Task Resources:" 标记下一行才是真正的资源数据,本行跳过
 		if strings.Contains(line, "Task Resources:") {
-			// Process the next line which contains the data
-			// We'll handle this in the next iteration
 			continue
 		}
 
-		// Check if this line contains resource data (CPU, Memory, Disk)
+		// 资源数据行(CPU、Memory、Disk)
 		if strings.Contains(line, "MHz") && (strings.Contains(line, "MiB") || strings.Contains(line, "GiB")) {
-			// Split by multiple spaces
+			// 多空格分隔
 			fields := strings.Split(line, "  ")
 
-			// Extract CPU info
+			// 提取 CPU 信息
 			for _, field := range fields {
 				if strings.Contains(field, "/") && strings.Contains(field, "MHz") {
 					fieldForCPU := strings.Split(field, " ")
@@ -88,7 +88,7 @@ func getAllocationResourceInfo(allocID string, nodeID string, nodeName string) (
 					}
 					continue
 				}
-				// Extract Memory info
+				// 提取 Memory 信息
 				if strings.Contains(field, "/") && (strings.Contains(field, "MiB") || strings.Contains(field, "GiB")) {
 					if memParts := strings.Split(field, "/"); len(memParts) == 2 {
 						memUsageStr := memParts[0]
@@ -107,6 +107,8 @@ func getAllocationResourceInfo(allocID string, nodeID string, nodeName string) (
 	return resourceInfo, nil
 }
 
+// parseSize 把 "123 MiB" / "1.5 GiB" 这类字符串归一化为 MiB(float64)。
+// 单位识别失败返回 0,**调用方需结合 limit==0 跳过百分比计算**避免除零。
 func parseSize(sizeStr string) float64 {
 	parts := strings.Fields(sizeStr)
 	if len(parts) != 2 {

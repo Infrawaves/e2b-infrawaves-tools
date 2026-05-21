@@ -12,6 +12,30 @@
 ./nomad-nodeJob-exporter -oneshot
 ```
 
+## 环境变量
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `NOMAD_ADDR` | `http://127.0.0.1:4646` | Nomad HTTP API |
+| `NOMAD_TOKEN` | (空) | Nomad ACL token |
+| `ORCHESTRATOR_ADDR` | `127.0.0.1:9090` | 本机 e2b orchestrator gRPC,沙箱泄露检测用 |
+| `DISABLE_SANDBOX_LEAK_CHECK` | (未设置) | 设为 `1` 可关闭沙箱泄露检测(例如非 client 节点) |
+| `NODE_IP` | 自动取 eth0 | 标签使用的节点 IP |
+
+## 沙箱泄露检测
+
+每次 scrape 时,exporter 会:
+
+1. 扫 `/proc` 得到本机所有 firecracker 进程 → sandbox_id 集合 A
+2. 调用本机 orchestrator `gRPC SandboxService.List` → sandbox_id 集合 B
+3. 输出三类指标:
+   - `e2b_sandbox_consistent_count` — A ∩ B,正常运行
+   - `e2b_sandbox_leak_count` + `e2b_sandbox_leak{sandbox_id,pid}` — A \ B,fc 进程泄露(orchestrator 不知道,占着 HugeTLB)
+   - `e2b_sandbox_orphan_count` + `e2b_sandbox_orphan{sandbox_id}` — B \ A,orchestrator 状态过期(沙箱已死,记录未清)
+   - `e2b_orchestrator_reachable` — 0/1,gRPC 不通时 leak/orphan 数据不刷新,避免误报
+
+详见 [docs/OBSERVABILITY.md](../docs/OBSERVABILITY.md#沙箱泄露检测)。
+
 ## 部署步骤
 
 ### 一键安装
