@@ -1,0 +1,302 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "enable": true,
+        "hide": true,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "enable": true,
+        "iconColor": "red",
+        "name": "Firing alerts (E2B)",
+        "expr": "ALERTS{alertname=~\"E2B.*\", alertstate=\"firing\"}",
+        "titleFormat": "{{alertname}}",
+        "tagKeys": "severity,node_ip,sandbox_id",
+        "useValueForTime": false
+      },
+      {
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "enable": true,
+        "iconColor": "orange",
+        "name": "Grafana-managed alerts",
+        "target": {"limit": 100, "matchAny": true, "tags": ["e2b"], "type": "tags"}
+      }
+    ]
+  },
+  "description": "Sandbox/firecracker leak detection: compare /proc-derived fc sandbox_id set vs orchestrator's authoritative running list. Surface zombie fc and orphan sandbox records.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Total firecracker processes whose sandbox_id is NOT in the orchestrator's running list — likely zombie fc still consuming HugeTLB. Red >=1, dark red >=5.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "red", "value": 1}, {"color": "dark-red", "value": 5}]},
+          "unit": "short"
+        }
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum(e2b_sandbox_leak_count{node_ip=~\"$node_ip\"})",
+          "refId": "A"
+        }
+      ],
+      "title": "Firecracker 泄漏数(集群)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Sandboxes the orchestrator believes are running but no firecracker is found. Yellow >=1, red >=5.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "yellow", "value": 1}, {"color": "red", "value": 5}]},
+          "unit": "short"
+        }
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sum(e2b_sandbox_orphan_count{node_ip=~\"$node_ip\"})",
+          "refId": "A"
+        }
+      ],
+      "title": "孤儿沙箱数(集群)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "How many distinct nodes currently have at least one leaked firecracker. Lets you see whether a leak is a single-node bug or cluster-wide.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "red", "value": 1}]},
+          "unit": "short"
+        }
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "id": 9,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "count(e2b_sandbox_leak_count{node_ip=~\"$node_ip\"} > 0) OR on() vector(0)",
+          "refId": "A"
+        }
+      ],
+      "title": "存在泄漏的节点数",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "Min reachability across all nodes — DOWN if any node's exporter cannot talk to its local orchestrator gRPC. When DOWN, leak detection on that node is paused.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [{"options": {"0": {"color": "red", "text": "DOWN"}, "1": {"color": "green", "text": "OK"}}, "type": "value"}],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red"}, {"color": "green", "value": 1}]}
+        }
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "min(e2b_orchestrator_reachable{node_ip=~\"$node_ip\"})",
+          "refId": "A"
+        }
+      ],
+      "title": "Orchestrator 连通性(最差)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"axisLabel": "count", "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "stacking": {"mode": "normal"}},
+          "unit": "short"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "id": 5,
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max"]}, "tooltip": {"mode": "multi"}},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "e2b_sandbox_leak_count{node_ip=~\"$node_ip\"}",
+          "legendFormat": "leak {{node_ip}}",
+          "refId": "A"
+        }
+      ],
+      "title": "各节点 Firecracker 泄漏数(僵尸进程)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"axisLabel": "count", "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "stacking": {"mode": "normal"}},
+          "unit": "short"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "id": 6,
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max"]}, "tooltip": {"mode": "multi"}},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "e2b_sandbox_orphan_count{node_ip=~\"$node_ip\"}",
+          "legendFormat": "orphan {{node_ip}}",
+          "refId": "A"
+        }
+      ],
+      "title": "各节点孤儿沙箱(Orchestrator 状态过期)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "description": "sandbox_id + pid pairs to kill. Sorted by node_ip for batch operations. Empty when healthy.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"align": "auto", "displayMode": "auto"},
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red"}]}
+        }
+      },
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 12},
+      "id": 7,
+      "options": {
+        "showHeader": true,
+        "sortBy": [{"displayName": "node_ip", "desc": false}]
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "e2b_sandbox_leak{node_ip=~\"$node_ip\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "当前泄漏清单(sandbox_id + pid,可用于定位 kill)",
+      "transformations": [
+        {"id": "organize", "options": {"excludeByName": {"Time": true, "__name__": true, "job": true, "instance": true, "Value": true}}}
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"align": "auto", "displayMode": "auto"}
+        }
+      },
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 22},
+      "id": 8,
+      "options": {
+        "showHeader": true,
+        "sortBy": [{"displayName": "node_ip", "desc": false}]
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "e2b_sandbox_orphan{node_ip=~\"$node_ip\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "当前孤儿沙箱清单",
+      "transformations": [
+        {"id": "organize", "options": {"excludeByName": {"Time": true, "__name__": true, "job": true, "instance": true, "Value": true}}}
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["e2b", "firecracker", "leak"],
+  "templating": {
+    "list": [
+      {
+        "current": {"selected": true, "text": "HKProdVolc", "value": "cfmlanmx6zl6od"},
+        "hide": 0,
+        "includeAll": false,
+        "label": "数据源",
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "definition": "label_values(e2b_sandbox_leak_count, node_ip)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "节点 IP",
+        "multi": true,
+        "name": "node_ip",
+        "options": [],
+        "query": {"query": "label_values(e2b_sandbox_leak_count, node_ip)", "refId": "Q"},
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {"from": "now-1h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "E2B / 沙箱泄漏检测",
+  "uid": "e2b-fc-leak",
+  "version": 2
+}
