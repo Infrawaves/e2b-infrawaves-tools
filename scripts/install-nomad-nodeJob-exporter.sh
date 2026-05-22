@@ -9,7 +9,17 @@ BINARY_NAME="nomad-nodeJob-exporter"
 SERVICE_NAME="nomad-nodeJob-exporter"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 
-echo "=== Nomad NodeJob Exporter 安装脚本 ==="
+echo "=== Nomad NodeJob Exporter 安装/升级脚本 ==="
+echo
+
+# 检测当前是 install 还是 upgrade,后续路径上有差异
+if [ -f "${INSTALL_PATH}/${BINARY_NAME}" ] || [ -f "$SERVICE_FILE" ]; then
+  MODE="upgrade"
+  echo "模式: 升级(检测到已有安装)"
+else
+  MODE="install"
+  echo "模式: 全新安装"
+fi
 echo
 
 # 1. 获取最新 Release 的下载链接
@@ -51,21 +61,30 @@ mv "$TEMP_FILE" "${INSTALL_PATH}/${BINARY_NAME}"
 echo "安装完成"
 echo
 
-# 4. 尝试从 Nomad 配置文件中获取 Token
-echo "4. 尝试获取 Nomad Token..."
+# 4. 获取 Nomad Token
+# 升级时优先保留 systemd unit 里现有的 token(可能是手动改过的);
+# 全新安装才从 nomad 配置回退读取。
+echo "4. 获取 Nomad Token..."
 NOMAD_TOKEN=""
 NOMAD_CONFIG_PATH="/opt/nomad/config/default.hcl"
 
-if [ -f "$NOMAD_CONFIG_PATH" ]; then
-  # 尝试从配置文件中提取 token
+if [ -f "$SERVICE_FILE" ]; then
+  EXISTING_TOKEN=$(grep -E '^Environment="NOMAD_TOKEN=' "$SERVICE_FILE" | sed -E 's/^Environment="NOMAD_TOKEN=([^"]*)".*/\1/')
+  if [ -n "$EXISTING_TOKEN" ]; then
+    NOMAD_TOKEN="$EXISTING_TOKEN"
+    echo "✓ 沿用 $SERVICE_FILE 中已有的 Token (长度 ${#NOMAD_TOKEN})"
+  fi
+fi
+
+if [ -z "$NOMAD_TOKEN" ] && [ -f "$NOMAD_CONFIG_PATH" ]; then
   NOMAD_TOKEN=$(grep -E '^\s*token\s*=\s*"([^"]+)"' "$NOMAD_CONFIG_PATH" | sed -E 's/^\s*token\s*=\s*"([^"]+)".*/\1/')
   if [ -n "$NOMAD_TOKEN" ]; then
     echo "✓ 从 $NOMAD_CONFIG_PATH 获取到 Token (长度 ${#NOMAD_TOKEN})"
-  else
-    echo "! 未找到 Token，请手动配置"
   fi
-else
-  echo "! 未找到 Nomad 配置文件 $NOMAD_CONFIG_PATH，请手动配置"
+fi
+
+if [ -z "$NOMAD_TOKEN" ]; then
+  echo "! 未找到 Token,请手动配置"
 fi
 echo
 
@@ -137,7 +156,12 @@ else
 fi
 
 echo
-echo "=== 安装完成 ==="
+if [ "$MODE" = "upgrade" ]; then
+  echo "=== 升级完成 ==="
+  echo "如遇问题,可回滚: sudo cp ${BACKUP_FILE:-<backup>} ${INSTALL_PATH}/${BINARY_NAME} && sudo systemctl restart $SERVICE_NAME"
+else
+  echo "=== 安装完成 ==="
+fi
 echo
 
 # 11. 检查 Token 配置

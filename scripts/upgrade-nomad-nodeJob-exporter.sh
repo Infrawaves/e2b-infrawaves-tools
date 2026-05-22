@@ -9,6 +9,7 @@ BINARY_NAME="nomad-nodeJob-exporter"
 SERVICE_NAME="nomad-nodeJob-exporter"
 
 echo "=== Nomad NodeJob Exporter 升级脚本 ==="
+echo "[提示] install 脚本已兼容升级,后续可直接使用 install-nomad-nodeJob-exporter.sh"
 echo
 
 # 1. 检查是否已安装
