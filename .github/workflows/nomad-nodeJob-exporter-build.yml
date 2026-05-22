@@ -116,6 +116,7 @@ jobs:
             ${{ steps.commits.outputs.commits }}
           draft: false
           prerelease: false
+          make_latest: "true"
           generate_release_notes: false
           overwrite_files: true
         env:
