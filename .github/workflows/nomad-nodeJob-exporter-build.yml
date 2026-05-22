@@ -98,7 +98,7 @@ jobs:
 
       - name: Update Latest Release
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'release'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: latest
           files: nomad-nodeJob-exporter/nomad-nodeJob-exporter-linux-amd64
