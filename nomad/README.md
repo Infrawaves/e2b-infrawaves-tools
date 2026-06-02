@@ -7,8 +7,12 @@
 ### 用法
 
 ```bash
-NOMAD_VAR_datacenter=prod-e2b-dc nomad job run nomad/install-nomad-nodejob-exporter.hcl
+NOMAD_VAR_datacenter=prod-e2b-dc \
+NOMAD_VAR_version_tag=$(date +%Y%m%d-%H%M) \
+  nomad job run nomad/install-nomad-nodejob-exporter.hcl
 ```
+
+⚠️ **`version_tag` 必须每次变**(建议用时间戳)。Nomad 看 job spec hash 没变就跳过已 complete 的节点 alloc,默认值 `manual` 第二次跑就不会重新调度。
 
 要带 GitHub token(防 60/h/IP 限速):
 

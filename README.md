@@ -28,6 +28,37 @@ curl -fsSL https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/mai
 
 ⚠️ `upgrade-nomad-nodeJob-exporter.sh` 已废弃,功能并入 install。脚本仍保留以兼容旧文档,首行会打印提示走 install。
 
+## 批量装机/升级(节点多时用 Nomad sysbatch)
+
+[nomad/install-nomad-nodejob-exporter.hcl](nomad/install-nomad-nodejob-exporter.hcl) 是一个 `sysbatch` job,在每个节点上跑一次上面的 install 脚本。在 nomad server 节点(如 dev gateway)上执行:
+
+```bash
+NOMAD_VAR_datacenter=prod-e2b-dc \
+NOMAD_VAR_version_tag=$(date +%Y%m%d-%H%M) \
+  nomad job run nomad/install-nomad-nodejob-exporter.hcl
+```
+
+⚠️ **`version_tag` 必须每次变**(建议用时间戳)。Nomad 判定 job spec 是否变化基于内容 hash,不变就跳过已 complete 的节点 alloc,导致升级实际没生效。
+
+按需追加变量:
+
+```bash
+NOMAD_VAR_gh_token=ghp_xxx        # 撞 GitHub API 60/h/IP 限速时
+NOMAD_VAR_node_pool=default        # 默认 default
+NOMAD_VAR_script_url=https://.../<branch>/scripts/install-nomad-nodeJob-exporter.sh   # 测分支版本时
+```
+
+只在某台节点跑,在 hcl 里 `group "install" {` 上面加 constraint:
+
+```hcl
+constraint {
+  attribute = "${node.unique.name}"
+  value     = "<node-name>"
+}
+```
+
+详细说明见 [nomad/README.md](nomad/README.md)。
+
 ## 文档
 
 - [可观测性路线图](docs/OBSERVABILITY.md) — 现有指标覆盖、与 e2b_val 内置 OTel 指标的对比、未来计划。
