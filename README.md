@@ -14,23 +14,25 @@ E2B 集群的运维与可观测性工具集。
 
 ## 一键安装 / 升级
 
-install 脚本已兼容升级:检测到现存安装时自动走升级路径,会保留 systemd unit 中已有的 `NOMAD_TOKEN`,只刷新二进制并 restart。
+install 脚本已兼容升级:检测到现存安装时自动走升级路径,会保留 systemd unit 中已有的 `NOMAD_TOKEN`,只刷新二进制并 restart。脚本默认以 root 跑(节点上本就是 root 用户)。
+
+🌍 海外节点(直连 GitHub):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/main/scripts/install-nomad-nodeJob-exporter.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/main/scripts/install-nomad-nodeJob-exporter.sh | bash
 ```
 
-> 🇨🇳 国内节点 `raw.githubusercontent.com` 拉取较慢,可改用 jsdelivr CDN(等价):
->
-> ```bash
-> curl -fsSL https://cdn.jsdelivr.net/gh/Infrawaves/e2b-infrawaves-tools@main/scripts/install-nomad-nodeJob-exporter.sh | sudo bash
-> ```
-
-批量装机/全集群同时撞 GitHub API 60/h/IP 限速时,传 `GH_TOKEN`(任意 PAT,公仓 read 权限即可)提到 5000/h:
+🇨🇳 国内节点(`raw.githubusercontent.com` 慢/不通,走 jsdelivr CDN,内容等价):
 
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/Infrawaves/e2b-infrawaves-tools@main/scripts/install-nomad-nodeJob-exporter.sh \
-  | sudo GH_TOKEN=ghp_xxx bash
+curl -fsSL https://cdn.jsdelivr.net/gh/Infrawaves/e2b-infrawaves-tools@main/scripts/install-nomad-nodeJob-exporter.sh | bash
+```
+
+批量装机/全集群同时撞 GitHub API 60/h/IP 限速时,传 `GH_TOKEN`(任意 PAT,公仓 read 权限即可)提到 5000/h。先 export 一次再用:
+
+```bash
+export GH_TOKEN=ghp_xxx
+curl -fsSL https://cdn.jsdelivr.net/gh/Infrawaves/e2b-infrawaves-tools@main/scripts/install-nomad-nodeJob-exporter.sh | bash
 ```
 
 ⚠️ `upgrade-nomad-nodeJob-exporter.sh` 已废弃,功能并入 install。脚本仍保留以兼容旧文档,首行会打印提示走 install。
