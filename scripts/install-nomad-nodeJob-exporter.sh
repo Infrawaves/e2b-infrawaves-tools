@@ -24,15 +24,30 @@ echo
 
 # 1. 获取最新 Release 的下载链接
 echo "1. 检查最新版本..."
-DOWNLOAD_URL=$(curl -s \
+AUTH_HEADER=()
+if [ -n "${GH_TOKEN:-}" ]; then
+  AUTH_HEADER=(-H "Authorization: token ${GH_TOKEN}")
+fi
+
+API_RESP=$(mktemp)
+HTTP_CODE=$(curl -s -o "$API_RESP" -w "%{http_code}" \
   -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest" |
-  jq -r --arg asset "$ASSET_NAME" '.assets[] | select(.name == $asset) | .browser_download_url')
+  "${AUTH_HEADER[@]}" \
+  "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest")
+
+DOWNLOAD_URL=$(jq -r --arg asset "$ASSET_NAME" '.assets[]? | select(.name == $asset) | .browser_download_url' < "$API_RESP")
 
 if [ -z "$DOWNLOAD_URL" ]; then
-  echo "错误: 无法获取下载链接"
+  echo "错误: 无法获取下载链接 (HTTP $HTTP_CODE)"
+  echo "----- GitHub API response -----"
+  cat "$API_RESP"
+  echo
+  echo "----- rate limit -----"
+  curl -s "${AUTH_HEADER[@]}" https://api.github.com/rate_limit | jq '.resources.core' 2>&1 || true
+  rm -f "$API_RESP"
   exit 1
 fi
+rm -f "$API_RESP"
 
 echo "下载链接: $DOWNLOAD_URL"
 echo
