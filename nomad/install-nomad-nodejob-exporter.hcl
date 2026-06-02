@@ -68,25 +68,32 @@ job "install-nomad-nodejob-exporter" {
           set -uo pipefail
           SCRIPT_URL="${var.script_url}"
           SERVICE="nomad-nodeJob-exporter"
+          : "$GH_TOKEN"   # ensure bound under set -u even if empty
 
           echo "[install] $(date -Iseconds) host=$(hostname) node_ip=$(hostname -I | awk '{print $1}')"
 
-          curl -fsSL "$SCRIPT_URL" | GH_TOKEN="$${GH_TOKEN:-}" bash
+          curl -fsSL "$SCRIPT_URL" | GH_TOKEN="$GH_TOKEN" bash
           rc=$?
 
           if [ $rc -ne 0 ]; then
             echo "[install] FAILED rc=$rc — dumping diagnostics:"
             echo "----- GitHub API rate limit -----"
-            AUTH=()
-            [ -n "$${GH_TOKEN:-}" ] && AUTH=(-H "Authorization: token $${GH_TOKEN}")
-            curl -s "$${AUTH[@]}" https://api.github.com/rate_limit 2>&1 || true
+            if [ -n "$GH_TOKEN" ]; then
+              curl -s -H "Authorization: token $GH_TOKEN" https://api.github.com/rate_limit 2>&1 || true
+            else
+              curl -s https://api.github.com/rate_limit 2>&1 || true
+            fi
             echo
             echo "----- systemctl status -----"
             systemctl status "$SERVICE" --no-pager -l 2>&1 || true
             echo "----- journalctl (last 100) -----"
             journalctl -u "$SERVICE" --no-pager -n 100 2>&1 || true
             echo "----- /metrics probe -----"
-            curl -s -o /dev/null -w "http_code=%%{http_code}\n" http://127.0.0.1:9106/metrics 2>&1 || true
+            if curl -sf -o /dev/null http://127.0.0.1:9106/metrics; then
+              echo "metrics ok"
+            else
+              echo "metrics unreachable (curl rc=$?)"
+            fi
             exit $rc
           fi
 
