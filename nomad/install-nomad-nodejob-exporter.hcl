@@ -19,8 +19,9 @@ variable "gh_token" {
 }
 
 variable "script_url" {
-  type    = string
-  default = "https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/main/scripts/install-nomad-nodeJob-exporter.sh"
+  type        = string
+  default     = "https://api.github.com/repos/Infrawaves/e2b-infrawaves-tools/contents/scripts/install-nomad-nodeJob-exporter.sh?ref=main"
+  description = "走 api.github.com 而不是 raw.githubusercontent.com,部分内网节点不通 raw"
 }
 
 job "install-nomad-nodejob-exporter" {
@@ -52,7 +53,7 @@ job "install-nomad-nodejob-exporter" {
 
       config {
         command = "/bin/bash"
-        args    = ["-c", "curl -fsSL ${var.script_url} | bash"]
+        args    = ["-c", "curl -fsSL -H 'Accept: application/vnd.github.raw' ${var.script_url} | bash"]
       }
 
       resources {
