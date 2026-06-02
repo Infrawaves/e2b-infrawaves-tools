@@ -26,6 +26,13 @@ curl -fsSL https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/mai
 > curl -fsSL https://cdn.jsdelivr.net/gh/Infrawaves/e2b-infrawaves-tools@main/scripts/install-nomad-nodeJob-exporter.sh | sudo bash
 > ```
 
+批量装机/全集群同时撞 GitHub API 60/h/IP 限速时,传 `GH_TOKEN`(任意 PAT,公仓 read 权限即可)提到 5000/h:
+
+```bash
+curl -fsSL https://cdn.jsdelivr.net/gh/Infrawaves/e2b-infrawaves-tools@main/scripts/install-nomad-nodeJob-exporter.sh \
+  | sudo GH_TOKEN=ghp_xxx bash
+```
+
 ⚠️ `upgrade-nomad-nodeJob-exporter.sh` 已废弃,功能并入 install。脚本仍保留以兼容旧文档,首行会打印提示走 install。
 
 ## 批量装机/升级(节点多时用 Nomad sysbatch)
@@ -33,9 +40,10 @@ curl -fsSL https://raw.githubusercontent.com/Infrawaves/e2b-infrawaves-tools/mai
 [nomad/install-nomad-nodejob-exporter.hcl](nomad/install-nomad-nodejob-exporter.hcl) 是一个 `sysbatch` job,在每个节点上跑一次上面的 install 脚本。在 nomad server 节点(如 dev gateway)上执行:
 
 ```bash
-NOMAD_VAR_datacenter=prod-e2b-dc \
-NOMAD_VAR_version_tag=$(date +%Y%m%d-%H%M) \
-  nomad job run nomad/install-nomad-nodejob-exporter.hcl
+nomad job run \
+  -var="datacenter=prod-e2b-dc" \
+  -var="version_tag=$(date +%Y%m%d-%H%M)" \
+  nomad/install-nomad-nodejob-exporter.hcl
 ```
 
 ⚠️ **`version_tag` 必须每次变**(建议用时间戳)。Nomad 判定 job spec 是否变化基于内容 hash,不变就跳过已 complete 的节点 alloc,导致升级实际没生效。
@@ -43,9 +51,9 @@ NOMAD_VAR_version_tag=$(date +%Y%m%d-%H%M) \
 按需追加变量:
 
 ```bash
-NOMAD_VAR_gh_token=ghp_xxx        # 撞 GitHub API 60/h/IP 限速时
-NOMAD_VAR_node_pool=default        # 默认 default
-NOMAD_VAR_script_url=https://.../<branch>/scripts/install-nomad-nodeJob-exporter.sh   # 测分支版本时
+-var="gh_token=ghp_xxx"      # 撞 GitHub API 60/h/IP 限速时
+-var="node_pool=default"      # 默认 default
+-var="script_url=https://.../<branch>/scripts/install-nomad-nodeJob-exporter.sh"   # 测分支版本时
 ```
 
 只在某台节点跑,在 hcl 里 `group "install" {` 上面加 constraint:
