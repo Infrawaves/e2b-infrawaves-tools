@@ -77,13 +77,17 @@ echo "安装完成"
 echo
 
 # 4. 获取 Nomad Token
-# 升级时优先保留 systemd unit 里现有的 token(可能是手动改过的);
-# 全新安装才从 nomad 配置回退读取。
+# 优先级:1) 显式入参 NOMAD_TOKEN (env)  2) 现有 unit 里的 token(升级路径)
+# /opt/nomad/config/default.hcl 里的 token 是 consul token,不是 nomad token,
+# 已废弃这条回退路径。
 echo "4. 获取 Nomad Token..."
+INPUT_NOMAD_TOKEN="${NOMAD_TOKEN:-}"
 NOMAD_TOKEN=""
-NOMAD_CONFIG_PATH="/opt/nomad/config/default.hcl"
 
-if [ -f "$SERVICE_FILE" ]; then
+if [ -n "$INPUT_NOMAD_TOKEN" ]; then
+  NOMAD_TOKEN="$INPUT_NOMAD_TOKEN"
+  echo "✓ 使用环境变量 NOMAD_TOKEN (长度 ${#NOMAD_TOKEN})"
+elif [ -f "$SERVICE_FILE" ]; then
   EXISTING_TOKEN=$(grep -E '^Environment="NOMAD_TOKEN=' "$SERVICE_FILE" | sed -E 's/^Environment="NOMAD_TOKEN=([^"]*)".*/\1/')
   if [ -n "$EXISTING_TOKEN" ]; then
     NOMAD_TOKEN="$EXISTING_TOKEN"
@@ -91,16 +95,26 @@ if [ -f "$SERVICE_FILE" ]; then
   fi
 fi
 
-if [ -z "$NOMAD_TOKEN" ] && [ -f "$NOMAD_CONFIG_PATH" ]; then
-  NOMAD_TOKEN=$(grep -E '^\s*token\s*=\s*"([^"]+)"' "$NOMAD_CONFIG_PATH" | sed -E 's/^\s*token\s*=\s*"([^"]+)".*/\1/')
-  if [ -n "$NOMAD_TOKEN" ]; then
-    echo "✓ 从 $NOMAD_CONFIG_PATH 获取到 Token (长度 ${#NOMAD_TOKEN})"
-  fi
+if [ -z "$NOMAD_TOKEN" ]; then
+  echo "✗ 未提供 Nomad Token。请通过环境变量传入:"
+  echo "    NOMAD_TOKEN=<your-nomad-acl-token> bash <(curl -fsSL ...)"
+  echo "  或通过 nomad sysbatch 用 -var=\"nomad_token=...\""
+  exit 1
 fi
 
-if [ -z "$NOMAD_TOKEN" ]; then
-  echo "! 未找到 Token,请手动配置"
+# 拿到 token 后立即用 nomad CLI 验证一次,token 错了 / agent 没跑 /
+# 缺 node:read 权限,这里直接拦下,不让坏 token 落到 systemd unit 里。
+if ! NOMAD_ADDR="http://127.0.0.1:4646" NOMAD_TOKEN="$NOMAD_TOKEN" \
+    nomad node status -verbose -self >/dev/null 2>&1; then
+  echo "✗ Token 验证失败:'nomad node status -verbose -self' 跑不通"
+  echo "  常见原因:NOMAD_TOKEN 无效 / 缺 node:read 权限 / 本机 nomad agent 未跑"
+  echo "  手动复现:"
+  echo "    NOMAD_ADDR=http://127.0.0.1:4646 NOMAD_TOKEN=<token> nomad node status -verbose -self"
+  echo
+  echo "  (若环境中已配置的 token 已失效,显式传入 NOMAD_TOKEN 即可覆盖刷新)"
+  exit 1
 fi
+echo "✓ Token 验证通过"
 echo
 
 # 5. 创建 systemd 服务文件
@@ -176,12 +190,4 @@ if [ "$MODE" = "upgrade" ]; then
   echo "如遇问题,可回滚: sudo cp ${BACKUP_FILE:-<backup>} ${INSTALL_PATH}/${BINARY_NAME} && sudo systemctl restart $SERVICE_NAME"
 else
   echo "=== 安装完成 ==="
-fi
-echo
-
-# 11. 检查 Token 配置
-if [ -z "$NOMAD_TOKEN" ]; then
-  echo "警告: 未找到 Nomad Token，请手动配置后重启服务:"
-  echo "  sudo sed -i 's/NOMAD_TOKEN=/NOMAD_TOKEN=<your-token>/' $SERVICE_FILE"
-  echo "  sudo systemctl restart $SERVICE_NAME"
 fi

@@ -18,6 +18,12 @@ variable "gh_token" {
   description = "Optional GitHub token to bypass api.github.com 60/h/IP rate limit"
 }
 
+variable "nomad_token" {
+  type        = string
+  default     = ""
+  description = "Nomad ACL token for the exporter to call `nomad node status -self`. 通常用 `-var=\"nomad_token=$NOMAD_TOKEN\"` 透传当前 shell 里的 token。"
+}
+
 variable "script_url" {
   type        = string
   default     = "https://api.github.com/repos/Infrawaves/e2b-infrawaves-tools/contents/scripts/install-nomad-nodeJob-exporter.sh?ref=main"
@@ -48,7 +54,8 @@ job "install-nomad-nodejob-exporter" {
       driver = "raw_exec"
 
       env {
-        GH_TOKEN = var.gh_token
+        GH_TOKEN    = var.gh_token
+        NOMAD_TOKEN = var.nomad_token
       }
 
       config {
