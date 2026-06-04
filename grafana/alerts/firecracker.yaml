@@ -123,14 +123,14 @@ groups:
 
       - alert: Firecracker 进程打开 FD 过多
         uid: e2b-fc-excess-open-fds
-        expr: e2b_fc_process_open_fds > 500
+        expr: e2b_fc_process_open_fds > 800
         for: 15m
         labels:
           severity: warning
           project: e2b
         annotations:
           summary: "节点 {{ $labels.node_ip }} 上 Firecracker {{ $labels.sandbox_id }} 打开了 {{ $value }} 个 FD"
-          description: "单个 fc 进程的打开文件描述符 > 500(正常 p99=141),很可能是 FD 泄露。pid={{ $labels.pid }}。"
+          description: "单个 fc 进程的打开文件描述符 > 800(正常 p90=141、p99≈534,基于 dev 近 14 天观测),很可能是 FD 泄露。pid={{ $labels.pid }}。"
 
       - alert: HugeTLB 池接近耗尽
         uid: e2b-node-hugepages-saturated
