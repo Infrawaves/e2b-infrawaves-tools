@@ -11,7 +11,7 @@ groups:
           project: e2b
         annotations:
           summary: "节点 {{ $labels.instance }} 上的 nomad-nodeJob-exporter 离线"
-          description: "Exporter 已 5 分钟无法访问;Firecracker 与 Allocation 视角的指标已丢失。"
+          description: "Exporter 不可达,Firecracker 与 Allocation 视角的指标已丢失。"
 
       - alert: Firecracker SandboxID 解析错误增多
         uid: e2b-fc-sandbox-id-parse-errors
@@ -43,7 +43,7 @@ groups:
           severity: warning
           project: e2b
         annotations:
-          summary: "节点 {{ $labels.node_name }} 上 Allocation {{ $labels.job_name }} CPU 占用 > 90%"
+          summary: "节点 {{ $labels.node_name }} 上 Allocation {{ $labels.job_name }} CPU 占用 {{ printf \"%.0f\" $value }}%"
 
       - alert: Allocation 内存饱和
         uid: e2b-alloc-mem-saturated
@@ -53,23 +53,23 @@ groups:
           severity: warning
           project: e2b
         annotations:
-          summary: "节点 {{ $labels.node_name }} 上 Allocation {{ $labels.job_name }} 内存占用 > 90%"
+          summary: "节点 {{ $labels.node_name }} 上 Allocation {{ $labels.job_name }} 内存占用 {{ printf \"%.0f\" $value }}%"
 
       - alert: Firecracker 进程泄露
         uid: e2b-fc-leak
         expr: e2b_sandbox_leak_count > 0 and on(node_ip) e2b_orchestrator_reachable == 1
-        for: 10m
+        for: 20m
         labels:
           severity: warning
           project: e2b
         annotations:
           summary: "节点 {{ $labels.node_ip }} 上检测到 {{ $value }} 个泄露的 Firecracker 进程"
-          description: "存在 sandbox_id 不在 orchestrator 运行列表中的 Firecracker 进程,很可能是僵死/卡住的 fc 仍占用 HugeTLB。可通过 e2b_sandbox_leak{node_ip,sandbox_id,pid} 定位待清理的目标。"
+          description: "存在 sandbox_id 不在 orchestrator 运行列表的 Firecracker 进程。"
 
       - alert: 孤儿沙箱
         uid: e2b-sandbox-orphan
         expr: e2b_sandbox_orphan_count > 0 and on(node_ip) e2b_orchestrator_reachable == 1
-        for: 10m
+        for: 20m
         labels:
           severity: warning
           project: e2b
@@ -97,7 +97,7 @@ groups:
           project: e2b
         annotations:
           summary: "节点 {{ $labels.node_name }} 上 Allocation {{ $labels.service }} 抖动(15 分钟内重启 {{ $value }} 次)"
-          description: "Allocation 的 up/down 状态在 15 分钟内变化超过 4 次,虽未严格 DOWN 但已不稳定 —— 请排查日志。"
+          description: "Allocation 的 up/down 状态在 15 分钟内变化 > 4 次,处于不稳定状态。"
 
       - alert: 集群 Firecracker 进程数为零
         uid: e2b-cluster-fc-zero
@@ -113,7 +113,7 @@ groups:
       - alert: Firecracker 进程线程数过多
         uid: e2b-fc-excess-threads
         expr: e2b_fc_process_threads > 30
-        for: 5m
+        for: 15m
         labels:
           severity: warning
           project: e2b
@@ -124,7 +124,7 @@ groups:
       - alert: Firecracker 进程打开 FD 过多
         uid: e2b-fc-excess-open-fds
         expr: e2b_fc_process_open_fds > 500
-        for: 5m
+        for: 15m
         labels:
           severity: warning
           project: e2b
@@ -152,7 +152,7 @@ groups:
           project: e2b
         annotations:
           summary: "节点 {{ $labels.node_ip }} 路径 {{ $labels.path }} 磁盘使用率 > 90%"
-          description: "持续超过 90% 已 10 分钟,沙箱启动可能出现 ENOSPC。"
+          description: "磁盘使用率持续 > 90%,沙箱启动可能出现 ENOSPC。"
 
       - alert: 沙箱超过声明的 TTL
         uid: e2b-sandbox-overrun
@@ -163,23 +163,23 @@ groups:
           project: e2b
         annotations:
           summary: "沙箱 {{ $labels.sandbox_id }} 已超 max_sandbox_length {{ $value }}s"
-          description: "沙箱运行已超过 SandboxConfig.max_sandbox_length 声明的上限,通常意味着客户端持续 keepalive 或 orchestrator TTL 清理失败。node={{ $labels.node_ip }}。"
+          description: "沙箱运行已超过 max_sandbox_length 声明的上限,通常是客户端持续 keepalive 或 TTL 清理失败。node={{ $labels.node_ip }}。"
 
-      - alert: 沙箱存活异常长(>4h)
+      - alert: 沙箱存活异常长(>20h)
         uid: e2b-sandbox-too-old
-        expr: e2b_sandbox_age_seconds > 4 * 3600
+        expr: e2b_sandbox_age_seconds > 20 * 3600
         for: 5m
         labels:
           severity: info
           project: e2b
         annotations:
-          summary: "沙箱 {{ $labels.sandbox_id }} 存活已 {{ $value }}s(> 4 小时)"
-          description: "存活时间异常长。node={{ $labels.node_ip }}。如果业务允许长跑,可调大此告警阈值或加 team_id 白名单。"
+          summary: "沙箱 {{ $labels.sandbox_id }} 存活已 {{ $value }}s(> 20 小时)"
+          description: "沙箱存活时间已超过 20 小时阈值(上限 24h)。node={{ $labels.node_ip }}。"
 
       - alert: Firecracker 出现僵尸进程
         uid: e2b-fc-zombie
         expr: e2b_fc_process_state_count{state="Z"} > 0
-        for: 5m
+        for: 15m
         labels:
           severity: warning
           project: e2b
@@ -190,13 +190,13 @@ groups:
       - alert: Firecracker 卡内核 IO
         uid: e2b-fc-uninterruptible
         expr: e2b_fc_process_state_count{state="D"} > 0
-        for: 5m
+        for: 15m
         labels:
           severity: warning
           project: e2b
         annotations:
           summary: "节点 {{ $labels.node_ip }} 出现 {{ $value }} 个 D 状态 firecracker"
-          description: "fc 进程在 uninterruptible disk sleep,通常是底层 IO(NFS / 磁盘)阻塞,kill -9 也杀不掉。"
+          description: "fc 进程在 uninterruptible disk sleep,通常是底层 IO(NFS / 磁盘)阻塞。"
 
       - alert: Orchestrator List gRPC 慢
         uid: e2b-orchestrator-list-slow
