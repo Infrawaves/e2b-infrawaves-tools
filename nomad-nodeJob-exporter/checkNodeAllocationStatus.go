@@ -197,7 +197,7 @@ func checkRequiredServices() (map[string]*AllocationInfo, error) {
 	if nodeInfo.Meta["role"] == "orchestrator" {
 		// 早期版本同样含日志栈,已精简
 		// requiredServices := []string{"client-orchestrator", "otel-collector", "logs-collector", "loki-service"}
-		requiredServices := []string{"client-orchestrator", "otel-collector"}
+		requiredServices := []string{"otel-collector"}
 		for _, service := range requiredServices {
 			if alloc, exists := allocations[service]; exists {
 				services[service] = alloc
