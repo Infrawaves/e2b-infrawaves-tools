@@ -38,7 +38,7 @@ var (
 			Name: "e2b_fc_process_info",
 			Help: "Process info mapping (value is always 1)",
 		},
-		[]string{"node_ip", "sandbox_id", "pid"},
+		[]string{"node_ip", "sandbox_id", "pid", "vm_kind"},
 	)
 
 	// e2b_fc_process_memory_rss_bytes:进程常驻内存(RSS)字节数
@@ -50,7 +50,7 @@ var (
 			Name: "e2b_fc_process_memory_rss_bytes",
 			Help: "Process resident set size in bytes. Note: In Hugepages-enabled Firecracker environments, this is typically 0 as Hugepages are not counted in standard VmRSS statistics",
 		},
-		[]string{"node_ip", "sandbox_id", "pid"},
+		[]string{"node_ip", "sandbox_id", "pid", "vm_kind"},
 	)
 
 	// e2b_fc_process_memory_vsize_bytes:进程虚拟内存(VmSize)字节数
@@ -61,7 +61,7 @@ var (
 			Name: "e2b_fc_process_memory_vsize_bytes",
 			Help: "Process virtual memory size in bytes. In Hugepages-enabled Firecracker environments, this represents the actual memory allocation as RSS is unavailable",
 		},
-		[]string{"node_ip", "sandbox_id", "pid"},
+		[]string{"node_ip", "sandbox_id", "pid", "vm_kind"},
 	)
 
 	// e2b_fc_process_memory_hugetlb_bytes:HugeTLB 内存字节数
@@ -71,7 +71,7 @@ var (
 			Name: "e2b_fc_process_memory_hugetlb_bytes",
 			Help: "Process HugeTLB memory size in bytes. Represents physical memory allocated through Hugepages, which is not counted in standard VmRSS statistics",
 		},
-		[]string{"node_ip", "sandbox_id", "pid"},
+		[]string{"node_ip", "sandbox_id", "pid", "vm_kind"},
 	)
 
 	// e2b_fc_process_cpu_seconds_total:CPU 累计时间(秒)
@@ -80,7 +80,7 @@ var (
 			Name: "e2b_fc_process_cpu_seconds_total",
 			Help: "Process cumulative CPU time in seconds",
 		},
-		[]string{"node_ip", "sandbox_id", "pid", "mode"},
+		[]string{"node_ip", "sandbox_id", "pid", "vm_kind", "mode"},
 	)
 
 	// e2b_fc_process_uptime_seconds:进程已运行时长(秒)
@@ -89,7 +89,7 @@ var (
 			Name: "e2b_fc_process_uptime_seconds",
 			Help: "Process uptime in seconds",
 		},
-		[]string{"node_ip", "sandbox_id", "pid"},
+		[]string{"node_ip", "sandbox_id", "pid", "vm_kind"},
 	)
 
 	// e2b_fc_process_threads:线程数
@@ -98,7 +98,7 @@ var (
 			Name: "e2b_fc_process_threads",
 			Help: "Process thread count",
 		},
-		[]string{"node_ip", "sandbox_id", "pid"},
+		[]string{"node_ip", "sandbox_id", "pid", "vm_kind"},
 	)
 
 	// e2b_fc_process_open_fds:已打开文件描述符数
@@ -107,7 +107,7 @@ var (
 			Name: "e2b_fc_process_open_fds",
 			Help: "Process open file descriptor count",
 		},
-		[]string{"node_ip", "sandbox_id", "pid"},
+		[]string{"node_ip", "sandbox_id", "pid", "vm_kind"},
 	)
 
 	// e2b_fc_process_io_bytes_total:I/O 字节累计
@@ -116,7 +116,7 @@ var (
 			Name: "e2b_fc_process_io_bytes_total",
 			Help: "Process cumulative I/O bytes",
 		},
-		[]string{"node_ip", "sandbox_id", "pid", "operation"},
+		[]string{"node_ip", "sandbox_id", "pid", "vm_kind", "operation"},
 	)
 
 	// e2b_fc_process_io_ops_total:I/O 次数累计
@@ -125,7 +125,7 @@ var (
 			Name: "e2b_fc_process_io_ops_total",
 			Help: "Process cumulative I/O operations",
 		},
-		[]string{"node_ip", "sandbox_id", "pid", "operation"},
+		[]string{"node_ip", "sandbox_id", "pid", "vm_kind", "operation"},
 	)
 
 	// e2b_fc_process_context_switches_total:上下文切换累计
@@ -134,7 +134,7 @@ var (
 			Name: "e2b_fc_process_context_switches_total",
 			Help: "Process cumulative context switches",
 		},
-		[]string{"node_ip", "sandbox_id", "pid", "type"},
+		[]string{"node_ip", "sandbox_id", "pid", "vm_kind", "type"},
 	)
 
 	// e2b_fc_process_state_count:按 Linux 进程状态聚合 fc 进程数。
@@ -565,6 +565,14 @@ func updateFirecrackerMetrics() (string, map[string][]string) {
 			continue
 		}
 
+		// 按 sandbox_id 前缀区分 build VM 与 instance VM(与 leak 检测同一判据)。
+		// build VM 起真实 fc 但不进 orchestrator List,用 vm_kind 让 CPU/内存/FD/线程/
+		// 存活时长等进程指标能按 build vs instance 拆分(issue #12)。
+		vmKind := "instance"
+		if strings.HasPrefix(sandboxID, buildSandboxPrefix) {
+			vmKind = "build"
+		}
+
 		// 解析 /proc/[pid]/stat:CPU 时间和 uptime
 		userTime, systemTime, uptime, vsize, err := parseStat(pid)
 		if err != nil {
@@ -599,21 +607,21 @@ func updateFirecrackerMetrics() (string, map[string][]string) {
 		}
 
 		// 更新指标
-		e2bFcProcessInfo.WithLabelValues(nodeIP, sandboxID, pid).Set(1)
-		e2bFcProcessMemoryRssBytes.WithLabelValues(nodeIP, sandboxID, pid).Set(float64(rssBytes))
-		e2bFcProcessMemoryVsizeBytes.WithLabelValues(nodeIP, sandboxID, pid).Set(vsize)
-		e2bFcProcessMemoryHugetlbBytes.WithLabelValues(nodeIP, sandboxID, pid).Set(hugetlbPages)
-		e2bFcProcessCpuSecondsTotal.WithLabelValues(nodeIP, sandboxID, pid, "user").Set(userTime)
-		e2bFcProcessCpuSecondsTotal.WithLabelValues(nodeIP, sandboxID, pid, "system").Set(systemTime)
-		e2bFcProcessUptimeSeconds.WithLabelValues(nodeIP, sandboxID, pid).Set(uptime)
-		e2bFcProcessThreads.WithLabelValues(nodeIP, sandboxID, pid).Set(float64(threads))
-		e2bFcProcessOpenFds.WithLabelValues(nodeIP, sandboxID, pid).Set(float64(openFds))
-		e2bFcProcessIoBytesTotal.WithLabelValues(nodeIP, sandboxID, pid, "read").Set(readBytes)
-		e2bFcProcessIoBytesTotal.WithLabelValues(nodeIP, sandboxID, pid, "write").Set(writeBytes)
-		e2bFcProcessIoOpsTotal.WithLabelValues(nodeIP, sandboxID, pid, "read").Set(readCount)
-		e2bFcProcessIoOpsTotal.WithLabelValues(nodeIP, sandboxID, pid, "write").Set(writeCount)
-		e2bFcProcessContextSwitchesTotal.WithLabelValues(nodeIP, sandboxID, pid, "voluntary").Set(voluntarySwitches)
-		e2bFcProcessContextSwitchesTotal.WithLabelValues(nodeIP, sandboxID, pid, "involuntary").Set(involuntarySwitches)
+		e2bFcProcessInfo.WithLabelValues(nodeIP, sandboxID, pid, vmKind).Set(1)
+		e2bFcProcessMemoryRssBytes.WithLabelValues(nodeIP, sandboxID, pid, vmKind).Set(float64(rssBytes))
+		e2bFcProcessMemoryVsizeBytes.WithLabelValues(nodeIP, sandboxID, pid, vmKind).Set(vsize)
+		e2bFcProcessMemoryHugetlbBytes.WithLabelValues(nodeIP, sandboxID, pid, vmKind).Set(hugetlbPages)
+		e2bFcProcessCpuSecondsTotal.WithLabelValues(nodeIP, sandboxID, pid, vmKind, "user").Set(userTime)
+		e2bFcProcessCpuSecondsTotal.WithLabelValues(nodeIP, sandboxID, pid, vmKind, "system").Set(systemTime)
+		e2bFcProcessUptimeSeconds.WithLabelValues(nodeIP, sandboxID, pid, vmKind).Set(uptime)
+		e2bFcProcessThreads.WithLabelValues(nodeIP, sandboxID, pid, vmKind).Set(float64(threads))
+		e2bFcProcessOpenFds.WithLabelValues(nodeIP, sandboxID, pid, vmKind).Set(float64(openFds))
+		e2bFcProcessIoBytesTotal.WithLabelValues(nodeIP, sandboxID, pid, vmKind, "read").Set(readBytes)
+		e2bFcProcessIoBytesTotal.WithLabelValues(nodeIP, sandboxID, pid, vmKind, "write").Set(writeBytes)
+		e2bFcProcessIoOpsTotal.WithLabelValues(nodeIP, sandboxID, pid, vmKind, "read").Set(readCount)
+		e2bFcProcessIoOpsTotal.WithLabelValues(nodeIP, sandboxID, pid, vmKind, "write").Set(writeCount)
+		e2bFcProcessContextSwitchesTotal.WithLabelValues(nodeIP, sandboxID, pid, vmKind, "voluntary").Set(voluntarySwitches)
+		e2bFcProcessContextSwitchesTotal.WithLabelValues(nodeIP, sandboxID, pid, vmKind, "involuntary").Set(involuntarySwitches)
 
 		sandboxToPIDs[sandboxID] = append(sandboxToPIDs[sandboxID], pid)
 		stateCounts[parseProcState(pid)]++
