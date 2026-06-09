@@ -123,14 +123,14 @@ groups:
 
       - alert: Firecracker 进程打开 FD 过多
         uid: e2b-fc-excess-open-fds
-        expr: e2b_fc_process_open_fds > 500
+        expr: e2b_fc_process_open_fds > 1300
         for: 15m
         labels:
           severity: warning
           project: e2b
         annotations:
           summary: "节点 {{ $labels.node_ip }} 上 Firecracker {{ $labels.sandbox_id }} 打开了 {{ $value }} 个 FD"
-          description: "单个 fc 进程的打开文件描述符 > 500(正常 p99=141),很可能是 FD 泄露。pid={{ $labels.pid }}。"
+          description: "单个 fc 进程的打开文件描述符 > 1300(hkprod 5000+ 沙箱满载实测 p90≈805、p99≈1000、max≈1081;FD 随节点负载近线性增长,1300 取 fleet 天花板之上),很可能是 FD 泄露。pid={{ $labels.pid }}。"
 
       - alert: Build VM 存活异常长(疑似卡死)
         uid: e2b-build-vm-stuck
