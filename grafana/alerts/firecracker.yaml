@@ -132,6 +132,17 @@ groups:
           summary: "节点 {{ $labels.node_ip }} 上 Firecracker {{ $labels.sandbox_id }} 打开了 {{ $value }} 个 FD"
           description: "单个 fc 进程的打开文件描述符 > 1300(hkprod 5000+ 沙箱满载实测 p90≈805、p99≈1000、max≈1081;FD 随节点负载近线性增长,1300 取 fleet 天花板之上),很可能是 FD 泄露。pid={{ $labels.pid }}。"
 
+      - alert: Build VM 存活异常长(疑似卡死)
+        uid: e2b-build-vm-stuck
+        expr: e2b_fc_process_uptime_seconds{vm_kind="build"} > 7200
+        for: 15m
+        labels:
+          severity: warning
+          project: e2b
+        annotations:
+          summary: "节点 {{ $labels.node_ip }} 上 build VM {{ $labels.sandbox_id }} 已存活 {{ $value }}s(> 2h)"
+          description: "template build 的 firecracker VM 正常分钟级完成,存活 > 2h 极可能是构建卡死或未清理(build VM 不进 orchestrator List,不会被 leak/TTL 逻辑回收)。阈值 7200s 为保守占位,待 hkprod 实测 build 时长分位数后收紧。pid={{ $labels.pid }}。"
+
       - alert: HugeTLB 池接近耗尽
         uid: e2b-node-hugepages-saturated
         expr: (e2b_node_hugepages_total - e2b_node_hugepages_free) / e2b_node_hugepages_total > 0.9 and e2b_node_hugepages_total > 0

@@ -31,6 +31,9 @@
 | `node_ip` | string | 裸金属宿主机 IP 地址 | `10.0.0.1` |
 | `sandbox_id` | string | 从进程启动参数提取的业务标识 | `dddklj7hkiqc8biw6ezy` |
 | `pid` | int | 宿主机上的真实进程 ID | `12345` |
+| `vm_kind` | string | 按 `sandbox_id` 前缀区分:`build`(template build VM,前缀 `b`)/ `instance`(用户沙箱,前缀 `i`) | `instance` |
+
+> `vm_kind` 让 CPU/内存/FD/线程/存活时长等**所有 per-process 指标**都能按 build vs instance 拆分(issue #12)。build VM 不进 orchestrator List、不会被 leak/TTL 回收,因此其卡死要靠 `e2b_fc_process_uptime_seconds{vm_kind="build"}` 异常长来发现(见告警 `e2b-build-vm-stuck`)。节点级聚合指标(`e2b_fc_process_count` / `_parse_errors_total` / `_state_count`)不带 `vm_kind`。下文各指标"标签"行未逐一重复 `vm_kind`,以本表为准。
 
 ## 指标定义
 

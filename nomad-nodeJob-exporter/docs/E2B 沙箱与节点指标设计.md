@@ -60,10 +60,14 @@
 |------|-----|
 | 类型 | Gauge |
 | 标签 | `_count`: `node_ip`；`leak`: `node_ip`, `sandbox_id`, `pid` |
-| 说明 | A \ B：fc 进程在但 orchestrator 不再管理。**这些进程占着 HugeTLB / vCPU，是真正的资源泄露。** |
-| 示例 | `e2b_sandbox_leak{node_ip="10.0.0.1",sandbox_id="...",pid="12345"} 1` |
+| 说明 | A \ B **中剔除 build 前缀后**的部分:`i-` 等用户沙箱 fc 进程在但 orchestrator 不再管理。**这些进程占着 HugeTLB / vCPU，是真正的资源泄露。** |
+| 示例 | `e2b_sandbox_leak{node_ip="10.0.0.1",sandbox_id="i...",pid="12345"} 1` |
 
 **为什么需要 per-pid 标签**：定位时直接 `kill <pid>` 即可，不必 SSH 上去再 `pgrep`。`_count` 用于告警阈值，`leak` 用于钻取细节。
+
+> **build VM 不算泄露,也不单独建计数指标**:template build 的 fc VM 的 sandbox_id 以 build 前缀(上游 `InstanceBuildPrefix="b"`)开头,起真实 fc 但走 template-manager 构建路径、不进 `SandboxService.List`,因此永远落在 A\B 里。早期版本把它们误判为泄露(全 `b-`、高速轮换、不累积、orphan 恒 0,见 issue #12),现已从 leak 中剔除。
+>
+> build 的可见性靠 per-process 的 `e2b_fc_process_*{vm_kind="build"}`(见下文 firecracker 进程指标)。**不单独出 build 计数/卡死指标**,因为:① build sandbox_id 高速轮换(一次 build 顺序起多个 `b-` 沙箱;issue #12 实测 30min 内 505 个不同 id、任一时刻仅约 10 个),瞬时数 ≠ build 任务数;② build fc 生命周期短,周期 scrape 采样混叠、严重低估。需要瞬时数用 `count(e2b_fc_process_info{vm_kind="build"})`(理解其为快照、会低估);卡死用 `e2b_fc_process_uptime_seconds{vm_kind="build"}` 在告警 `e2b-build-vm-stuck` 判阈值(阈值留 yaml)。要**可靠**的 build 活跃度/任务数需从 template-manager 取,见 issue #13。
 
 ### 3. `e2b_sandbox_orphan_count` / `e2b_sandbox_orphan`
 

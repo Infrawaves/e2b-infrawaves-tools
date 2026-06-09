@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -22,6 +23,12 @@ import (
 //   leak  = A \ B  → fc 进程存在,但 orchestrator 不知道(僵尸 fc,占资源)
 //   orphan = B \ A  → orchestrator 认为有沙箱,但找不到 fc(状态不一致)
 //   一致  = A ∩ B
+//
+// 例外:template build 的 firecracker VM(sandbox_id 以 InstanceBuildPrefix "b" 开头)
+// 起真实 fc、socket 命名与用户沙箱相同,但走 template-manager 构建路径、不进
+// SandboxService.List,因此永远落在 A\B 里。这类不是泄露,从 leak 中剔除(见 issue #12)。
+// build VM 的可见性靠 e2b_fc_process_*{vm_kind="build"}(checkFirecracker.go);卡死用
+// e2b_fc_process_uptime_seconds{vm_kind="build"} 在告警侧判,不在 exporter 预聚合。
 //
 // gRPC 直接连本机 orchestrator(默认 127.0.0.1:9090),无 auth。
 // 不依赖 protoc 工具链:用 raw codec 直接发空 message,然后用 protowire 手工解析响应中
@@ -119,6 +126,12 @@ const (
 	defaultOrchestratorAddr = "127.0.0.1:9090"
 	orchestratorListMethod  = "/SandboxService/List"
 	orchestratorListTimeout = 3 * time.Second
+
+	// buildSandboxPrefix 是 template build 沙箱 ID 的前缀,对应上游 e2b-dev/infra 的
+	// InstanceBuildPrefix("b",见 orchestrator/pkg/template/build/config)。
+	// 用户沙箱用 InstanceIDPrefix("i")。build VM 起真实 fc 但不进 SandboxService.List,
+	// 故 leak 检测按此前缀剔除(issue #12)。
+	buildSandboxPrefix = "b"
 
 	// Wire-format 字段编号。已与 e2b-dev/infra 仓库的 orchestrator.proto
 	// 以及 Nomad 任务定义 orchestrator.hcl(port "grpc" { static = 9090 },
@@ -230,10 +243,16 @@ func checkSandboxLeak(nodeIP string, fcSandboxes map[string][]string) {
 		}
 	}
 
-	var leakN, orphanN, consistentN int
+	var leakN, orphanN, consistentN, buildN int
 	for sbxID, pids := range fcSandboxes {
 		if _, ok := orchestratorIDs[sbxID]; ok {
 			consistentN++
+			continue
+		}
+		// build VM(build 前缀)永远不在 orchestrator List 中,属预期而非泄露,
+		// 单独计数后跳过,避免 leak=A\B 的系统性误报(issue #12)。
+		if strings.HasPrefix(sbxID, buildSandboxPrefix) {
+			buildN++
 			continue
 		}
 		leakN++
@@ -254,9 +273,10 @@ func checkSandboxLeak(nodeIP string, fcSandboxes map[string][]string) {
 	sandboxLeakCount.WithLabelValues(nodeIP).Set(float64(leakN))
 	sandboxOrphanCount.WithLabelValues(nodeIP).Set(float64(orphanN))
 	sandboxConsistentCount.WithLabelValues(nodeIP).Set(float64(consistentN))
+	// buildN 仅作 leak 视角的日志旁证(本轮被识别为 build 而从 leak 剔除的数)。
 
-	log.Printf("Sandbox leak summary: consistent=%d leak=%d orphan=%d (orchestrator=%d, fc=%d) list_rtt=%.3fs",
-		consistentN, leakN, orphanN, len(orchestratorIDs), len(fcSandboxes), dur)
+	log.Printf("Sandbox leak summary: consistent=%d leak=%d orphan=%d build=%d (orchestrator=%d, fc=%d) list_rtt=%.3fs",
+		consistentN, leakN, orphanN, buildN, len(orchestratorIDs), len(fcSandboxes), dur)
 }
 
 func listOrchestratorSandboxes(addr string) ([]runningSandbox, error) {
