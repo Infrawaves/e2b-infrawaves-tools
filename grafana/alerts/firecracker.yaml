@@ -167,11 +167,7 @@ groups:
 
       - alert: 沙箱超过声明的 TTL
         uid: e2b-sandbox-overrun
-        expr: |
-          count by (team_id) (
-            (e2b_sandbox_overrun_seconds > 0)
-            * on(node_ip, sandbox_id) group_left(team_id) e2b_sandbox_info
-          ) >= 1
+        expr: count by (team_id) ((e2b_sandbox_overrun_seconds > 0) * on(node_ip, sandbox_id) group_left(team_id) e2b_sandbox_info) >= 1
         for: 5m
         labels:
           severity: warning
@@ -182,11 +178,7 @@ groups:
 
       - alert: 沙箱存活异常长(>20h)
         uid: e2b-sandbox-too-old
-        expr: |
-          count by (team_id) (
-            (e2b_sandbox_age_seconds > 20 * 3600)
-            * on(node_ip, sandbox_id) group_left(team_id) e2b_sandbox_info
-          ) >= 1
+        expr: count by (team_id) ((e2b_sandbox_age_seconds > 20 * 3600) * on(node_ip, sandbox_id) group_left(team_id) e2b_sandbox_info) >= 1
         for: 5m
         labels:
           severity: info
