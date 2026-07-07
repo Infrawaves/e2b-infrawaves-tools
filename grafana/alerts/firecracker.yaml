@@ -37,13 +37,13 @@ groups:
 
       - alert: Allocation CPU 饱和
         uid: e2b-alloc-cpu-saturated
-        expr: nomad_allocation_cpu_usage_percentage > 90
-        for: 10m
+        expr: nomad_allocation_cpu_usage_percentage > 10000
+        for: 30m
         labels:
           severity: warning
           project: e2b
         annotations:
-          summary: "节点 {{ $labels.node_name }} 上 Allocation {{ $labels.job_name }} CPU 占用 {{ printf \"%.0f\" $value }}%"
+          summary: '节点 {{ $labels.node_name }} 上 Allocation {{ $labels.job_name }} CPU 占用 {{ printf "%.0f" $value }}%'
 
       - alert: Allocation 内存饱和
         uid: e2b-alloc-mem-saturated
@@ -53,7 +53,7 @@ groups:
           severity: warning
           project: e2b
         annotations:
-          summary: "节点 {{ $labels.node_name }} 上 Allocation {{ $labels.job_name }} 内存占用 {{ printf \"%.0f\" $value }}%"
+          summary: '节点 {{ $labels.node_name }} 上 Allocation {{ $labels.job_name }} 内存占用 {{ printf "%.0f" $value }}%'
 
       - alert: Firecracker 进程泄露
         uid: e2b-fc-leak
@@ -134,14 +134,14 @@ groups:
 
       - alert: Build VM 存活异常长(疑似卡死)
         uid: e2b-build-vm-stuck
-        expr: e2b_fc_process_uptime_seconds{vm_kind="build"} > 7200
+        expr: max by (node_ip) (e2b_fc_process_uptime_seconds{vm_kind="build"} > 7200) > 0
         for: 15m
         labels:
           severity: warning
           project: e2b
         annotations:
-          summary: "节点 {{ $labels.node_ip }} 上 build VM {{ $labels.sandbox_id }} 已存活 {{ $value }}s(> 2h)"
-          description: "template build 的 firecracker VM 正常分钟级完成,存活 > 2h 极可能是构建卡死或未清理(build VM 不进 orchestrator List,不会被 leak/TTL 逻辑回收)。阈值 7200s 为保守占位,待 hkprod 实测 build 时长分位数后收紧。pid={{ $labels.pid }}。"
+          summary: '节点 {{ $labels.node_ip }} 上 build VM 最长存活 {{ printf "%.0f" $values.B.Value }}s (≈{{ printf "%.1f" (divf $values.B.Value 3600) }}h)'
+          description: "节点存在 build VM 存活超过 2h(template build 正常分钟级完成,通常是构建卡死或未清理;build VM 不进 orchestrator List,不会被 leak/TTL 逻辑回收)。逐 sandbox 明细在 dashboard 按 node_ip 过滤下钻。阈值 7200s 为保守占位,待 hkprod 实测 build 时长分位数后收紧。"
 
       - alert: HugeTLB 池接近耗尽
         uid: e2b-node-hugepages-saturated
@@ -167,25 +167,25 @@ groups:
 
       - alert: 沙箱超过声明的 TTL
         uid: e2b-sandbox-overrun
-        expr: e2b_sandbox_overrun_seconds > 0
+        expr: count by (team_id) ((e2b_sandbox_overrun_seconds > 0) * on(node_ip, sandbox_id) group_left(team_id) e2b_sandbox_info) >= 1
         for: 5m
         labels:
           severity: warning
           project: e2b
         annotations:
-          summary: "沙箱 {{ $labels.sandbox_id }} 已超 max_sandbox_length {{ $value }}s"
-          description: "沙箱运行已超过 max_sandbox_length 声明的上限,通常是客户端持续 keepalive 或 TTL 清理失败。node={{ $labels.node_ip }}。"
+          summary: "team {{ $labels.team_id }}: {{ $value }} 个沙箱超过 max_sandbox_length"
+          description: "该 team 当前有 {{ $value }} 个沙箱已超过声明的 TTL,通常是客户端持续 keepalive 或 TTL 清理失败。逐 sandbox 明细在 dashboard 按 team_id 过滤下钻。"
 
       - alert: 沙箱存活异常长(>20h)
         uid: e2b-sandbox-too-old
-        expr: e2b_sandbox_age_seconds > 20 * 3600
+        expr: count by (team_id) ((e2b_sandbox_age_seconds > 20 * 3600) * on(node_ip, sandbox_id) group_left(team_id) e2b_sandbox_info) >= 1
         for: 5m
         labels:
           severity: info
           project: e2b
         annotations:
-          summary: "沙箱 {{ $labels.sandbox_id }} 存活已 {{ $value }}s(> 20 小时)"
-          description: "沙箱存活时间已超过 20 小时阈值(上限 24h)。node={{ $labels.node_ip }}。"
+          summary: "team {{ $labels.team_id }}: {{ $value }} 个沙箱存活 > 20h"
+          description: "该 team 当前有 {{ $value }} 个沙箱存活超过 20 小时(上限 24h)。逐 sandbox 明细在 dashboard 按 team_id 过滤下钻。"
 
       - alert: Firecracker 出现僵尸进程
         uid: e2b-fc-zombie

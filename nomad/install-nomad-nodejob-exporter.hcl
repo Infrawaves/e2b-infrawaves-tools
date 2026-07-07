@@ -60,7 +60,7 @@ job "install-nomad-nodejob-exporter" {
 
       config {
         command = "/bin/bash"
-        args    = ["-c", "curl -fsSL -H 'Accept: application/vnd.github.raw' ${var.script_url} | bash"]
+        args    = ["-c", "A=(); [ -n \"$GH_TOKEN\" ] && A=(-H \"Authorization: token $GH_TOKEN\"); curl -fsSL \"$${A[@]}\" -H 'Accept: application/vnd.github.raw' -o /tmp/install-nnje.sh \"${var.script_url}\" && bash /tmp/install-nnje.sh"]
       }
 
       resources {
