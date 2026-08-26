@@ -214,7 +214,7 @@ func checkRequiredServices() (map[string]*AllocationInfo, error) {
 
 	// template-manager role 必需服务
 	if nodeInfo.Meta["templaterole"] == "template-manager" {
-		requiredServices := []string{"template-manager"}
+		requiredServices := []string{"template-manager", "otel-collector"}
 		for _, service := range requiredServices {
 			if alloc, exists := allocations[service]; exists {
 				services[service] = alloc
