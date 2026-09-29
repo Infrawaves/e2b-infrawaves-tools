@@ -162,4 +162,6 @@ func updateHostMetrics(nodeIP string) {
 	}
 	updateHugepagesMetrics(nodeIP)
 	updateDiskMetrics(nodeIP)
+	updateNodeCPUMetrics(nodeIP)
+	updateOrchestratorCgroupMetrics(nodeIP)
 }

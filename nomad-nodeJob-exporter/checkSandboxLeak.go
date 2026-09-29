@@ -216,6 +216,10 @@ func checkSandboxLeak(nodeIP string, fcSandboxes map[string][]string) {
 	orchestratorReachable.WithLabelValues(nodeIP).Set(1)
 	orchestratorListDurationSeconds.WithLabelValues(nodeIP).Set(dur)
 
+	// 缓存本轮沙箱快照,供 OOM 爆炸半径计算使用(OOM 检测在本函数之前执行,
+	// 用上一轮快照即 OOM 发生前一刻该节点承载的沙箱,语义正确)。
+	cacheSandboxSnapshot(sandboxes)
+
 	// 建 sandbox_id → record 索引,顺便发布 per-sandbox info。
 	now := time.Now().Unix()
 	orchestratorIDs := make(map[string]struct{}, len(sandboxes))
