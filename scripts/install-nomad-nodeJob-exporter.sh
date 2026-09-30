@@ -117,8 +117,35 @@ fi
 echo "✓ Token 验证通过"
 echo
 
+# 4b. PG 连通性探测目标(可选)
+# 优先级:1) 显式入参 PG_CONNECTIVITY_TARGETS (env)  2) 现有 unit 里的值(升级沿用)
+# 格式:逗号分隔的 "name=host:port",例如:
+#   PG_CONNECTIVITY_TARGETS="direct=db.xxxx.supabase.co:5432,pooler=aws-1-ap-northeast-1.pooler.supabase.com:5432"
+# 纯 TCP 拨号探测,不需要任何用户名/密码;未设置时该采集器静默跳过,不影响其他指标。
+INPUT_PG_TARGETS="${PG_CONNECTIVITY_TARGETS:-}"
+PG_CONNECTIVITY_TARGETS=""
+if [ -n "$INPUT_PG_TARGETS" ]; then
+  PG_CONNECTIVITY_TARGETS="$INPUT_PG_TARGETS"
+  echo "✓ 使用环境变量 PG_CONNECTIVITY_TARGETS: $PG_CONNECTIVITY_TARGETS"
+elif [ -f "$SERVICE_FILE" ]; then
+  EXISTING_PG_TARGETS=$(grep -E '^Environment="PG_CONNECTIVITY_TARGETS=' "$SERVICE_FILE" | sed -E 's/^Environment="PG_CONNECTIVITY_TARGETS=([^"]*)".*/\1/')
+  if [ -n "$EXISTING_PG_TARGETS" ]; then
+    PG_CONNECTIVITY_TARGETS="$EXISTING_PG_TARGETS"
+    echo "✓ 沿用 $SERVICE_FILE 中已有的 PG_CONNECTIVITY_TARGETS: $PG_CONNECTIVITY_TARGETS"
+  fi
+fi
+if [ -z "$PG_CONNECTIVITY_TARGETS" ]; then
+  echo "ℹ 未设置 PG_CONNECTIVITY_TARGETS,PG 连通性探测将跳过(不影响其他指标)"
+fi
+echo
+
 # 5. 创建 systemd 服务文件
 echo "5. 配置 systemd 服务..."
+# 仅在设置了 PG 探测目标时才注入该 Environment 行,避免写入空值。
+PG_TARGETS_ENV_LINE=""
+if [ -n "$PG_CONNECTIVITY_TARGETS" ]; then
+  PG_TARGETS_ENV_LINE="Environment=\"PG_CONNECTIVITY_TARGETS=$PG_CONNECTIVITY_TARGETS\""
+fi
 cat > "$SERVICE_FILE" <<EOF
 [Unit]
 Description=Nomad Service Exporter
@@ -135,6 +162,7 @@ WorkingDirectory=/opt/nomad-nodeJob-exporter
 # 添加 Nomad 地址和 Token
 Environment="NOMAD_ADDR=http://127.0.0.1:4646"
 Environment="NOMAD_TOKEN=$NOMAD_TOKEN"
+$PG_TARGETS_ENV_LINE
 
 ExecStart=/opt/nomad-nodeJob-exporter/nomad-nodeJob-exporter
 

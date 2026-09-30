@@ -112,6 +112,8 @@ func updateMetrics() {
 	e2bFcProcessIoOpsTotal.Reset()
 	e2bFcProcessContextSwitchesTotal.Reset()
 	nodePortListening.Reset()
+	pgConnectivityUp.Reset()
+	pgConnectivityLatencySeconds.Reset()
 	sandboxLeakCount.Reset()
 	sandboxOrphanCount.Reset()
 	sandboxConsistentCount.Reset()
@@ -159,6 +161,10 @@ func updateMetrics() {
 
 	// 更新端口监听指标
 	updatePortListeningMetrics()
+
+	// PG 连通性探测(纯 TCP,不需要凭据):从本节点视角探测 direct/pooler 链路,
+	// 供 api / dashboard-api 的 PG 可达性监控与告警使用。
+	updatePGConnectivityMetrics()
 
 	// 获取节点信息
 	log.Println("Getting node info...")
@@ -290,6 +296,9 @@ func registerMetrics() {
 	prometheus.MustRegister(e2bFcProcessIoOpsTotal)
 	prometheus.MustRegister(e2bFcProcessContextSwitchesTotal)
 	prometheus.MustRegister(nodePortListening)
+	prometheus.MustRegister(pgConnectivityUp)
+	prometheus.MustRegister(pgConnectivityLatencySeconds)
+	prometheus.MustRegister(pgConnectivityCheckTotal)
 	prometheus.MustRegister(sandboxLeakCount)
 	prometheus.MustRegister(sandboxOrphanCount)
 	prometheus.MustRegister(sandboxConsistentCount)

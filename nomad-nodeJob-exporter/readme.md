@@ -21,6 +21,28 @@
 | `ORCHESTRATOR_ADDR` | `127.0.0.1:9090` | 本机 e2b orchestrator gRPC,沙箱泄露检测用 |
 | `DISABLE_SANDBOX_LEAK_CHECK` | (未设置) | 设为 `1` 可关闭沙箱泄露检测(例如非 client 节点) |
 | `NODE_IP` | 自动取 eth0 | 标签使用的节点 IP |
+| `PG_CONNECTIVITY_TARGETS` | (未设置) | PG 连通性探测目标,格式 `name=host:port` 逗号分隔;未设置则跳过探测 |
+| `PG_CONNECTIVITY_TIMEOUT_MS` | `3000` | 单次 TCP 拨号超时(毫秒) |
+
+## PG 连通性探测
+
+在 api / dashboard-api 所在节点上,可探测这些服务对 PostgreSQL 的 TCP 可达性——回答
+"服务此刻连不连得上 PG"。**纯 TCP 拨号,不进入认证流程,不需要任何用户名/密码**,因此
+代码与配置里都不出现凭据;只覆盖 connection refused / 超时 / DNS 解析失败这几类故障。
+
+通过 `PG_CONNECTIVITY_TARGETS` 配置目标,可同时探测直连与连接池两条链路做对比:
+
+```
+PG_CONNECTIVITY_TARGETS="direct=db.xxxx.supabase.co:5432,pooler=aws-1-ap-northeast-1.pooler.supabase.com:5432"
+```
+
+输出指标(label `target` 为链路名、`endpoint` 为地址、`node_ip` 为节点):
+
+- `pg_connectivity_up{target,endpoint,node_ip}` — 1=TCP 可达,0=不可达
+- `pg_connectivity_latency_seconds{target,endpoint,node_ip}` — TCP 建连耗时(仅可达时上报)
+- `pg_connectivity_check_total{target,endpoint,node_ip,result}` — 按结果计数,`result ∈ {ok,refused,timeout,dns_error,other}`
+
+未设置 `PG_CONNECTIVITY_TARGETS` 时该采集器静默跳过,不影响其他指标。
 
 ## 沙箱泄露检测
 
