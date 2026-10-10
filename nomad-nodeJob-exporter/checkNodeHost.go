@@ -56,6 +56,17 @@ var (
 		},
 		[]string{"node_ip", "path"},
 	)
+
+	// 节点内核版本(等价 `uname -r`)。以 info 风格暴露:value 恒为 1,
+	// 真实内容放在 release 标签。带 node_id / node_name 便于与 orchestrator
+	// /nodes 列表(node_id)直接关联,面板按 node_id join 即可取到内核版本。
+	nodeUnameInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "e2b_node_uname_info",
+			Help: "Node kernel release (uname -r) exposed as an info metric; value is always 1.",
+		},
+		[]string{"node_id", "node_name", "release"},
+	)
 )
 
 const hugepagesRoot = "/sys/kernel/mm/hugepages"
@@ -164,4 +175,37 @@ func updateHostMetrics(nodeIP string) {
 	updateDiskMetrics(nodeIP)
 	updateNodeCPUMetrics(nodeIP)
 	updateOrchestratorCgroupMetrics(nodeIP)
+}
+
+// kernelRelease 返回本机内核版本(等价 `uname -r`)。
+// 用 syscall.Uname 直接读,避免 fork 外部进程;读失败返回空串。
+func kernelRelease() string {
+	var uts syscall.Utsname
+	if err := syscall.Uname(&uts); err != nil {
+		log.Printf("uname: %v", err)
+		return ""
+	}
+	// uts.Release 是 [65]int8(C char 数组),转成 Go string 并截到第一个 NUL。
+	buf := make([]byte, 0, len(uts.Release))
+	for _, c := range uts.Release {
+		if c == 0 {
+			break
+		}
+		buf = append(buf, byte(c))
+	}
+	return string(buf)
+}
+
+// updateUnameMetric 上报节点内核版本。带 node_id / node_name,
+// 与 orchestrator /nodes 列表(node_id)对齐,面板可按 node_id join。
+func updateUnameMetric(nodeID, nodeName string) {
+	if nodeID == "" {
+		nodeID = "unknown"
+	}
+	release := kernelRelease()
+	if release == "" {
+		release = "unknown"
+	}
+	nodeUnameInfo.WithLabelValues(nodeID, nodeName, release).Set(1)
+	log.Printf("Node %s (%s) kernel release: %s", nodeName, nodeID, release)
 }
