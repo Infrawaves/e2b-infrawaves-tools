@@ -129,6 +129,7 @@ func updateMetrics() {
 	nodeHugepagesReserved.Reset()
 	nodeDiskFreeBytes.Reset()
 	nodeDiskTotalBytes.Reset()
+	nodeUnameInfo.Reset()
 	nodeCPUUsagePercent.Reset()
 	nodeCPUCores.Reset()
 	orchCgroupAnonBytes.Reset()
@@ -177,6 +178,9 @@ func updateMetrics() {
 	}
 
 	log.Printf("Got node info: ID=%s, Name=%s", nodeInfo.ID, nodeInfo.Name)
+
+	// 上报节点内核版本(uname -r),带 node_id/node_name 便于与 /nodes 列表关联。
+	updateUnameMetric(nodeInfo.ID, nodeInfo.Name)
 
 	role := nodeInfo.Meta["role"]
 	templaterole := nodeInfo.Meta["templaterole"]
@@ -315,6 +319,7 @@ func registerMetrics() {
 	prometheus.MustRegister(nodeHugepagesReserved)
 	prometheus.MustRegister(nodeDiskFreeBytes)
 	prometheus.MustRegister(nodeDiskTotalBytes)
+	prometheus.MustRegister(nodeUnameInfo)
 	prometheus.MustRegister(nodeCPUUsagePercent)
 	prometheus.MustRegister(nodeCPUCores)
 	prometheus.MustRegister(orchCgroupAnonBytes)
