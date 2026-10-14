@@ -44,6 +44,12 @@ PG_CONNECTIVITY_TARGETS="direct=db.xxxx.supabase.co:5432,pooler=aws-1-ap-northea
 
 未设置 `PG_CONNECTIVITY_TARGETS` 时该采集器静默跳过,不影响其他指标。
 
+## 节点二进制 MD5
+
+每次 scrape 会读取本机 `/opt/orchestrator/orchestrator` 和 `/fc-envd/envd`,
+并输出 `e2b_node_binary_info{node_ip,binary,path,md5}`(Gauge 值恒为 1)。
+`binary` 为 `orchestrator` 或 `envd`;文件不存在或不可读时会记日志并跳过对应指标。
+
 ## 沙箱泄露检测
 
 每次 scrape 时,exporter 会:
