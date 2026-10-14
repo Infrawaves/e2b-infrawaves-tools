@@ -1,6 +1,9 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -67,9 +70,50 @@ var (
 		},
 		[]string{"node_id", "node_name", "release"},
 	)
+
+	nodeBinaryInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "e2b_node_binary_info",
+			Help: "MD5 checksum of a node binary exposed as an info metric; value is always 1.",
+		},
+		[]string{"node_ip", "binary", "path", "md5"},
+	)
 )
 
 const hugepagesRoot = "/sys/kernel/mm/hugepages"
+
+var nodeBinaries = []struct {
+	name string
+	path string
+}{
+	{name: "orchestrator", path: "/opt/orchestrator/orchestrator"},
+	{name: "envd", path: "/fc-envd/envd"},
+}
+
+func fileMD5(path string) (string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	hash := md5.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+func updateNodeBinaryInfoMetrics(nodeIP string) {
+	for _, binary := range nodeBinaries {
+		checksum, err := fileMD5(binary.path)
+		if err != nil {
+			log.Printf("node binary md5: hash %s (%s): %v", binary.name, binary.path, err)
+			continue
+		}
+		nodeBinaryInfo.WithLabelValues(nodeIP, binary.name, binary.path, checksum).Set(1)
+	}
+}
 
 // hugepagesSizeBytes 把 "hugepages-<N>kB" 目录名解析为字节数。
 // 名字不符合预期格式时返回 0。
@@ -175,6 +219,7 @@ func updateHostMetrics(nodeIP string) {
 	updateDiskMetrics(nodeIP)
 	updateNodeCPUMetrics(nodeIP)
 	updateOrchestratorCgroupMetrics(nodeIP)
+	updateNodeBinaryInfoMetrics(nodeIP)
 }
 
 // kernelRelease 返回本机内核版本(等价 `uname -r`)。

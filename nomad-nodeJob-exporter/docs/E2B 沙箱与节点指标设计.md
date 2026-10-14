@@ -6,7 +6,7 @@
 
 1. **沙箱视角（`e2b_sandbox_*`）**——通过本机 orchestrator gRPC `SandboxService.List` 拿到权威沙箱列表，与 `/proc` 扫描的 firecracker 进程比对，输出一致性 / 泄露 / 孤儿 / 存活时长 / 超 TTL 等指标。
 2. **Orchestrator 探活（`e2b_orchestrator_*`）**——本机 orchestrator gRPC 是否可达、List RTT。
-3. **节点容量（`e2b_node_*`）**——节点级 HugeTLB 池与关键路径的磁盘容量。
+3. **节点指标（`e2b_node_*`）**——节点级 HugeTLB 池、关键路径的磁盘容量与部署二进制 MD5。
 
 姊妹文档：[E2B Firecracker 进程指标设计.md](./E2B%20Firecracker%20进程指标设计.md)（系统进程视角，`e2b_fc_process_*` 系列）。
 
@@ -17,7 +17,7 @@
 | 系统进程视角 | `e2b_fc_process_*` | `/proc/<pid>/` | `checkFirecracker.go` |
 | **业务沙箱视角（旁路）** | **`e2b_sandbox_*`** | **本机 orchestrator gRPC + 进程比对** | **`checkSandboxLeak.go`** |
 | **Orchestrator 探活** | **`e2b_orchestrator_*`** | **gRPC `SandboxService.List` 调用结果** | **`checkSandboxLeak.go`** |
-| **节点容量** | **`e2b_node_*`** | **`/sys/kernel/mm/hugepages` + `statfs(2)`** | **`checkNodeHost.go`** |
+| **节点指标** | **`e2b_node_*`** | **`/sys/kernel/mm/hugepages` + `statfs(2)` + 本机二进制文件** | **`checkNodeHost.go`** |
 
 > "旁路实现"是指：`e2b_sandbox_*` 不是 orchestrator / sandbox 自己上报的，而是 exporter 主动调 gRPC 拉权威列表，再与本地观察事实交叉验证。这种方式不依赖 OTLP 链路，控制面故障时仍能从 Prometheus 直接拉数据。
 
@@ -39,9 +39,17 @@
 | `template_id` | string | 沙箱使用的模板 | `python3.11` |
 | `team_id` | string | 沙箱所属 team | `team-abc` |
 | `path` | string | `e2b_node_disk_*` 监控的路径 | `/`、`/mnt/nfs` |
+| `binary` | string | `e2b_node_binary_info` 二进制名称 | `orchestrator`、`envd` |
+| `md5` | string | `e2b_node_binary_info` 文件 MD5 | `1b3dda69ab27bf4bea7087c53a4c7e76` |
 | `size_bytes` | string | HugeTLB 页大小（字节字符串） | `2097152`、`1073741824` |
 
 > 注：`e2b_sandbox_info` 是高基数指标（每沙箱一条），不要在告警 expr 里用作 group key。
+
+### 节点二进制 MD5
+
+每次 scrape 检查本机 `/opt/orchestrator/orchestrator` 与 `/fc-envd/envd`，
+以 info 风格输出 `e2b_node_binary_info{node_ip,binary,path,md5} 1`。
+文件缺失或读取失败时记录日志且不输出该文件的指标；不同节点及二进制可按 `node_ip` 和 `binary` 对比。
 
 ## 沙箱视角指标
 

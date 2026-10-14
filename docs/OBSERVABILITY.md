@@ -28,7 +28,7 @@
 | 节点 role / templaterole | `nomad-nodeJob-exporter` | `nomad_node_role`, `nomad_node_templaterole` |
 | 关键端口监听探测 | `nomad-nodeJob-exporter` | `node_port_listening`(5016 / 9090,黑盒) |
 | Firecracker 进程级 | `nomad-nodeJob-exporter` | `e2b_fc_process_*` (count / mem / cpu / io / fds / ctx switches / state) |
-| 节点容量(HugeTLB / 磁盘) | `nomad-nodeJob-exporter` | `e2b_node_hugepages_*`、`e2b_node_disk_*` |
+| 节点指标(HugeTLB / 磁盘 / 二进制版本) | `nomad-nodeJob-exporter` | `e2b_node_hugepages_*`、`e2b_node_disk_*`、`e2b_node_binary_info` |
 | Orchestrator 探活 | `nomad-nodeJob-exporter` | `e2b_orchestrator_reachable`、`e2b_orchestrator_list_duration_seconds` |
 | 沙箱 → 物理节点映射 | `scheduling_monitor` | NFS 共享目录 + 离线脚本 |
 | **沙箱泄露检测** | `nomad-nodeJob-exporter` | 见下文 [沙箱泄露检测](#沙箱泄露检测) |
