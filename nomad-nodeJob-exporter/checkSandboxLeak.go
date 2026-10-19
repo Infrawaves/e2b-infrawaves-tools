@@ -121,12 +121,14 @@ var (
 		[]string{"node_ip"},
 	)
 
-	// --- per-sandbox 配置画像(来自 RunningSandbox 顶层 + 其 deprecated Config 子消息)---
+	// --- per-sandbox 配置画像(来自 RunningSandbox 顶层 + 其 Config 子消息)---
 	//
-	// A 类(RunningSandbox 顶层,稳定):vcpu / ram_mb / end_time。
-	// B 类(RunningSandbox.config,上游标记 deprecated 但当前仍填充):kernel/fc/envd
-	// 版本、total_disk_size_mb、auto_pause、allow_internet_access、auto_resume。
-	// B 类字段将来某次 orchestrator 升级后可能停止填充而变空(或 0),见 issue #13。
+	// A 类(RunningSandbox 顶层,稳定):end_time。
+	// B 类(RunningSandbox.config):vcpu / ram_mb / kernel/fc/envd 版本、
+	// total_disk_size_mb、auto_pause、allow_internet_access、auto_resume。
+	// 其中 vcpu(config.field 11)/ ram_mb(config.field 12)经真实响应抓包确认在 Config 内,
+	// 不在 RunningSandbox 顶层。部分 B 类字段上游标记 deprecated,将来某次 orchestrator
+	// 升级后可能停止填充而变空(或 0),见 issue #13。
 
 	// 版本画像合成一条 info(value 恒为 1),避免把三个高基数字符串塞进 e2b_sandbox_info
 	// 导致其基数翻倍。版本变更本身是沙箱重建,sandbox_id 会变,不会在同一 series 上翻动。
@@ -225,10 +227,6 @@ const (
 	tagRunningSandboxStartTime = 3
 	// RunningSandbox.end_time(field 4, google.protobuf.Timestamp)
 	tagRunningSandboxEndTime = 4
-	// RunningSandbox.vcpu(field 8, int64 varint)
-	tagRunningSandboxVcpu = 8
-	// RunningSandbox.ram_mb(field 9, int64 varint)
-	tagRunningSandboxRamMB = 9
 
 	// SandboxConfig.template_id(field 1, string)
 	tagSandboxConfigTemplateID = 1
@@ -238,6 +236,10 @@ const (
 	tagSandboxConfigFirecrackerVersion = 4
 	// SandboxConfig.sandbox_id(field 6, string)
 	tagSandboxConfigSandboxID = 6
+	// SandboxConfig.vcpu(field 11, int64 varint)
+	tagSandboxConfigVcpu = 11
+	// SandboxConfig.ram_mb(field 12, int64 varint)
+	tagSandboxConfigRamMB = 12
 	// SandboxConfig.envd_version(field 10, string)
 	tagSandboxConfigEnvdVersion = 10
 	// SandboxConfig.team_id(field 13, string)
@@ -274,12 +276,12 @@ type runningSandbox struct {
 	StartTimeUnix  int64
 	MaxLengthHours int64
 
-	// A 类(RunningSandbox 顶层)。EndTimeUnix=0 表示未设置。
+	// RunningSandbox 顶层。EndTimeUnix=0 表示未设置。
 	EndTimeUnix int64
-	Vcpu        int64
-	RamMB       int64
 
-	// B 类(RunningSandbox.config,deprecated 来源)。字符串空 / 数值 0 表示字段缺失。
+	// SandboxConfig 来源。字符串空 / 数值 0 表示字段缺失。
+	Vcpu                int64
+	RamMB               int64
 	KernelVersion       string
 	FirecrackerVersion  string
 	EnvdVersion         string
@@ -538,20 +540,6 @@ func parseRunningSandbox(data []byte) (runningSandbox, error) {
 			}
 			rec.EndTimeUnix = secs
 			data = data[tn:]
-		case tagRunningSandboxVcpu:
-			v, vn := protowire.ConsumeVarint(data)
-			if vn < 0 {
-				return rec, protowire.ParseError(vn)
-			}
-			rec.Vcpu = int64(v)
-			data = data[vn:]
-		case tagRunningSandboxRamMB:
-			v, vn := protowire.ConsumeVarint(data)
-			if vn < 0 {
-				return rec, protowire.ParseError(vn)
-			}
-			rec.RamMB = int64(v)
-			data = data[vn:]
 		default:
 			vn := protowire.ConsumeFieldValue(num, typ, data)
 			if vn < 0 {
@@ -600,6 +588,20 @@ func parseSandboxConfig(data []byte, rec *runningSandbox) error {
 			}
 			rec.SandboxID = s
 			data = data[sn:]
+		case tagSandboxConfigVcpu:
+			v, vn := protowire.ConsumeVarint(data)
+			if vn < 0 {
+				return protowire.ParseError(vn)
+			}
+			rec.Vcpu = int64(v)
+			data = data[vn:]
+		case tagSandboxConfigRamMB:
+			v, vn := protowire.ConsumeVarint(data)
+			if vn < 0 {
+				return protowire.ParseError(vn)
+			}
+			rec.RamMB = int64(v)
+			data = data[vn:]
 		case tagSandboxConfigEnvdVersion:
 			s, sn := protowire.ConsumeString(data)
 			if sn < 0 {
