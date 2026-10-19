@@ -129,9 +129,75 @@
 - orchestrator TTL 清理逻辑失败
 - 业务 SDK 没正确处理 `close`
 
+## 沙箱配置画像指标
+
+> ⚠️ **数据源分两类，稳定性不同**：
+> - **A 类**（`vcpu` / `ram_mb` / `end_time`）取自 `RunningSandbox` 顶层字段，上游长期稳定。
+> - **B 类**（版本、`total_disk_size_mb`、`auto_pause`、`allow_internet_access`、`auto_resume`）取自 `RunningSandbox.config` 子消息，**上游已标记 deprecated**（注释原文：Redis is the source of truth；该 Config 仍被填充只是为了 rollout 期间兼容旧 API）。将来某次 orchestrator 升级后 B 类字段可能停止填充而变空 / 为 0，告警不要强依赖，见 issue #13。
+>
+> `state` 字段**不提供**：gRPC `List` 只返回正在运行的沙箱，state 恒为 `running` 无区分度；真实 state 只在 Redis catalog 层，取它需引 Redis 客户端并打破 exporter「只看本机」模型，故放弃。
+
+### 7. `e2b_sandbox_build_info`
+
+| 属性 | 值 |
+|------|-----|
+| 类型 | Gauge（值固定 1） |
+| 标签 | `node_ip`, `sandbox_id`, `kernel_version`, `firecracker_version`, `envd_version` |
+| 说明 | 沙箱构建版本画像。标签为空表示该 orchestrator 版本未填充对应 Config 字段 |
+| 数据源 | `SandboxConfig.kernel_version` / `firecracker_version` / `envd_version`（B 类，deprecated） |
+| 示例 | `e2b_sandbox_build_info{sandbox_id="...",kernel_version="6.1.102",firecracker_version="1.10.1",envd_version="0.2.4"} 1` |
+
+**用途**：版本漂移排查。单独成 info 而不塞进 `e2b_sandbox_info`，避免给已高基数的 info 再叠三个字符串标签使基数翻倍。版本变更本身意味着沙箱重建（`sandbox_id` 会变），不会在同一 series 上翻动。
+
+### 8. `e2b_sandbox_vcpu` / `e2b_sandbox_ram_mb` / `e2b_sandbox_disk_mb`
+
+| 属性 | 值 |
+|------|-----|
+| 类型 | Gauge |
+| 标签 | `node_ip`, `sandbox_id` |
+| 说明 | 沙箱配置的 vCPU 数 / 内存 MB / 总磁盘 MB。值为 0（未知）时不上报，避免误导容量视图 |
+| 数据源 | `RunningSandbox.vcpu`（A 类）、`RunningSandbox.ram_mb`（A 类）、`SandboxConfig.total_disk_size_mb`（B 类，deprecated） |
+| 示例 | `e2b_sandbox_vcpu{...} 2` / `e2b_sandbox_ram_mb{...} 2048` / `e2b_sandbox_disk_mb{...} 5120` |
+
+**用途**：按 team / template 聚合资源申请量，与节点实际 `nomad_allocation_memory_*` 对照看超售。
+
+### 9. `e2b_sandbox_end_time_seconds`
+
+| 属性 | 值 |
+|------|-----|
+| 类型 | Gauge |
+| 标签 | `node_ip`, `sandbox_id` |
+| 说明 | `RunningSandbox.end_time` 的 Unix 秒；0 表示未设置（无计划到期） |
+| 数据源 | `RunningSandbox.end_time`（A 类，`google.protobuf.Timestamp`） |
+| 示例 | `e2b_sandbox_end_time_seconds{...} 1718000000` |
+
+**与 `overrun` 的区别**：`overrun` 由 `config.max_sandbox_length` 推算，`end_time` 是 orchestrator 实际记录的到期时刻，可做一致性校验（`end_time - start_time` 应 ≈ `max_sandbox_length`）。
+
+### 10. `e2b_sandbox_allow_internet` / `e2b_sandbox_auto_pause`
+
+| 属性 | 值 |
+|------|-----|
+| 类型 | Gauge（0/1） |
+| 标签 | `node_ip`, `sandbox_id` |
+| 说明 | 是否允许访问公网 / 是否超时自动暂停。恒上报 0 或 1 |
+| 数据源 | `SandboxConfig.allow_internet_access` / `auto_pause`（B 类，deprecated） |
+| 示例 | `e2b_sandbox_allow_internet{...} 1` / `e2b_sandbox_auto_pause{...} 0` |
+
+> 注：deprecated 来源下 `false` 与「字段未填充」在 wire 上无法区分，统一记 0。若全集群此指标恒为 0，先怀疑是 B 类字段停填（见顶部 issue #13）而非配置真的全关。
+
+### 11. `e2b_sandbox_auto_resume_timeout_seconds`
+
+| 属性 | 值 |
+|------|-----|
+| 类型 | Gauge |
+| 标签 | `node_ip`, `sandbox_id`, `policy` |
+| 说明 | 自动恢复超时秒数；`policy` 标签携带恢复策略（如 `off` / `any`）。仅当沙箱携带 `auto_resume` 子消息时上报 |
+| 数据源 | `SandboxAutoResumeConfig.timeout_seconds` + `policy`（B 类，deprecated） |
+| 示例 | `e2b_sandbox_auto_resume_timeout_seconds{sandbox_id="...",policy="any"} 300` |
+
 ## Orchestrator 探活指标
 
-### 7. `e2b_orchestrator_reachable`
+### 12. `e2b_orchestrator_reachable`
 
 | 属性 | 值 |
 |------|-----|
@@ -142,7 +208,7 @@
 
 > 默认地址 `127.0.0.1:9090`，可用 `ORCHESTRATOR_ADDR` 覆盖。**dev/prod 都是 9090**，旧文档里写的 5008 已经废弃。
 
-### 8. `e2b_orchestrator_list_duration_seconds`
+### 13. `e2b_orchestrator_list_duration_seconds`
 
 | 属性 | 值 |
 |------|-----|
@@ -155,7 +221,7 @@
 
 ## 节点容量指标
 
-### 9. `e2b_node_hugepages_total` / `_free` / `_reserved`
+### 14. `e2b_node_hugepages_total` / `_free` / `_reserved`
 
 | 属性 | 值 |
 |------|-----|
@@ -177,7 +243,7 @@
 
 参见 `e2b-node-hugepages-saturated`。
 
-### 10. `e2b_node_disk_free_bytes` / `_total_bytes`
+### 15. `e2b_node_disk_free_bytes` / `_total_bytes`
 
 | 属性 | 值 |
 |------|-----|
@@ -200,19 +266,31 @@
 
 `checkSandboxLeak.go` 用 protowire 直接解析，关键 tag：
 
-| 消息 | 字段 | 编号 | 类型 |
-|------|------|------|------|
-| `SandboxListResponse` | `sandboxes` | 1 | repeated message |
-| `RunningSandbox` | `config` | 1 | message |
-| `RunningSandbox` | `client_id` | 2 | string |
-| `RunningSandbox` | `start_time` | 3 | google.protobuf.Timestamp |
-| `SandboxConfig` | `template_id` | 1 | string |
-| `SandboxConfig` | `sandbox_id` | 6 | string |
-| `SandboxConfig` | `team_id` | 13 | string |
-| `SandboxConfig` | `max_sandbox_length` | 14 | int64 varint（小时） |
-| `Timestamp` | `seconds` | 1 | int64 varint |
+| 消息 | 字段 | 编号 | 类型 | 来源类 |
+|------|------|------|------|--------|
+| `SandboxListResponse` | `sandboxes` | 1 | repeated message | — |
+| `RunningSandbox` | `config` | 1 | message | — |
+| `RunningSandbox` | `client_id` | 2 | string | A |
+| `RunningSandbox` | `start_time` | 3 | google.protobuf.Timestamp | A |
+| `RunningSandbox` | `end_time` | 4 | google.protobuf.Timestamp | A |
+| `RunningSandbox` | `vcpu` | 8 | int64 varint | A |
+| `RunningSandbox` | `ram_mb` | 9 | int64 varint | A |
+| `SandboxConfig` | `template_id` | 1 | string | B |
+| `SandboxConfig` | `kernel_version` | 3 | string | B |
+| `SandboxConfig` | `firecracker_version` | 4 | string | B |
+| `SandboxConfig` | `sandbox_id` | 6 | string | B |
+| `SandboxConfig` | `envd_version` | 10 | string | B |
+| `SandboxConfig` | `team_id` | 13 | string | B |
+| `SandboxConfig` | `max_sandbox_length` | 14 | int64 varint（小时） | B |
+| `SandboxConfig` | `total_disk_size_mb` | 15 | int64 varint（MB） | B |
+| `SandboxConfig` | `auto_pause` | 18 | bool varint | B |
+| `SandboxConfig` | `allow_internet_access` | 21 | bool varint | B |
+| `SandboxConfig` | `auto_resume` | 24 | SandboxAutoResumeConfig message | B |
+| `SandboxAutoResumeConfig` | `policy` | 1 | string | B |
+| `SandboxAutoResumeConfig` | `timeout_seconds` | 2 | uint64 varint | B |
+| `Timestamp` | `seconds` | 1 | int64 varint | — |
 
-> 升级 e2b/infra 时若调整 proto 字段编号，需要同步改 `checkSandboxLeak.go` 中的 `tag*` 常量。
+> **A = `RunningSandbox` 顶层字段（稳定）；B = `RunningSandbox.config` 子消息（上游已 deprecated，可能停填）**，见本页「沙箱配置画像指标」顶部说明。字段编号已对照 `e2b-dev/runtime` 的 `packages/shared/pkg/grpc/orchestrator/orchestrator.pb.go` 核实。升级上游时若调整 proto 字段编号，需同步改 `checkSandboxLeak.go` 中的 `tag*` 常量。
 
 ## Prometheus 查询示例
 

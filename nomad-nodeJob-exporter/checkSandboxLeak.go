@@ -120,6 +120,86 @@ var (
 		},
 		[]string{"node_ip"},
 	)
+
+	// --- per-sandbox 配置画像(来自 RunningSandbox 顶层 + 其 Config 子消息)---
+	//
+	// A 类(RunningSandbox 顶层,稳定):end_time。
+	// B 类(RunningSandbox.config):vcpu / ram_mb / kernel/fc/envd 版本、
+	// total_disk_size_mb、auto_pause、allow_internet_access、auto_resume。
+	// 其中 vcpu(config.field 11)/ ram_mb(config.field 12)经真实响应抓包确认在 Config 内,
+	// 不在 RunningSandbox 顶层。部分 B 类字段上游标记 deprecated,将来某次 orchestrator
+	// 升级后可能停止填充而变空(或 0),见 issue #13。
+
+	// 版本画像合成一条 info(value 恒为 1),避免把三个高基数字符串塞进 e2b_sandbox_info
+	// 导致其基数翻倍。版本变更本身是沙箱重建,sandbox_id 会变,不会在同一 series 上翻动。
+	sandboxBuildInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "e2b_sandbox_build_info",
+			Help: "Marker (always 1) carrying per-sandbox build versions from orchestrator config. Empty label = field absent in this orchestrator version.",
+		},
+		[]string{"node_ip", "sandbox_id", "kernel_version", "firecracker_version", "envd_version"},
+	)
+
+	sandboxVcpu = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "e2b_sandbox_vcpu",
+			Help: "Configured vCPU count of the sandbox (RunningSandbox.vcpu).",
+		},
+		[]string{"node_ip", "sandbox_id"},
+	)
+
+	sandboxRamMB = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "e2b_sandbox_ram_mb",
+			Help: "Configured RAM of the sandbox in MB (RunningSandbox.ram_mb).",
+		},
+		[]string{"node_ip", "sandbox_id"},
+	)
+
+	sandboxDiskMB = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "e2b_sandbox_disk_mb",
+			Help: "Configured total disk size of the sandbox in MB (SandboxConfig.total_disk_size_mb, deprecated source).",
+		},
+		[]string{"node_ip", "sandbox_id"},
+	)
+
+	// RunningSandbox.end_time 的 Unix 秒。0 表示未设置(例如无限期沙箱)。
+	// 与 age/overrun 不同:overrun 基于 config.max_sandbox_length 推算,end_time 是
+	// orchestrator 实际记录的到期时刻,可用于与 age 做一致性校验。
+	sandboxEndTimeSeconds = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "e2b_sandbox_end_time_seconds",
+			Help: "Unix timestamp of RunningSandbox.end_time. 0 means unset (no scheduled expiry).",
+		},
+		[]string{"node_ip", "sandbox_id"},
+	)
+
+	sandboxAllowInternet = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "e2b_sandbox_allow_internet",
+			Help: "1 if the sandbox is configured with internet access, else 0 (SandboxConfig.allow_internet_access, deprecated source).",
+		},
+		[]string{"node_ip", "sandbox_id"},
+	)
+
+	sandboxAutoPause = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "e2b_sandbox_auto_pause",
+			Help: "1 if the sandbox auto-pauses on timeout, else 0 (SandboxConfig.auto_pause, deprecated source).",
+		},
+		[]string{"node_ip", "sandbox_id"},
+	)
+
+	// auto_resume 超时秒数(SandboxAutoResumeConfig.timeout_seconds)。policy 放进标签。
+	// 仅当沙箱携带 auto_resume 子消息时上报;缺失则整条不出(避免 policy="" 噪声)。
+	sandboxAutoResumeTimeoutSeconds = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "e2b_sandbox_auto_resume_timeout_seconds",
+			Help: "Auto-resume timeout in seconds (SandboxAutoResumeConfig.timeout_seconds). policy label carries the resume policy.",
+		},
+		[]string{"node_ip", "sandbox_id", "policy"},
+	)
 )
 
 const (
@@ -145,14 +225,41 @@ const (
 	tagRunningSandboxClientID = 2
 	// RunningSandbox.start_time(field 3, google.protobuf.Timestamp)
 	tagRunningSandboxStartTime = 3
+	// RunningSandbox.end_time(field 4, google.protobuf.Timestamp)
+	tagRunningSandboxEndTime = 4
+
 	// SandboxConfig.template_id(field 1, string)
 	tagSandboxConfigTemplateID = 1
+	// SandboxConfig.kernel_version(field 3, string)
+	tagSandboxConfigKernelVersion = 3
+	// SandboxConfig.firecracker_version(field 4, string)
+	tagSandboxConfigFirecrackerVersion = 4
 	// SandboxConfig.sandbox_id(field 6, string)
 	tagSandboxConfigSandboxID = 6
+	// SandboxConfig.vcpu(field 11, int64 varint)
+	tagSandboxConfigVcpu = 11
+	// SandboxConfig.ram_mb(field 12, int64 varint)
+	tagSandboxConfigRamMB = 12
+	// SandboxConfig.envd_version(field 10, string)
+	tagSandboxConfigEnvdVersion = 10
 	// SandboxConfig.team_id(field 13, string)
 	tagSandboxConfigTeamID = 13
 	// SandboxConfig.max_sandbox_length(field 14, int64 varint, 小时)
 	tagSandboxConfigMaxLength = 14
+	// SandboxConfig.total_disk_size_mb(field 15, int64 varint, MB)
+	tagSandboxConfigTotalDiskMB = 15
+	// SandboxConfig.auto_pause(field 18, bool varint)
+	tagSandboxConfigAutoPause = 18
+	// SandboxConfig.allow_internet_access(field 21, bool varint)
+	tagSandboxConfigAllowInternet = 21
+	// SandboxConfig.auto_resume(field 24, SandboxAutoResumeConfig message)
+	tagSandboxConfigAutoResume = 24
+
+	// SandboxAutoResumeConfig.policy(field 1, string)
+	tagAutoResumePolicy = 1
+	// SandboxAutoResumeConfig.timeout_seconds(field 2, uint64 varint)
+	tagAutoResumeTimeoutSeconds = 2
+
 	// google.protobuf.Timestamp.seconds(field 1, int64 varint)
 	tagTimestampSeconds = 1
 
@@ -168,6 +275,24 @@ type runningSandbox struct {
 	TeamID         string
 	StartTimeUnix  int64
 	MaxLengthHours int64
+
+	// RunningSandbox 顶层。EndTimeUnix=0 表示未设置。
+	EndTimeUnix int64
+
+	// SandboxConfig 来源。字符串空 / 数值 0 表示字段缺失。
+	Vcpu                int64
+	RamMB               int64
+	KernelVersion       string
+	FirecrackerVersion  string
+	EnvdVersion         string
+	TotalDiskMB         int64
+	AutoPause           bool
+	AllowInternetAccess bool
+
+	// auto_resume 子消息。HasAutoResume 区分"未携带"与"timeout=0"。
+	HasAutoResume     bool
+	AutoResumePolicy  string
+	AutoResumeTimeout uint64
 }
 
 // rawCodec 让 payload 直接以 []byte 形式收发,绕过生成的 stub 用 protowire 手工解析。
@@ -229,6 +354,32 @@ func checkSandboxLeak(nodeIP string, fcSandboxes map[string][]string) {
 		}
 		orchestratorIDs[s.SandboxID] = struct{}{}
 		sandboxInfo.WithLabelValues(nodeIP, s.SandboxID, s.NodeID, s.TemplateID, s.TeamID).Set(1)
+
+		// 版本画像 info(标签缺失即该 orchestrator 版本未填 Config,见 issue #13)。
+		sandboxBuildInfo.WithLabelValues(nodeIP, s.SandboxID, s.KernelVersion, s.FirecrackerVersion, s.EnvdVersion).Set(1)
+
+		// 资源画像。vcpu/ram 为 A 类稳定字段;0 视为未知,不上报以免误导容量视图。
+		if s.Vcpu > 0 {
+			sandboxVcpu.WithLabelValues(nodeIP, s.SandboxID).Set(float64(s.Vcpu))
+		}
+		if s.RamMB > 0 {
+			sandboxRamMB.WithLabelValues(nodeIP, s.SandboxID).Set(float64(s.RamMB))
+		}
+		if s.TotalDiskMB > 0 {
+			sandboxDiskMB.WithLabelValues(nodeIP, s.SandboxID).Set(float64(s.TotalDiskMB))
+		}
+		if s.EndTimeUnix > 0 {
+			sandboxEndTimeSeconds.WithLabelValues(nodeIP, s.SandboxID).Set(float64(s.EndTimeUnix))
+		}
+
+		// 布尔开关一律 0/1 上报(deprecated 来源下 false 与"未填"无法区分,统一记 0)。
+		sandboxAllowInternet.WithLabelValues(nodeIP, s.SandboxID).Set(boolToFloat(s.AllowInternetAccess))
+		sandboxAutoPause.WithLabelValues(nodeIP, s.SandboxID).Set(boolToFloat(s.AutoPause))
+
+		// auto_resume 仅在携带子消息时上报,policy 进标签。
+		if s.HasAutoResume {
+			sandboxAutoResumeTimeoutSeconds.WithLabelValues(nodeIP, s.SandboxID, s.AutoResumePolicy).Set(float64(s.AutoResumeTimeout))
+		}
 
 		if s.StartTimeUnix > 0 {
 			age := now - s.StartTimeUnix
@@ -378,6 +529,17 @@ func parseRunningSandbox(data []byte) (runningSandbox, error) {
 			}
 			rec.StartTimeUnix = secs
 			data = data[tn:]
+		case tagRunningSandboxEndTime:
+			ts, tn := protowire.ConsumeBytes(data)
+			if tn < 0 {
+				return rec, protowire.ParseError(tn)
+			}
+			secs, err := parseTimestampSeconds(ts)
+			if err != nil {
+				return rec, err
+			}
+			rec.EndTimeUnix = secs
+			data = data[tn:]
 		default:
 			vn := protowire.ConsumeFieldValue(num, typ, data)
 			if vn < 0 {
@@ -405,12 +567,47 @@ func parseSandboxConfig(data []byte, rec *runningSandbox) error {
 			}
 			rec.TemplateID = s
 			data = data[sn:]
+		case tagSandboxConfigKernelVersion:
+			s, sn := protowire.ConsumeString(data)
+			if sn < 0 {
+				return protowire.ParseError(sn)
+			}
+			rec.KernelVersion = s
+			data = data[sn:]
+		case tagSandboxConfigFirecrackerVersion:
+			s, sn := protowire.ConsumeString(data)
+			if sn < 0 {
+				return protowire.ParseError(sn)
+			}
+			rec.FirecrackerVersion = s
+			data = data[sn:]
 		case tagSandboxConfigSandboxID:
 			s, sn := protowire.ConsumeString(data)
 			if sn < 0 {
 				return protowire.ParseError(sn)
 			}
 			rec.SandboxID = s
+			data = data[sn:]
+		case tagSandboxConfigVcpu:
+			v, vn := protowire.ConsumeVarint(data)
+			if vn < 0 {
+				return protowire.ParseError(vn)
+			}
+			rec.Vcpu = int64(v)
+			data = data[vn:]
+		case tagSandboxConfigRamMB:
+			v, vn := protowire.ConsumeVarint(data)
+			if vn < 0 {
+				return protowire.ParseError(vn)
+			}
+			rec.RamMB = int64(v)
+			data = data[vn:]
+		case tagSandboxConfigEnvdVersion:
+			s, sn := protowire.ConsumeString(data)
+			if sn < 0 {
+				return protowire.ParseError(sn)
+			}
+			rec.EnvdVersion = s
 			data = data[sn:]
 		case tagSandboxConfigTeamID:
 			s, sn := protowire.ConsumeString(data)
@@ -426,6 +623,37 @@ func parseSandboxConfig(data []byte, rec *runningSandbox) error {
 			}
 			rec.MaxLengthHours = int64(v)
 			data = data[vn:]
+		case tagSandboxConfigTotalDiskMB:
+			v, vn := protowire.ConsumeVarint(data)
+			if vn < 0 {
+				return protowire.ParseError(vn)
+			}
+			rec.TotalDiskMB = int64(v)
+			data = data[vn:]
+		case tagSandboxConfigAutoPause:
+			v, vn := protowire.ConsumeVarint(data)
+			if vn < 0 {
+				return protowire.ParseError(vn)
+			}
+			rec.AutoPause = v != 0
+			data = data[vn:]
+		case tagSandboxConfigAllowInternet:
+			v, vn := protowire.ConsumeVarint(data)
+			if vn < 0 {
+				return protowire.ParseError(vn)
+			}
+			rec.AllowInternetAccess = v != 0
+			data = data[vn:]
+		case tagSandboxConfigAutoResume:
+			ar, an := protowire.ConsumeBytes(data)
+			if an < 0 {
+				return protowire.ParseError(an)
+			}
+			if err := parseAutoResumeConfig(ar, rec); err != nil {
+				return err
+			}
+			rec.HasAutoResume = true
+			data = data[an:]
 		default:
 			vn := protowire.ConsumeFieldValue(num, typ, data)
 			if vn < 0 {
@@ -435,6 +663,49 @@ func parseSandboxConfig(data []byte, rec *runningSandbox) error {
 		}
 	}
 	return nil
+}
+
+// parseAutoResumeConfig 解析 SandboxAutoResumeConfig 子消息:policy(string)+ timeout_seconds(uint64)。
+func parseAutoResumeConfig(data []byte, rec *runningSandbox) error {
+	for len(data) > 0 {
+		num, typ, n := protowire.ConsumeTag(data)
+		if n < 0 {
+			return protowire.ParseError(n)
+		}
+		data = data[n:]
+
+		switch int(num) {
+		case tagAutoResumePolicy:
+			s, sn := protowire.ConsumeString(data)
+			if sn < 0 {
+				return protowire.ParseError(sn)
+			}
+			rec.AutoResumePolicy = s
+			data = data[sn:]
+		case tagAutoResumeTimeoutSeconds:
+			v, vn := protowire.ConsumeVarint(data)
+			if vn < 0 {
+				return protowire.ParseError(vn)
+			}
+			rec.AutoResumeTimeout = v
+			data = data[vn:]
+		default:
+			vn := protowire.ConsumeFieldValue(num, typ, data)
+			if vn < 0 {
+				return protowire.ParseError(vn)
+			}
+			data = data[vn:]
+		}
+	}
+	return nil
+}
+
+// boolToFloat 把 Prometheus 布尔语义映射成 0/1。
+func boolToFloat(b bool) float64 {
+	if b {
+		return 1
+	}
+	return 0
 }
 
 func parseTimestampSeconds(data []byte) (int64, error) {
