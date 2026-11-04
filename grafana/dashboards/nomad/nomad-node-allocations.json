@@ -115,11 +115,11 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "count(nomad_allocation_memory_usage_percentage{node_name=~\"$node_name\"} > 90) OR on() vector(0)",
+          "expr": "count(nomad_allocation_memory_usage_percentage_max{node_name=~\"$node_name\"} > 70) OR on() vector(0)",
           "refId": "A"
         }
       ],
-      "title": "内存 > 90% 分配数",
+      "title": "内存 > 70% 分配数(÷memory_max)",
       "type": "stat"
     },
     {
@@ -241,13 +241,13 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "topk(10, nomad_allocation_memory_usage_percentage{node_name=~\"$node_name\"})",
+          "expr": "topk(10, nomad_allocation_memory_usage_percentage_max{node_name=~\"$node_name\"})",
           "format": "table",
           "instant": true,
           "refId": "A"
         }
       ],
-      "title": "内存% Top 10 分配",
+      "title": "内存% Top 10 分配(÷memory_max)",
       "transformations": [
         {
           "id": "organize",
@@ -305,9 +305,8 @@
             "gradientMode": "scheme",
             "thresholdsStyle": {"mode": "line"}
           },
-          "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "yellow", "value": 80}, {"color": "red", "value": 90}]},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "yellow", "value": 60}, {"color": "red", "value": 70}]},
           "unit": "percent",
-          "max": 100,
           "min": 0
         }
       },
@@ -317,12 +316,18 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "nomad_allocation_memory_usage_percentage{node_name=~\"$node_name\"}",
-          "legendFormat": "{{node_name}} / {{job_name}}",
+          "expr": "nomad_allocation_memory_usage_percentage_max{node_name=~\"$node_name\"}",
+          "legendFormat": "{{node_name}} / {{job_name}} (÷max 硬)",
           "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "nomad_allocation_memory_usage_percentage{node_name=~\"$node_name\"}",
+          "legendFormat": "{{node_name}} / {{job_name}} (÷limit 软,参考)",
+          "refId": "B"
         }
       ],
-      "title": "分配内存使用率(阈值 80/90)",
+      "title": "分配内存使用率(÷memory_max 实线告警依据;÷memory_limit 软参考)",
       "type": "timeseries"
     }
   ],

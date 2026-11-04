@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -69,6 +70,16 @@ var (
 		[]string{"allocation_id", "job_name", "task_name", "node_id", "node_name"},
 	)
 
+	// 内存硬上限(memory_max,nomad alloc status 的 "Max:" 行)。
+	// memory_usage_percentage 的分母优先用它;未声明时回退到 memory_limit。
+	allocationMemoryMax = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "nomad_allocation_memory_max",
+			Help: "Allocation memory hard limit (memory_max) in MiB; 0 if not declared",
+		},
+		[]string{"allocation_id", "job_name", "task_name", "node_id", "node_name"},
+	)
+
 	allocationCPUUsagePercentage = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "nomad_allocation_cpu_usage_percentage",
@@ -80,9 +91,21 @@ var (
 	allocationMemoryUsagePercentage = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "nomad_allocation_memory_usage_percentage",
-			Help: "Allocation memory usage percentage",
+			Help: "Allocation memory usage percentage vs memory_limit (soft limit). May exceed 100% for tasks that can burst up to memory_max; use nomad_allocation_memory_usage_percentage_max to judge OOM proximity.",
 		},
 		[]string{"allocation_id", "job_name", "task_name", "node_id", "node_name"},
+	)
+
+	// 相对硬上限 memory_max 的使用率。这才是"接近 OOM"的真实水位。
+	// 未声明 memory_max 的 alloc 不上报本指标(缺失而非 0,避免误判)。
+	// 额外带 mem_limit_mib / mem_max_mib 两个分母标签(均为稳定值,不随用量 churn),
+	// 让告警文案能同时呈现软/硬两个分母,无需跨指标 join。
+	allocationMemoryUsagePercentageMax = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "nomad_allocation_memory_usage_percentage_max",
+			Help: "Allocation memory usage percentage vs memory_max (hard limit). 100% means at the OOM ceiling. Labels mem_limit_mib/mem_max_mib carry both denominators for context.",
+		},
+		[]string{"allocation_id", "job_name", "task_name", "node_id", "node_name", "mem_limit_mib", "mem_max_mib"},
 	)
 )
 
@@ -96,8 +119,10 @@ func updateMetrics() {
 	allocationCPULimit.Reset()
 	allocationMemoryUsage.Reset()
 	allocationMemoryLimit.Reset()
+	allocationMemoryMax.Reset()
 	allocationCPUUsagePercentage.Reset()
 	allocationMemoryUsagePercentage.Reset()
+	allocationMemoryUsagePercentageMax.Reset()
 	e2bFcProcessCount.Reset()
 	e2bFcProcessParseErrorsTotal.Reset()
 	e2bFcProcessInfo.Reset()
@@ -263,6 +288,7 @@ func updateMetrics() {
 			allocationCPULimit.WithLabelValues(resourceInfo.AllocationID, resourceInfo.JobName, resourceInfo.TaskName, resourceInfo.NodeID, resourceInfo.NodeName).Set(resourceInfo.CPULimit)
 			allocationMemoryUsage.WithLabelValues(resourceInfo.AllocationID, resourceInfo.JobName, resourceInfo.TaskName, resourceInfo.NodeID, resourceInfo.NodeName).Set(resourceInfo.MemoryUsage)
 			allocationMemoryLimit.WithLabelValues(resourceInfo.AllocationID, resourceInfo.JobName, resourceInfo.TaskName, resourceInfo.NodeID, resourceInfo.NodeName).Set(resourceInfo.MemoryLimit)
+			allocationMemoryMax.WithLabelValues(resourceInfo.AllocationID, resourceInfo.JobName, resourceInfo.TaskName, resourceInfo.NodeID, resourceInfo.NodeName).Set(resourceInfo.MemoryMax)
 
 			// 计算并上报使用率(limit=0 时跳过,避免除零)
 			if resourceInfo.CPULimit > 0 {
@@ -271,10 +297,23 @@ func updateMetrics() {
 				log.Printf("Allocation %s CPU usage: %.2f%% (%.2f MHz/%.2f MHz)", resourceInfo.AllocationID, cpuPercentage, resourceInfo.CPUUsage, resourceInfo.CPULimit)
 			}
 
+			// 内存使用率双发,避免"同名改语义"的歧义:
+			//   nomad_allocation_memory_usage_percentage      = usage / memory_limit(软上限,红线原语义,保持不变)
+			//   nomad_allocation_memory_usage_percentage_max  = usage / memory_max  (硬上限,真·接近 OOM 水位,新增)
+			// 可借用内存的 task(软 100 GiB / 硬 300 GiB)在前者会 >100%,属预期;
+			// 判断是否接近 OOM 请用后者。两个分母的绝对值分别由
+			// nomad_allocation_memory_limit / nomad_allocation_memory_max 暴露。
 			if resourceInfo.MemoryLimit > 0 {
 				memoryPercentage := (resourceInfo.MemoryUsage / resourceInfo.MemoryLimit) * 100
 				allocationMemoryUsagePercentage.WithLabelValues(resourceInfo.AllocationID, resourceInfo.JobName, resourceInfo.TaskName, resourceInfo.NodeID, resourceInfo.NodeName).Set(memoryPercentage)
-				log.Printf("Allocation %s Memory usage: %.2f%%", resourceInfo.AllocationID, memoryPercentage)
+				log.Printf("Allocation %s Memory usage (vs limit): %.2f%% (%.0f MiB / %.0f MiB)", resourceInfo.AllocationID, memoryPercentage, resourceInfo.MemoryUsage, resourceInfo.MemoryLimit)
+			}
+			if resourceInfo.MemoryMax > 0 {
+				memoryPercentageMax := (resourceInfo.MemoryUsage / resourceInfo.MemoryMax) * 100
+				memLimitLabel := strconv.FormatInt(int64(resourceInfo.MemoryLimit), 10)
+				memMaxLabel := strconv.FormatInt(int64(resourceInfo.MemoryMax), 10)
+				allocationMemoryUsagePercentageMax.WithLabelValues(resourceInfo.AllocationID, resourceInfo.JobName, resourceInfo.TaskName, resourceInfo.NodeID, resourceInfo.NodeName, memLimitLabel, memMaxLabel).Set(memoryPercentageMax)
+				log.Printf("Allocation %s Memory usage (vs max): %.2f%% (%.0f MiB / %.0f MiB)", resourceInfo.AllocationID, memoryPercentageMax, resourceInfo.MemoryUsage, resourceInfo.MemoryMax)
 			}
 		}
 	}
@@ -293,8 +332,10 @@ func registerMetrics() {
 	prometheus.MustRegister(allocationCPULimit)
 	prometheus.MustRegister(allocationMemoryUsage)
 	prometheus.MustRegister(allocationMemoryLimit)
+	prometheus.MustRegister(allocationMemoryMax)
 	prometheus.MustRegister(allocationCPUUsagePercentage)
 	prometheus.MustRegister(allocationMemoryUsagePercentage)
+	prometheus.MustRegister(allocationMemoryUsagePercentageMax)
 	prometheus.MustRegister(e2bFcProcessCount)
 	prometheus.MustRegister(e2bFcProcessParseErrorsTotal)
 	prometheus.MustRegister(e2bFcProcessInfo)

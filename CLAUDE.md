@@ -12,6 +12,18 @@ E2B 集群运维 / 可观测性工具集。本文件给未来的 Claude 会话�
 
 需要补口径或加维度时,**新增**指标(例如 `e2b_node_port_listening_v2`),保留旧指标双发一段时间,而不是 in-place 改动。
 
+### 内存使用率分母:双发案例(2026-11,`checkAllocationResource.go` + `main.go`)
+
+`nomad_allocation_memory_usage_percentage` 的分母是**软上限** `memory_limit`(Nomad `alloc status` 里 `219 GiB/100 GiB` 的后者)。但 task 真正的 OOM 硬上限是下面那行 `Max: 300 GiB`(`memory_max`)。可借用内存的 task(软 100 / 硬 300)用软上限作分母会报出 >100% 的误导值(实测 219%),触发误报。
+
+**处理方式(遵循双发,不改旧指标语义)**:
+
+- `nomad_allocation_memory_usage_percentage` — 分母仍是 `memory_limit`,**语义保持不变**,继续上报(红线契约不破)。
+- `nomad_allocation_memory_usage_percentage_max`(新增)— 分母是 `memory_max`,是"接近 OOM"的真实水位;额外带 `mem_limit_mib` / `mem_max_mib` 两个稳定标签,让告警文案不跨指标 join 就能同时呈现软/硬两个分母。
+- `nomad_allocation_memory_max`(新增)— 硬上限绝对值(MiB),`memory_max` 未声明时为 0。
+
+`memory_max` 来自 `nomad alloc status -verbose` 的 `Max:` 行(`checkAllocationResource.go` 新增解析)。告警(`grafana/alerts/firecracker.yaml`)与 dashboard(`nomad-node-allocations.json`)已切到 `_percentage_max > 70`;旧指标仅不再作告警触发条件。`Max:` 行格式与 Nomad 版本绑定,升级时回归。
+
 ## 仓库结构
 
 | 路径 | 用途 |

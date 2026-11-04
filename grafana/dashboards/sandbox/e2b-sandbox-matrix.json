@@ -1,0 +1,2690 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "description": "与「节点总览（orchestrator 权威）」同源 /nodes 的 sandboxCount 求和，二者一致。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "sandboxCount",
+              "text": "沙箱数",
+              "type": "number"
+            }
+          ],
+          "computed_columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY}"
+          },
+          "filterExpression": "",
+          "filters": [],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "summarizeBy": "none",
+          "summarizeExpression": "",
+          "type": "json",
+          "url": "http://192.168.0.146:3000/nodes",
+          "url_options": {
+            "data": "",
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "当前活跃沙箱总数",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 6,
+        "y": 0
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "count(up{job=\"ecs\"} == 1)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "被监控节点数（在线）",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 11,
+        "y": 0
+      },
+      "id": 23,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "count(up{job=\"ecs\"} == 0) or vector(0)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "离线节点数（down）",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": [
+                "count"
+              ]
+            },
+            "inspect": false
+          },
+          "noValue": "✓ 无异常，所有在线节点均有沙箱指标",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "(up{job=\"ecs\",instance!~\"192.168.0.146:9106|192.168.0.161:9106\"} == 1) unless on(instance) label_replace(count by (node_ip)(e2b_sandbox_info), \"instance\", \"$1:9106\", \"node_ip\", \"(.*)\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "⚠ 漏抓/异常检测（exporter 在线但无沙箱指标）",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "job": true,
+              "prometheus": true
+            },
+            "renameByName": {
+              "instance": "节点 exporter (无沙箱指标)"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 20,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style='font-size:12px;line-height:1.25;columns:2;column-gap:20px'><div style='margin:0;padding:0'><b>节点ID</b>：orchestrator 节点名。</div><div style='margin:0;padding:0'><b>节点状态</b>：ready / draining / unhealthy / down。</div><div style='margin:0;padding:0'><b>沙箱数</b>：当前活跃沙箱数。</div><div style='margin:0;padding:0'><b>启动中</b>：创建中未就绪（瞬时）。</div><div style='margin:0;padding:0'><b>真实CPU使用率</b>：实时 CPU 占用（cpuPercent）。</div><div style='margin:0;padding:0'><b>CPU核数</b>：物理核数。</div><div style='margin:0;padding:0'><b>已分配CPU</b>：所有沙箱申请的 vCPU 之和。</div><div style='margin:0;padding:0'><b>vCPU 超配比</b>：已分配vCPU÷物理核数，<b style='color:#d9822b'>允许&gt;100%（CPU超卖）</b>，实际压力看真实CPU使用率。</div><div style='margin:0;padding:0'><b>内存已用</b>：真实物理内存占用。</div><div style='margin:0;padding:0'><b>内存总量</b>：物理内存总量。</div><div style='margin:0;padding:0'><b>内存使用率</b>：内存已用÷内存总量。</div><div style='margin:0;padding:0'><b>已分配内存</b>：分给沙箱的内存额度（记账值）。</div><div style='margin:0;padding:0'><b>大页池总量</b>：hugePagesTotal×2MiB（约占物理内存65%）。</div><div style='margin:0;padding:0'><b style='color:#d9822b'>沙箱内存水位(÷大页池)</b>：已分配内存÷大页池，正确的内存分配水位。</div><div style='margin:0;padding:0'><b>大页已用</b>：内核实时已用大页。</div><div style='margin:0;padding:0'><b>大页使用率</b>：大页已用÷大页池。</div><div style='margin:0;padding:0'><b>系统盘/data1/data2 已用·总量</b>：三块盘各自占用与容量。</div><div style='margin:0;padding:0'><b>累计创建成功/失败</b>：启动至今累计（非当前），失败&gt;0 飘色。</div><div style='margin:0;padding:0'><b>状态变更时间</b>：节点状态最近变更时刻（UTC）。</div></div>",
+        "mode": "html"
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [],
+      "title": "📖 节点总览 · 列含义说明",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "节点状态"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "down": {
+                        "color": "red",
+                        "index": 3,
+                        "text": "down"
+                      },
+                      "draining": {
+                        "color": "orange",
+                        "index": 1,
+                        "text": "draining"
+                      },
+                      "ready": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "ready"
+                      },
+                      "unhealthy": {
+                        "color": "red",
+                        "index": 2,
+                        "text": "unhealthy"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "真实CPU使用率"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "vCPU 超配比"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 2
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    },
+                    {
+                      "color": "red",
+                      "value": 1.5
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "内存使用率"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 1
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "orange",
+                      "value": 0.8
+                    },
+                    {
+                      "color": "red",
+                      "value": 0.95
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "沙箱内存水位(÷大页池)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 1
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "orange",
+                      "value": 0.8
+                    },
+                    {
+                      "color": "red",
+                      "value": 0.95
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "大页使用率"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 1
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "orange",
+                      "value": 0.8
+                    },
+                    {
+                      "color": "red",
+                      "value": 0.95
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "内存已用"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "内存总量"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "已分配内存"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "大页池总量"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "大页已用"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "系统盘已用"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "系统盘总量"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "data1盘已用"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "data1盘总量"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "data2盘已用"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "data2盘总量"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "累计创建失败"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "节点ID"
+            },
+            "properties": [
+              {
+                "id": "custom.footer.reducers",
+                "value": [
+                  "count"
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "沙箱数"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "启动中"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU核数"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "已分配CPU"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "累计创建成功"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU型号"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "版本"
+            },
+            "properties": []
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "沙箱数"
+            },
+            "properties": [
+              {
+                "id": "custom.footer.reducers",
+                "value": [
+                  "sum"
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "进入当前状态时间"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "time:YYYY-MM-DD HH:mm:ss"
+              },
+              {
+                "id": "custom.width",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "已持续"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [],
+          "show": true
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "id",
+              "text": "节点ID",
+              "type": "string"
+            },
+            {
+              "selector": "status",
+              "text": "节点状态",
+              "type": "string"
+            },
+            {
+              "selector": "sandboxCount",
+              "text": "沙箱数",
+              "type": "number"
+            },
+            {
+              "selector": "sandboxStartingCount",
+              "text": "启动中",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.cpuPercent",
+              "text": "真实CPU使用率",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.cpuCount",
+              "text": "CPU核数",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.allocatedCPU",
+              "text": "已分配CPU",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.memoryUsedBytes",
+              "text": "内存已用",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.memoryTotalBytes",
+              "text": "内存总量",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.allocatedMemoryBytes",
+              "text": "已分配内存",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.hugePagesTotal",
+              "text": "_hpTotalPages",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.hugePagesUsed",
+              "text": "_hpUsedPages",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.hugePagesReserved",
+              "text": "_hpRsvPages",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.hugePageSizeBytes",
+              "text": "_hpSize",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.disks.0.usedBytes",
+              "text": "系统盘已用",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.disks.0.totalBytes",
+              "text": "系统盘总量",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.disks.1.usedBytes",
+              "text": "data1盘已用",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.disks.1.totalBytes",
+              "text": "data1盘总量",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.disks.2.usedBytes",
+              "text": "data2盘已用",
+              "type": "number"
+            },
+            {
+              "selector": "metrics.disks.2.totalBytes",
+              "text": "data2盘总量",
+              "type": "number"
+            },
+            {
+              "selector": "createSuccesses",
+              "text": "累计创建成功",
+              "type": "number"
+            },
+            {
+              "selector": "createFails",
+              "text": "累计创建失败",
+              "type": "number"
+            },
+            {
+              "selector": "machineInfo.cpuModelName",
+              "text": "CPU型号",
+              "type": "string"
+            },
+            {
+              "selector": "version",
+              "text": "版本",
+              "type": "string"
+            },
+            {
+              "selector": "statusChangedAt",
+              "text": "进入当前状态时间",
+              "type": "timestamp"
+            },
+            {
+              "selector": "statusChangedAt",
+              "text": "已持续",
+              "type": "timestamp"
+            }
+          ],
+          "computed_columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY}"
+          },
+          "filterExpression": "",
+          "filters": [],
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "summarizeBy": "none",
+          "summarizeExpression": "",
+          "type": "json",
+          "url": "http://192.168.0.146:3000/nodes",
+          "url_options": {
+            "data": "",
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "节点总览（orchestrator 权威：状态 / 沙箱数 / 资源）",
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "大页池总量",
+            "binary": {
+              "left": "_hpTotalPages",
+              "operator": "*",
+              "right": "_hpSize"
+            },
+            "mode": "binary",
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "大页已用",
+            "binary": {
+              "left": "_hpUsedPages",
+              "operator": "*",
+              "right": "_hpSize"
+            },
+            "mode": "binary",
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "vCPU 超配比",
+            "binary": {
+              "left": "已分配CPU",
+              "operator": "/",
+              "right": "CPU核数"
+            },
+            "mode": "binary",
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "内存使用率",
+            "binary": {
+              "left": "内存已用",
+              "operator": "/",
+              "right": "内存总量"
+            },
+            "mode": "binary",
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "沙箱内存水位(÷大页池)",
+            "binary": {
+              "left": "已分配内存",
+              "operator": "/",
+              "right": "大页池总量"
+            },
+            "mode": "binary",
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "大页使用率",
+            "binary": {
+              "left": "大页已用",
+              "operator": "/",
+              "right": "大页池总量"
+            },
+            "mode": "binary",
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "_hpRsvPages": true,
+              "_hpSize": true,
+              "_hpTotalPages": true,
+              "_hpUsedPages": true
+            },
+            "indexByName": {
+              "CPU型号": 26,
+              "CPU核数": 7,
+              "data1盘已用": 20,
+              "data1盘总量": 21,
+              "data2盘已用": 22,
+              "data2盘总量": 23,
+              "vCPU 超配比": 9,
+              "内存使用率": 12,
+              "内存已用": 10,
+              "内存总量": 11,
+              "启动中": 5,
+              "大页使用率": 17,
+              "大页已用": 16,
+              "大页池总量": 14,
+              "已分配CPU": 8,
+              "已分配内存": 13,
+              "已持续": 3,
+              "沙箱内存水位(÷大页池)": 15,
+              "沙箱数": 4,
+              "版本": 27,
+              "真实CPU使用率": 6,
+              "系统盘已用": 18,
+              "系统盘总量": 19,
+              "累计创建失败": 25,
+              "累计创建成功": 24,
+              "节点ID": 0,
+              "节点状态": 1,
+              "进入当前状态时间": 2
+            },
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": "",
+            "sort": [
+              {
+                "desc": true,
+                "field": "沙箱数"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "各节点内核版本与二进制MD5。数据源 exporter 指标 e2b_node_uname_info / e2b_node_binary_info，按 instance(抓取地址) 关联。无对应二进制的节点 MD5 列留空。",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "节点ID"
+            },
+            "properties": [
+              {
+                "id": "custom.footer.reducers",
+                "value": [
+                  "count"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "id": 14,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [],
+          "show": true
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "e2b_node_uname_info",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "e2b_node_binary_info{binary=\"orchestrator\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "e2b_node_binary_info{binary=\"envd\"}",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "C"
+        }
+      ],
+      "title": "节点内核版本（uname -r）",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "instance",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Value #A": true,
+              "Value #B": true,
+              "Value #C": true,
+              "__name__": true,
+              "__name__ 1": true,
+              "__name__ 2": true,
+              "__name__ 3": true,
+              "binary": true,
+              "binary 1": true,
+              "binary 2": true,
+              "binary 3": true,
+              "job": true,
+              "job 1": true,
+              "job 2": true,
+              "job 3": true,
+              "node_id": true,
+              "node_id 1": true,
+              "node_ip": true,
+              "node_ip 1": true,
+              "node_ip 2": true,
+              "node_ip 3": true,
+              "path": true,
+              "path 1": true,
+              "path 2": true,
+              "path 3": true,
+              "prometheus": true,
+              "prometheus 1": true,
+              "prometheus 2": true,
+              "prometheus 3": true
+            },
+            "indexByName": {
+              "instance": 2,
+              "md5": 4,
+              "md5 2": 3,
+              "node_name": 0,
+              "release": 1
+            },
+            "renameByName": {
+              "instance": "抓取地址",
+              "md5": "envd MD5",
+              "md5 2": "orchestrator MD5",
+              "node_name": "节点ID",
+              "release": "内核版本"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": "",
+            "sort": [
+              {
+                "desc": false,
+                "field": "节点ID"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "id": 24,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "footer": {
+                  "reducers": []
+                },
+                "inspect": false
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Team名称"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "0ae5f9f7-d6ac-4fde-9279-92943a0b5a86": {
+                            "text": "Shaozhou's Project"
+                          },
+                          "0f44e8fc-859c-4f6a-b7e4-3068de12123e": {
+                            "text": "张硕's Project"
+                          },
+                          "2a8e0507-cbc5-4445-95dc-314347c607f4": {
+                            "text": "Hanszhuang's Default Team"
+                          },
+                          "4b893304-e299-4243-bea4-392feee74b7c": {
+                            "text": "张国强's Project"
+                          },
+                          "4e8177c9-134c-4311-b917-418314e587af": {
+                            "text": "郭品学's Project"
+                          },
+                          "65380065-c5bd-4d9f-b81c-1ce0866db931": {
+                            "text": "e2b-nex@china-qijizhifeng.com"
+                          },
+                          "6d4eb009-5540-4951-830a-b0e10d06ed65": {
+                            "text": "何阳极's Project"
+                          },
+                          "9bfcc2c7-0a17-486c-a79c-4b323eee7162": {
+                            "text": "锁祎然's Project"
+                          },
+                          "e5c4b9f2-88d7-4bae-bde0-1480d82e9988": {
+                            "text": "Zhoumaosen's Project"
+                          },
+                          "f6eb883d-263d-4b71-831e-58ae7fd13878": {
+                            "text": "张朝运's Default Team"
+                          },
+                          "fcd649c5-0175-4d1e-98a5-1c218009dee4": {
+                            "text": "e2b-rl@china-qijizhifeng.com"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "模板别名"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "0codtjuah1n6euwxqdk5": {
+                            "text": "e2b-nex/claude-maypok86__otter-41"
+                          },
+                          "0ewxls6rgwboibmjw1ri": {
+                            "text": "e2b-nex/claude-oclif__core-593"
+                          },
+                          "0mhs67dp9clkj3phjzov": {
+                            "text": "s-project-3fe6/sphinx-doc__sphinx-8120__3a585a8cb90a"
+                          },
+                          "0mjoi8n09bxcf8evu24h": {
+                            "text": "s-project-3fe6/sphinx-doc__sphinx-10614__55c5001772b0"
+                          },
+                          "0odmdknhmnydj3l7efy8": {
+                            "text": "e2b-nex/claude-gpbl__react-day-picker-581"
+                          },
+                          "0qnc917rxpfyc9ek8s35": {
+                            "text": "e2b-nex/claude-reduxjs__react-redux-1701"
+                          },
+                          "19687s18lh59pwvbm0pc": {
+                            "text": "e2b-nex/claude-not-fl3__nanoserde-91"
+                          },
+                          "1atkon5z8lx8ikkym80y": {
+                            "text": "e2b-nex/claude-cogent3__cogent3-1951"
+                          },
+                          "1g6r38yujwj0ws9qrdf3": {
+                            "text": "e2b-nex/claude-knative__client-1929"
+                          },
+                          "1ky9ysmq82hhvcvs4ck6": {
+                            "text": "e2b-nex/claude-surface-ui__surface_formatter-53"
+                          },
+                          "1nwlm2b3ap62f5e3gumz": {
+                            "text": "e2b-nex/claude-orhun__git-cliff-94"
+                          },
+                          "1p7izundk4777jvspz95": {
+                            "text": "e2b-nex/claude-quick__nimble-706"
+                          },
+                          "1rrrypp5e8h3kdkmbz94": {
+                            "text": "e2b-nex/claude-humbug__php-scoper-882"
+                          },
+                          "1w01zq1h7r7zdmq0dyu8": {
+                            "text": "e2b-nex/claude-obsidian-tasks-group__obsidian-tasks-2695"
+                          },
+                          "1zs9fudcgu8w9vztyngf": {
+                            "text": "s-project-3fe6/django__django-10554__a22d6aae1a2c"
+                          },
+                          "21pi03ckjubw1kjtrohp": {
+                            "text": "s-project-3fe6/nexbench-rubric-6148bb86b79e4bdd40cc734f-v2"
+                          },
+                          "26bzyjsm0uuonoyxh1pz": {
+                            "text": "e2b-nex/claude-scoutapp__scout_apm_python-597"
+                          },
+                          "2guq9fp1k67pzot9nexu": {
+                            "text": "e2b-nex/claude-aftership__clickhouse-sql-parser-148"
+                          },
+                          "2hz6rh14vlcwvgcgy5vo": {
+                            "text": "s-project-3fe6/pydata__xarray-3095__54e422055b18"
+                          },
+                          "2migm8i5ozkb9jr0abwo": {
+                            "text": "e2b-nex/claude-kubernetes-csi__external-provisioner-758"
+                          },
+                          "2yxs31etbiam5vcvodri": {
+                            "text": "e2b-nex/claude-tjtanjin__react-chatbotify-252"
+                          },
+                          "31qweakf87romudkflr6": {
+                            "text": "e2b-nex/claude-jsonata-js__jsonata-728"
+                          },
+                          "35xg75ys0waqek7ixz8y": {
+                            "text": "e2b-nex/claude-cloudtools__troposphere-2225"
+                          },
+                          "392nrl5cfgfqc06d446a": {
+                            "text": "e2b-nex/claude-ripple__explorer-740"
+                          },
+                          "3nb40ilrsoka3wpmvlw5": {
+                            "text": "e2b-nex/claude-jnothman__upsetplot-264"
+                          },
+                          "3qnsj3qqrqoq3t0uarpi": {
+                            "text": "e2b-nex/claude-segmentio__terraform-docs-235"
+                          },
+                          "3xoyndfyutykzha4cpta": {
+                            "text": "e2b-nex/claude-scionproto__scion-4570"
+                          },
+                          "3z7nr34sfjfhaoz9jn7o": {
+                            "text": "s-project-3fe6/scikit-learn__scikit-learn-10297__ece33b3fff1b"
+                          },
+                          "45g0wgyxapmz43kbz0qn": {
+                            "text": "e2b-nex/claude-newrelic__elixir_agent-464"
+                          },
+                          "4dalynnoeihnzrno5wdl": {
+                            "text": "e2b-nex/claude-sanctuary-js__sanctuary-491"
+                          },
+                          "4dweu63b5ggbibna7nhp": {
+                            "text": "e2b-nex/claude-fsspec__universal_pathlib-372"
+                          },
+                          "4qm2fxy7684gls6w55gw": {
+                            "text": "s-project-3fe6/django__django-16938__bf376aadd233"
+                          },
+                          "633nci4nnyu174rnlwnl": {
+                            "text": "e2b-nex/claude-dynaconf__dynaconf-811"
+                          },
+                          "65yv3r9yxsb64oy1fa0f": {
+                            "text": "s-project-3fe6/django__django-14034__e83c36d56350"
+                          },
+                          "6c1l6mz96hdutuybvajw": {
+                            "text": "e2b-nex/claude-yannickcr__eslint-plugin-react-1735"
+                          },
+                          "6iufhebl620ynzjtqsbg": {
+                            "text": "e2b-nex/claude-aquasecurity__starboard-505"
+                          },
+                          "6jcg325ho9fgqigiobu6": {
+                            "text": "s-project-3fe6/nexbench-rubric-8d11d62e0e975959cb99b2f9-v2"
+                          },
+                          "6k825ttnt8854wbfyd4e": {
+                            "text": "e2b-nex/claude-intuit__auto-1762"
+                          },
+                          "6mhvpkq8qfhu1eynn03h": {
+                            "text": "e2b-nex/claude-go-task__task-211"
+                          },
+                          "6muvw9j4ve2xs8ubbxl2": {
+                            "text": "e2b-nex/claude-pennylaneai__pennylane-4749"
+                          },
+                          "7azpwqhilxfvltlrbup1": {
+                            "text": "e2b-nex/claude-absinthe-graphql__absinthe-797"
+                          },
+                          "7h34ao333ke1fus93f2g": {
+                            "text": "e2b-nex/claude-hibiken__asynq-276"
+                          },
+                          "7kap87bhlmsnugo4gaxx": {
+                            "text": "e2b-nex/claude-cloudnativelabs__kube-router-1666"
+                          },
+                          "7lvcwyahv1lyfyy76uje": {
+                            "text": "e2b-nex/claude-logaretm__vee-validate-4594"
+                          },
+                          "7t71zy4tohc8l3s58w97": {
+                            "text": "e2b-nex/claude-elastic__synthetics-261"
+                          },
+                          "7v40spckx8pc1pg3ytwu": {
+                            "text": "e2b-nex/claude-crazy-max__ghaction-docker-meta-23"
+                          },
+                          "7vrsfoxt38f5vwm2c60k": {
+                            "text": "e2b-nex/claude-d3__d3-array-276"
+                          },
+                          "7ybogwqddok5e48lodvh": {
+                            "text": "e2b-nex/claude-harttle__liquidjs-631"
+                          },
+                          "7zd4tmsf2n1wf0s388e1": {
+                            "text": "e2b-nex/claude-tradingview__lightweight-charts-759"
+                          },
+                          "894cl8l2j2fr4s9r3rh5": {
+                            "text": "e2b-nex/claude-surveyjs__survey-analytics-524"
+                          },
+                          "9dsfoxl973zc8ug1nl23": {
+                            "text": "e2b-nex/claude-aquasecurity__tfsec-969"
+                          },
+                          "9k0vpypc8fqyy0diq9xl": {
+                            "text": "e2b-nex/claude-parquet-go__parquet-go-292"
+                          },
+                          "9l4gw0s54hx83cfla59j": {
+                            "text": "e2b-nex/claude-joshuakgoldberg__create-typescript-app-1791"
+                          },
+                          "9qh7wf1lwn4khnwdo6bi": {
+                            "text": "e2b-nex/claude-joshuakgoldberg__create-typescript-app-1866"
+                          },
+                          "a6jji2hcma65gax0rcit": {
+                            "text": "e2b-nex/tenacity__565414a2__nyb29800f6"
+                          },
+                          "a9625qrqwbse3ypx7sgu": {
+                            "text": "e2b-nex/claude-francoismassart__eslint-plugin-tailwindcss-217"
+                          },
+                          "ahru8796uqua87n9h0gc": {
+                            "text": "e2b-rl/claude-verified-django__django-14053-batch-20260917-retry2"
+                          },
+                          "aqm3vw2hii7l5xpryui0": {
+                            "text": "e2b-nex/claude-buxlabs__boxwood-619"
+                          },
+                          "aqriul9c0z2n16ldk2b8": {
+                            "text": "e2b-nex/claude-eslint__eslint-11113"
+                          },
+                          "bp92nbhmij1ooq03zmhk": {
+                            "text": "e2b-nex/claude-jsx-eslint__eslint-plugin-react-3673"
+                          },
+                          "bq5heibp1ag5ughr1jrb": {
+                            "text": "e2b-nex/claude-serverless__serverless-5744"
+                          },
+                          "bqpamg2kjtmjbx469hdc": {
+                            "text": "e2b-nex/claude-jump-dev__jump-jl-3302"
+                          },
+                          "c9h7zfbv83pi7aca7msg": {
+                            "text": "s-project-3fe6/sympy__sympy-13372__dd1fe8eef044"
+                          },
+                          "cgsp2ho5e7dcyqsm18w4": {
+                            "text": "e2b-nex/claude-joshuakgoldberg__create-typescript-app-2245"
+                          },
+                          "cmp5jk5xrwu5nk10tbn4": {
+                            "text": "e2b-nex/claude-pyccel__pyccel-1837"
+                          },
+                          "co5o4nb5egppy7lmubod": {
+                            "text": "e2b-nex/claude-martinohmann__hcl-rs-189"
+                          },
+                          "cvkhn3vp1f6ytt4ygae3": {
+                            "text": "e2b-nex/claude-allegro__marathon-consul-123"
+                          },
+                          "cvrl4eg6u4y0n79crowt": {
+                            "text": "e2b-nex/claude-google__go-github-2744"
+                          },
+                          "da3a29pixysm7qt4xgmt": {
+                            "text": "e2b-rl/claude-verified-sphinx-doc__sphinx-7889-batch-20260917-retry1"
+                          },
+                          "dlhgg3g8gyz2u7htm2tp": {
+                            "text": "e2b-nex/claude-semantic-release__semantic-release-812"
+                          },
+                          "dwj1l6y1vt3qnpsxdrma": {
+                            "text": "e2b-nex/claude-uber-web__baseui-1663"
+                          },
+                          "ea1oe392qsie8rjd8pn9": {
+                            "text": "s-project-3fe6/sphinx-doc__sphinx-9673__4dd2d4638209"
+                          },
+                          "edrdxtmw4kb3f0gaculi": {
+                            "text": "e2b-nex/claude-goreleaser__nfpm-576"
+                          },
+                          "egmvv8rpoxsx2f1ghhkb": {
+                            "text": "e2b-nex/claude-mmcloughlin__avo-123"
+                          },
+                          "esdq8hvz6rb5yfo08rgp": {
+                            "text": "e2b-nex/claude-defstudio__telegraph-502"
+                          },
+                          "euj1vt8j47zf4ujjla82": {
+                            "text": "e2b-nex/claude-pybamm-team__pybamm-587"
+                          },
+                          "exy605n0294qejirq8t9": {
+                            "text": "e2b-nex/claude-pycqa__pyflakes-754"
+                          },
+                          "eyxyoho9x7y95a5hf5pl": {
+                            "text": "e2b-nex/claude-benhoyt__goawk-215"
+                          },
+                          "fe3fusjyzo2xvhbp3m46": {
+                            "text": "e2b-nex/claude-eslint-community__eslint-plugin-eslint-plugin-451"
+                          },
+                          "fklxewtccumwkznrdbyc": {
+                            "text": "e2b-nex/claude-glayzzle__php-parser-85"
+                          },
+                          "flyk5oz5ngo7adsv5kxp": {
+                            "text": "e2b-nex/claude-qiskit__qiskit-ibm-runtime-361"
+                          },
+                          "fw3wl8ruengexrcgr1xg": {
+                            "text": "e2b-nex/claude-platers__obsidian-linter-1207"
+                          },
+                          "fwcyxn5ikf8d2l98ktll": {
+                            "text": "e2b-nex/claude-oscal-compass__compliance-trestle-1573"
+                          },
+                          "fx9ag71z4ogaj2va8u7b": {
+                            "text": "s-project-3fe6/django__django-16569__4a63f9f01fcf"
+                          },
+                          "fzwz4palxaqw7jieh4qv": {
+                            "text": "e2b-nex/claude-reata__sqllineage-239"
+                          },
+                          "g3te82ba65kp28oytquj": {
+                            "text": "e2b-nex/claude-pingcap__tidb-binlog-894"
+                          },
+                          "g5zmnvdyx54nf7madxi3": {
+                            "text": "e2b-nex/claude-nats-io__nsc-422"
+                          },
+                          "g6snan38xlq6hkt64gke": {
+                            "text": "e2b-nex/claude-e2niee__pandapower-249"
+                          },
+                          "g79jwwqwsbzx2nwgxmf7": {
+                            "text": "s-project-3fe6/django__django-11551__8d7a5ae6748f"
+                          },
+                          "g9c2hct4yl91s7zc8yw9": {
+                            "text": "hanszhuangs-default-team/tinycc__tinycc-9b8765d__64b260fd__nyb29800f6__cli__r761ed5"
+                          },
+                          "g9hdpm10v2gnkzo2f4zb": {
+                            "text": "e2b-nex/claude-brenolf__polyjuice-59"
+                          },
+                          "gayjrc2ewrbw709t780r": {
+                            "text": "e2b-nex/claude-bbc__psammead-758"
+                          },
+                          "ge0wwsvizuwgjjtmpc0r": {
+                            "text": "e2b-nex/claude-serverless__serverless-3186"
+                          },
+                          "gmtszbzff44z45m2sz1s": {
+                            "text": "e2b-nex/claude-natcap__invest-750"
+                          },
+                          "h5ayklzk1vk9ccbce01x": {
+                            "text": "e2b-nex/claude-sindresorhus__got-286"
+                          },
+                          "h5g4mxrc7wjjei4q9m2w": {
+                            "text": "e2b-nex/claude-dikhan__terraform-provider-openapi-322"
+                          },
+                          "h9fz3kd3f3m8i2er68b8": {
+                            "text": "e2b-nex/claude-timothycrosley__isort-390"
+                          },
+                          "hfszqeiqcp4cy88d8did": {
+                            "text": "e2b-nex/claude-segmentio__analytics-swift-302"
+                          },
+                          "hgbgbkg87aicun1pjgaj": {
+                            "text": "e2b-nex/claude-fgnass__node-dev-232"
+                          },
+                          "hj4oe4qouodq45bzosps": {
+                            "text": "e2b-nex/claude-defstudio__telegraph-599"
+                          },
+                          "how0ofan1n4xs0dr558p": {
+                            "text": "e2b-nex/claude-numaproj__numaflow-271"
+                          },
+                          "hywu0crbp3rgcm0hdo28": {
+                            "text": "e2b-nex/claude-pyfilesystem__pyfilesystem2-439"
+                          },
+                          "i1tur9wqc9d1zyj8c72b": {
+                            "text": "s-project-3fe6/pytest-dev__pytest-10081__96ec2ae45d43"
+                          },
+                          "i9fcpsfljpg380rtqthe": {
+                            "text": "e2b-nex/claude-reactiflux__discord-irc-476"
+                          },
+                          "ia13odbdopmn298ei59s": {
+                            "text": "e2b-nex/claude-astropenguin__xarray-dataclasses-6"
+                          },
+                          "iaduv2qjwf8y7zt0wek6": {
+                            "text": "e2b-nex/claude-neurodatawithoutborders__pynwb-820"
+                          },
+                          "ihxvv511k7iym66c8jh5": {
+                            "text": "e2b-nex/gdpval-v5-rebuild"
+                          },
+                          "imkllhwc8vxnou85nn1z": {
+                            "text": "s-project-3fe6/scikit-learn__scikit-learn-12585__30f423f1f769"
+                          },
+                          "imn9uyrbamspbzgz0dp9": {
+                            "text": "s-project-3fe6/sphinx-doc__sphinx-9320__0886375bfe80"
+                          },
+                          "iuubrboxq832clpe00v8": {
+                            "text": "e2b-nex/claude-globocom__huskyci-478"
+                          },
+                          "ix096unvq6ecjqqtwu2f": {
+                            "text": "e2b-nex/claude-qiskit__qiskit-terra-7919"
+                          },
+                          "izo61djnfqn9a4j2slun": {
+                            "text": "s-project-3fe6/django__django-15572__09bf8d861a6e"
+                          },
+                          "jq16hmghttkgrtrseqo7": {
+                            "text": "s-default-team/northcua-e2b-osworld-gnome-full-rfc008-20260906-r21-slim"
+                          },
+                          "jtoiylwcmsf4jtezs42l": {
+                            "text": "e2b-nex/claude-nemocas__abstractalgebra-jl-703"
+                          },
+                          "jzv433gg3tj42ev2zncw": {
+                            "text": "s-project-3fe6/pytest-dev__pytest-7324__0e2e397b236f"
+                          },
+                          "k5198db5yf3gnjsc6w0w": {
+                            "text": "s-project-3fe6/astropy__astropy-7166__d10a11c32407"
+                          },
+                          "kg55i3m0qr7e8y6tkn2m": {
+                            "text": "e2b-nex/claude-dubzzz__fast-check-1020"
+                          },
+                          "l0lgm8jzzo2wbmotry51": {
+                            "text": "e2b-nex/claude-lo1tuma__eslint-plugin-mocha-369"
+                          },
+                          "lxgcs0tf7kud6uh6e6eg": {
+                            "text": "e2b-nex/claude-jensneuse__graphql-go-tools-174"
+                          },
+                          "lzrrv9l77wnta69hpj08": {
+                            "text": "e2b-nex/claude-dockyard__elixir-mail-106"
+                          },
+                          "m0jb2jpxw4jaig2maa9t": {
+                            "text": "e2b-nex/claude-aio-libs__aiohttp-7869"
+                          },
+                          "m0yf8ywkl61o0ehokqhs": {
+                            "text": "e2b-nex/claude-ember-cli__eslint-plugin-ember-920"
+                          },
+                          "m8e8xr5e4cjevdutk9oe": {
+                            "text": "e2b-nex/claude-gitify-app__gitify-812"
+                          },
+                          "mayyxaqcn1awb5dhqhoy": {
+                            "text": "e2b-nex/claude-openrocket__openrocket-2780"
+                          },
+                          "mdzqjyz2eywqrgdjm1fc": {
+                            "text": "s-project-3fe6/django__django-11163__ce8b645315b7"
+                          },
+                          "mgdwcz90y3y619xp9lyc": {
+                            "text": "e2b-nex/claude-tailwindlabs__tailwindcss-jit-157"
+                          },
+                          "ms6vzrf6ko4ktsbgjx2n": {
+                            "text": "e2b-nex/claude-testem__testem-1748"
+                          },
+                          "mu9kva8upbusl7f4ckbj": {
+                            "text": "s-project-3fe6/django__django-14500__fc0ccb88baeb"
+                          },
+                          "my7fni0yeu16bza141dq": {
+                            "text": "e2b-nex/claude-blitz-js__superjson-81"
+                          },
+                          "nbelzlzbxdjhgm4sgy8e": {
+                            "text": "e2b-rl/claude-verified-astropy__astropy-7671-batch-20260917-retry1"
+                          },
+                          "nezlgfskmb992uw7so7v": {
+                            "text": "e2b-nex/claude-lingui__js-lingui-898"
+                          },
+                          "nkokgf1x9wivsd82zcdq": {
+                            "text": "s-project-3fe6/sympy__sympy-21379__9834c0c6745c"
+                          },
+                          "nrlg11h2wxxek0c26jkf": {
+                            "text": "e2b-nex/claude-ast-grep__ast-grep-1588"
+                          },
+                          "nskbc5nmorubwfgfmwsr": {
+                            "text": "e2b-nex/claude-julialang__juliasyntax-jl-106"
+                          },
+                          "nxx9fhcrdrbm31ew8128": {
+                            "text": "e2b-nex/claude-phpmd__phpmd-1193"
+                          },
+                          "nyppacsziclqexvqcvla": {
+                            "text": "s-project-3fe6/matplotlib__matplotlib-13989__519273d01a75"
+                          },
+                          "o1jrxar6ywyh4ahv6646": {
+                            "text": "e2b-nex/claude-test-results-reporter__reporter-26"
+                          },
+                          "ol3udwpqn0s5afy62zvp": {
+                            "text": "e2b-nex/claude-open-feature__js-sdk-578"
+                          },
+                          "oqngqs5p530us3g716ja": {
+                            "text": "e2b-nex/claude-fastify__fastify-swagger-511"
+                          },
+                          "osex1wxqpjybvv8figy1": {
+                            "text": "s-project-3fe6/django__django-13925__4ad36753a3f5"
+                          },
+                          "ov7xrn7j032ud4k45fw9": {
+                            "text": "e2b-nex/claude-gobuffalo__pop-797"
+                          },
+                          "p0qvbbb717ca8969awaf": {
+                            "text": "e2b-nex/claude-fredrikekre__runic-jl-110"
+                          },
+                          "payoaqh1mvpwd1zx1l0g": {
+                            "text": "e2b-rl/claude-verified-matplotlib__matplotlib-25287-batch-20260917"
+                          },
+                          "pgqcvt0gvi4k941e7dpb": {
+                            "text": "e2b-nex/claude-kubernetes-csi__external-provisioner-387"
+                          },
+                          "pll5jbwf3dfbv5wk2xc5": {
+                            "text": "e2b-nex/claude-eslint__eslint-8797"
+                          },
+                          "pn40xmspoobfaiqau91h": {
+                            "text": "e2b-nex/claude-pyca__pyopenssl-708"
+                          },
+                          "q04p46oxhpk37rydn7er": {
+                            "text": "e2b-nex/claude-jazzband__pip-tools-822"
+                          },
+                          "q24vysnnnazed56imjmp": {
+                            "text": "e2b-nex/claude-scrapy__scrapy-6606"
+                          },
+                          "q4wpzjm6d7cs6pxe7kx2": {
+                            "text": "hanszhuangs-default-team/chmln__handlr-90e78ba__603dc930__nyb29800f6__cli__r761ed5"
+                          },
+                          "q96dbe6gjktykf35j9y9": {
+                            "text": "e2b-nex/claude-seaofvoices__darklua-164"
+                          },
+                          "qbe3xgzduu9ae81lfkoj": {
+                            "text": "e2b-nex/claude-qiskit__qiskit-terra-5619"
+                          },
+                          "qbo0fdsg3qic99c8vnyl": {
+                            "text": "e2b-nex/claude-gtalarico__pyairtable-416"
+                          },
+                          "qfnh4mled8efuvrhg6eh": {
+                            "text": "s-project-3fe6/matplotlib__matplotlib-21568__5dbe0590339e"
+                          },
+                          "qfssqbn0x0m3ror76fvi": {
+                            "text": "e2b-nex/claude-ecmwf__earthkit-data-592"
+                          },
+                          "qkkuic75e9la4xuwagdf": {
+                            "text": "s-project-3fe6/matplotlib__matplotlib-25332__8c12c01db6c7"
+                          },
+                          "qufrbk47jj1tjwl12p2d": {
+                            "text": "e2b-nex/claude-obsidian-tasks-group__obsidian-tasks-3099"
+                          },
+                          "r4a83rdyw4b86jst02hs": {
+                            "text": "e2b-nex/claude-kubermatic__kubermatic-7202"
+                          },
+                          "r67d8feygzrzuhbeihgo": {
+                            "text": "s-project-3fe6/django__django-12262__ac70b11df1d0"
+                          },
+                          "rg3q8nmlm16ohuqdkotw": {
+                            "text": "e2b-nex/claude-pyca__cryptography-11201"
+                          },
+                          "rgu6tjc2p6z1rqbog7za": {
+                            "text": "e2b-nex/claude-hdmf-dev__hdmf-1189"
+                          },
+                          "rq3yssocoz88iltry17e": {
+                            "text": "e2b-nex/claude-not-fl3__nanoserde-102"
+                          },
+                          "rqtg6m21s2in3tvww2xc": {
+                            "text": "e2b-nex/claude-qiskit__qiskit-terra-9006"
+                          },
+                          "scai2d2j3wm3mscb64sx": {
+                            "text": "e2b-nex/claude-speee__jsx-slack-165"
+                          },
+                          "sqrm1kded4c5tmujq7v3": {
+                            "text": "e2b-nex/claude-wntrblm__nox-804"
+                          },
+                          "su6a6cpnc1hufw2mp13h": {
+                            "text": "e2b-nex/claude-unidata__netcdf-c-2065"
+                          },
+                          "suyius2pmkay7ihm9s87": {
+                            "text": "e2b-nex/claude-eemeli__yaml-371"
+                          },
+                          "t2n1ludsy6wogiynqwho": {
+                            "text": "s-project-3fe6/django__django-11603__26c67acbc2ee"
+                          },
+                          "t5x6bu6l83sm58bsly1g": {
+                            "text": "e2b-nex/claude-dtolnay__async-trait-235"
+                          },
+                          "t9lkdwvb0eelpwafmyei": {
+                            "text": "e2b-nex/claude-luizalabs__teresa-467"
+                          },
+                          "tbca1zfwsbxrrwz0fi0a": {
+                            "text": "s-project-fe71/rsi-v001"
+                          },
+                          "tj7e6kupb5vvm4l13fi5": {
+                            "text": "e2b-nex/claude-firebase__firebase-tools-3025"
+                          },
+                          "toot7zw3iq4jevps932l": {
+                            "text": "e2b-nex/claude-edgexfoundry__device-sdk-go-1301"
+                          },
+                          "ty3mwfiyx7bs5y4ts5h7": {
+                            "text": "e2b-nex/claude-buxlabs__boxwood-639"
+                          },
+                          "u7dawn62tac2z52pa6gc": {
+                            "text": "s-project-3fe6/nexbench-synth-node-codex-sdk-0-147-0"
+                          },
+                          "uamxp9zl1ibonw5zkcwf": {
+                            "text": "e2b-nex/claude-naturalcrit__homebrewery-2681"
+                          },
+                          "utdk1dqwp2qo3g2b0u81": {
+                            "text": "e2b-nex/claude-meggart__diskarrays-jl-228"
+                          },
+                          "uu0m4nrnkzjmdsqajv7d": {
+                            "text": "e2b-nex/claude-teddriggs__darling-272"
+                          },
+                          "uwjw2ypmfpki4kvpv879": {
+                            "text": "e2b-nex/claude-ecmwf__earthkit-data-339"
+                          },
+                          "vd68byo1usd81qgyhtla": {
+                            "text": "e2b-nex/claude-pulumi__pulumi-17188"
+                          },
+                          "ve2p21fxm3wsdw7rca1a": {
+                            "text": "shaozhous-project/cowork-opencode-universal-v0-3-0-c855c4b48b64"
+                          },
+                          "vooage7dzv1lkn753ha8": {
+                            "text": "e2b-nex/claude-weaveworks__eksctl-4809"
+                          },
+                          "vqb108d6e4b367qniggx": {
+                            "text": "e2b-nex/claude-codezonediitj__pydatastructs-85"
+                          },
+                          "vsfahpc63t7vn2iyv7hh": {
+                            "text": "e2b-nex/claude-nvim-lua__plenary-nvim-635"
+                          },
+                          "w2yhx8bt1zehu1j4v7uj": {
+                            "text": "e2b-nex/claude-platers__obsidian-linter-665"
+                          },
+                          "wax9ot2tuugn5rrch27l": {
+                            "text": "e2b-nex/claude-quora__pyanalyze-738"
+                          },
+                          "wc9k03520fyg3hgsu5hd": {
+                            "text": "e2b-nex/claude-cpisciotta__xcbeautify-311"
+                          },
+                          "xchmy122a0gmwt02bajh": {
+                            "text": "e2b-nex/claude-zeit-ui__react-151"
+                          },
+                          "xg9vbjad4lc8j43rzol7": {
+                            "text": "e2b-nex/claude-getsentry__sentry-capacitor-480"
+                          },
+                          "xlm25vzpndxe1e2joce9": {
+                            "text": "e2b-nex/claude-un-ts__prettier-455"
+                          },
+                          "xn1iu6yaxkaidiqmomz0": {
+                            "text": "s-project-3fe6/django__django-11532__dd01c3b13256"
+                          },
+                          "xrmf9namq72h3h1oi4d5": {
+                            "text": "e2b-nex/claude-nestjs__swagger-913"
+                          },
+                          "xuaqz5fv1o1gywrqgwtl": {
+                            "text": "s-project-3fe6/nexbench-rubric-8de79b722d948a22fd1ebfee-v3"
+                          },
+                          "xyasxw9jhpyyerdupz8i": {
+                            "text": "e2b-nex/deslib__96f1ee90__nyb29800f6"
+                          },
+                          "y0fro2p15h6jjxdccxc7": {
+                            "text": "e2b-nex/claude-open-telemetry__opentelemetry-go-contrib-5404"
+                          },
+                          "y521rdxolr894t19le6x": {
+                            "text": "e2b-nex/claude-intuit__auto-927"
+                          },
+                          "y6z104ir47fzghltprkr": {
+                            "text": "e2b-nex/claude-mlange-42__arche-438"
+                          },
+                          "yhr6d2igif0ouec77frx": {
+                            "text": "e2b-nex/claude-gregnb__mui-datatables-167"
+                          },
+                          "yjoxw49a7yyh1fpnqgsg": {
+                            "text": "e2b-nex/claude-webpack__enhanced-resolve-289"
+                          },
+                          "ykyswcs5o2npetgts2vv": {
+                            "text": "e2b-nex/claude-rochacbruno__dynaconf-188"
+                          },
+                          "yoktbzg2nl31vdie8842": {
+                            "text": "e2b-rl/claude-verified-astropy__astropy-8872-batch-20260917"
+                          },
+                          "yt0wn4b9gkjxqfsl918s": {
+                            "text": "e2b-nex/claude-cayleygraph__cayley-849"
+                          },
+                          "ywbnagvlawditypv2hqk": {
+                            "text": "e2b-nex/claude-moox__phenomic-923"
+                          },
+                          "z1do6vfe85dxg8nhzjtj": {
+                            "text": "e2b-nex/claude-rrd108__vue-mess-detector-404"
+                          },
+                          "z556v6ti7e8c2h5z64tz": {
+                            "text": "e2b-nex/claude-apache__camel-k-825"
+                          },
+                          "zc26v8jma1509efgc3dp": {
+                            "text": "e2b-nex/claude-opensearch-project__opensearch-php-177"
+                          },
+                          "zery95y14n2x46asrac9": {
+                            "text": "e2b-nex/claude-speee__jsx-slack-101"
+                          },
+                          "zkj6wsajkp1r9j1fe3qz": {
+                            "text": "e2b-nex/claude-cloudflare__cloudflare-go-760"
+                          },
+                          "zrq52iasyg4t0eaot42h": {
+                            "text": "e2b-nex/claude-pvlib__pvlib-python-542"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "开始时间"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "dateTimeAsIso"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "结束时间"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "dateTimeAsIso"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 16,
+            "w": 24,
+            "x": 0,
+            "y": 39
+          },
+          "id": 1,
+          "options": {
+            "cellHeight": "sm",
+            "enablePagination": true,
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "13.0.1+security-01",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(e2b_sandbox_info, \"team_name\", \"默默's Default Team\", \"team_id\", \"bf0cabd4-1d63-4c92-8018-56466250fc34\"), \"team_name\", \"魏存琦's Project\", \"team_id\", \"4f0c2666-2773-42f9-ae24-12863e48dbce\"), \"team_name\", \"高杨帆's Project\", \"team_id\", \"c8c30b05-7068-41e6-ab31-15daeb2b94f1\"), \"team_name\", \"雷可鹏's Project\", \"team_id\", \"f03fb965-cfcc-4d58-94e4-9f062b09da53\"), \"team_name\", \"锁祎然's Project\", \"team_id\", \"9bfcc2c7-0a17-486c-a79c-4b323eee7162\"), \"team_name\", \"郭品学's Project\", \"team_id\", \"4e8177c9-134c-4311-b917-418314e587af\"), \"team_name\", \"郑锐's Project\", \"team_id\", \"fe6493c4-af87-4f44-bf02-2acb426f1b81\"), \"team_name\", \"郑淼's Project\", \"team_id\", \"6f4f24b1-dba2-4cea-9daa-90a2cb06d21b\"), \"team_name\", \"谢天赐's Project\", \"team_id\", \"a56704da-010b-48da-ab8e-d2aaaf8545e3\"), \"team_name\", \"蔡子坤's Project\", \"team_id\", \"c383705d-81fa-4f85-8a19-dd81ef49f3eb\"), \"team_name\", \"符炫炜's Project\", \"team_id\", \"0ad0730c-2860-4f30-948c-acd9c4f42d29\"), \"team_name\", \"沈蔚's Project\", \"team_id\", \"892c82ba-e2e0-4cf1-9496-44eac15a714f\"), \"team_name\", \"李慧's Project\", \"team_id\", \"258d442e-2159-48c9-9ac9-f3e1a0c1c452\"), \"team_name\", \"李以时's Project\", \"team_id\", \"7fcbdf30-b95b-4d65-acef-b81b328bc5a5\"), \"team_name\", \"曹倚飞's Project\", \"team_id\", \"f0037e31-bd7a-4ad6-b16a-94c2790332da\"), \"team_name\", \"张硕's Project\", \"team_id\", \"0f44e8fc-859c-4f6a-b7e4-3068de12123e\"), \"team_name\", \"张朝运's Default Team\", \"team_id\", \"f6eb883d-263d-4b71-831e-58ae7fd13878\"), \"team_name\", \"张国强's Project\", \"team_id\", \"4b893304-e299-4243-bea4-392feee74b7c\"), \"team_name\", \"刘官明's Project\", \"team_id\", \"31738770-b0cd-480c-8ac5-9a5bf43d100b\"), \"team_name\", \"何阳极's Project\", \"team_id\", \"6d4eb009-5540-4951-830a-b0e10d06ed65\"), \"team_name\", \"Zhoumaosen's Project\", \"team_id\", \"e5c4b9f2-88d7-4bae-bde0-1480d82e9988\"), \"team_name\", \"Zhengmiao's Project\", \"team_id\", \"b2b5b25c-5b4a-4466-8b68-779004eabba7\"), \"team_name\", \"zhaojiarong@qijizhifeng.com\", \"team_id\", \"af8fc097-6343-4b33-b7bb-1c197789eabd\"), \"team_name\", \"Zhangqi's Project\", \"team_id\", \"3bf425ff-584d-4f11-abda-483a918b5897\"), \"team_name\", \"zhangping@infrawaves.com\", \"team_id\", \"bb20491c-f757-4043-846b-838b7f30a8d1\"), \"team_name\", \"Vision\", \"team_id\", \"899fdcc3-4702-4a27-be10-9270eaf4b1cd\"), \"team_name\", \"Tianyuhuai's Project\", \"team_id\", \"fea203de-19f9-4fa4-b5c8-3f7e6b5c2606\"), \"team_name\", \"test\", \"team_id\", \"9b6bc955-415e-43c4-800a-d406f7c38864\"), \"team_name\", \"system1\", \"team_id\", \"955127a8-51ec-41ef-ba1a-232a3b3e201b\"), \"team_name\", \"system@localhost\", \"team_id\", \"32758328-00b9-4f5b-b66d-8ea5ebd02d5c\"), \"team_name\", \"system@e2b.dev\", \"team_id\", \"b1940e54-3dbb-44cd-bf26-569382921299\"), \"team_name\", \"Sunpeng's Default Team\", \"team_id\", \"f7e95758-34fe-44a2-bad9-6097a14ad656\"), \"team_name\", \"Shaozhou's Project\", \"team_id\", \"0ae5f9f7-d6ac-4fde-9279-92943a0b5a86\"), \"team_name\", \"Service's Project\", \"team_id\", \"cdc01774-0863-42dd-8475-22aefbe90997\"), \"team_name\", \"Ruizheng's Default Team\", \"team_id\", \"fb4e1d45-5ed4-474d-8144-68d4f5bc7871\"), \"team_name\", \"RL\", \"team_id\", \"f081810f-4c2c-4b86-94b9-e69ebed18106\"), \"team_name\", \"pingzhang8-c@my.cityu.edu.hk\", \"team_id\", \"6417ba56-ea10-4fce-aa2e-54d353d907ab\"), \"team_name\", \"Ning's Project\", \"team_id\", \"004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7\"), \"team_name\", \"Liutongtong's Project\", \"team_id\", \"01872fea-af86-4de1-9f38-ff439deef08d\"), \"team_name\", \"Linlizhi's Project\", \"team_id\", \"c22d1774-82e6-4e16-8f24-9b0536744b18\"), \"team_name\", \"Infrawave_测试1's Project\", \"team_id\", \"78c62422-584c-47b6-88c3-318266c033d2\"), \"team_name\", \"Infrawave_test3's Project\", \"team_id\", \"e15b5877-779e-4359-9564-336c8cabe966\"), \"team_name\", \"Infrawave_test2's Default Team\", \"team_id\", \"19ca40b0-aafb-416e-8ffa-b33f9eb940a9\"), \"team_name\", \"Infrawave_test1's Default Team\", \"team_id\", \"3c17296b-964e-40a8-a2b4-ae73efcc3010\"), \"team_name\", \"Infra Team\", \"team_id\", \"77a2927b-7d67-484c-8962-2d447b8179af\"), \"team_name\", \"Hanszhuang's Default Team\", \"team_id\", \"2a8e0507-cbc5-4445-95dc-314347c607f4\"), \"team_name\", \"Guopinxue's Project\", \"team_id\", \"9ad5ed4c-445b-4a9e-b856-d18232fa1fc6\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"team_id\", \"fcae3a36-0d3f-40df-aad0-3c97b33624a5\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"team_id\", \"a2bf5f96-7335-4b47-b894-39641aad6ed5\"), \"team_name\", \"e2b-rl@china-qijizhifeng.com\", \"team_id\", \"fcd649c5-0175-4d1e-98a5-1c218009dee4\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"team_id\", \"6e7a55f9-5db0-4938-877b-c44d86eb25ab\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"team_id\", \"072e7581-1510-46cc-a875-c8f493f83179\"), \"team_name\", \"e2b-nex2@china-qijizhifeng.com\", \"team_id\", \"560cc0a7-b536-419e-a038-8338148be13d\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"team_id\", \"65380065-c5bd-4d9f-b81c-1ce0866db931\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"team_id\", \"b9bbe0bc-8826-494b-84ca-6c3a5ff46bec\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"team_id\", \"6eb3900a-1fe8-4743-bdf7-12172b9771fc\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"team_id\", \"f9a89b02-0f1f-402d-9994-bc13ac9122ab\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"team_id\", \"0db5fb8e-920d-4564-a712-30a345863244\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"team_id\", \"5a6930b7-6ba8-49c5-b8cf-4126474cdbd3\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"team_id\", \"cf6c9163-60c9-4c5d-aa08-525b08ab5aaa\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"team_id\", \"9db7bc25-1324-4330-85c4-f43dcde6d66d\"), \"team_name\", \"Chenjun's Project\", \"team_id\", \"4793fa63-b11e-4567-a1f0-bd5e0f93b551\"), \"team_name\", \"972963285@qq.com\", \"team_id\", \"47eee04d-4660-480c-97e8-64c39934cf47\"), \"team_name\", \"972963285@qq.com\", \"team_id\", \"467334dc-5de9-4ac9-a04b-d703c148f3a5\"), \"team_name\", \"9\", \"team_id\", \"c5ac79f6-6155-47ac-9623-456cfb843878\"), \"team_name\", \"8\", \"team_id\", \"ab785508-ba6c-4fdb-854a-2b39a2144354\"), \"team_name\", \"7\", \"team_id\", \"12f3e83f-3979-4a59-b388-1effc55fa8f4\"), \"team_name\", \"6\", \"team_id\", \"af487b23-9dba-4797-9627-c5b1b9ff3a42\"), \"team_name\", \"5\", \"team_id\", \"1e9c4b44-fe65-4392-9de0-84542f3998cb\"), \"team_name\", \"4\", \"team_id\", \"8d3b4cd8-df63-4c1a-b82b-d0139563e12e\"), \"team_name\", \"4\", \"team_id\", \"c99dee1b-a997-453d-85dd-be94aef8fbed\"), \"team_name\", \"3\", \"team_id\", \"ac3eeb52-7268-45e3-a373-0e195e12a294\"), \"team_name\", \"3\", \"team_id\", \"3cbcdfb8-84e8-422e-9b87-21e7a50b6865\"), \"team_name\", \"3\", \"team_id\", \"085a9d00-4918-42e6-a596-dbeadf54ec4d\"), \"team_name\", \"3\", \"team_id\", \"a726f5e6-4237-4bb2-8ab0-13eac8180425\"), \"team_name\", \"22\", \"team_id\", \"1e9c1e93-ad47-49ac-adb7-47a0606718cf\"), \"team_name\", \"2\", \"team_id\", \"77b9f6a9-1672-4483-beb0-2f5b11b26801\"), \"team_name\", \"2\", \"team_id\", \"07fe4160-c034-4331-94a1-9075257c62ab\"), \"team_name\", \"2\", \"team_id\", \"3ae3b6d7-f308-4b08-89a3-a6f412715806\"), \"team_name\", \"11\", \"team_id\", \"2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334\"), \"team_name\", \"1\", \"team_id\", \"a7124f1b-476a-45fb-a6c3-68d161fdc911\"), \"team_name\", \"1\", \"team_id\", \"9989897b-2fd9-45dd-a473-a6512a8cd96d\"), \"team_name\", \"1\", \"team_id\", \"0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf\"), \"team_name\", \"(未知team)\", \"team_name\", \"^$\"), \"template_alias\", \"$1\", \"template_id\", \"(.*)\")",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "expr": "max by (sandbox_id) (e2b_sandbox_vcpu)",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "expr": "max by (sandbox_id) (e2b_sandbox_ram_mb)",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "expr": "max by (sandbox_id) (e2b_sandbox_disk_mb)",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "expr": "max by (sandbox_id, kernel_version, firecracker_version, envd_version) (e2b_sandbox_build_info)",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "E"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "expr": "max by (sandbox_id) (e2b_sandbox_allow_internet)",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "F"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "expr": "max by (sandbox_id) (e2b_sandbox_auto_pause)",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "G"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "expr": "max by (sandbox_id) (e2b_sandbox_auto_resume_timeout_seconds)",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "H"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "expr": "max by (sandbox_id) (time() - e2b_sandbox_age_seconds) * 1000",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "I"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "expr": "max by (sandbox_id) (e2b_sandbox_end_time_seconds) * 1000",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "",
+              "range": false,
+              "refId": "J"
+            }
+          ],
+          "title": "沙箱矩阵（节点 × 沙箱 × Team × 模板）· 当前活跃 · 分页显示，表头可筛选搜索",
+          "transformations": [
+            {
+              "id": "joinByField",
+              "options": {
+                "byField": "sandbox_id",
+                "mode": "outer"
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Time 1": true,
+                  "Time 2": true,
+                  "Value #A": true,
+                  "Value #E": true,
+                  "__name__": true,
+                  "instance": true,
+                  "job": true,
+                  "prometheus": true
+                },
+                "indexByName": {
+                  "Value #B": 9,
+                  "Value #C": 10,
+                  "Value #D": 11,
+                  "Value #F": 15,
+                  "Value #G": 16,
+                  "Value #H": 17,
+                  "Value #I": 7,
+                  "Value #J": 8,
+                  "envd_version": 14,
+                  "firecracker_version": 13,
+                  "kernel_version": 12,
+                  "node_id": 0,
+                  "node_ip": 1,
+                  "sandbox_id": 2,
+                  "team_id": 3,
+                  "team_name": 4,
+                  "template_alias": 6,
+                  "template_id": 5
+                },
+                "renameByName": {
+                  "Value #B": "vCPU",
+                  "Value #C": "RAM(MB)",
+                  "Value #D": "磁盘(MB)",
+                  "Value #F": "可联网",
+                  "Value #G": "自动暂停",
+                  "Value #H": "自动恢复超时(s)",
+                  "Value #I": "开始时间",
+                  "Value #J": "结束时间",
+                  "envd_version": "envd",
+                  "firecracker_version": "Firecracker",
+                  "kernel_version": "内核版本",
+                  "node_id": "节点ID",
+                  "node_ip": "节点IP",
+                  "sandbox_id": "沙箱ID",
+                  "team_id": "TeamID",
+                  "team_name": "Team名称",
+                  "template_alias": "模板别名",
+                  "template_id": "模板ID"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "gridPos": {
+            "h": 5,
+            "w": 24,
+            "x": 0,
+            "y": 55
+          },
+          "id": 10,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "<div style='font-size:13px;line-height:1.6'><b>数据口径</b>：展示 <b>当前活跃</b> 沙箱快照，<b>自动刷新 5 分钟</b>一次；顶部「Refresh」可手动刷新，刷新下拉选 <b>Off</b> 可停止自动刷新。<br><b>数据源</b>：<b>「当前活跃沙箱总数」与「节点总览」表同源</b> orchestrator <code>/nodes</code>（权威：状态/资源/沙箱数/创建成败），两者数值一致。<b>沙箱矩阵明细表</b>来自火山 VMP（job=ecs，<code>e2b_sandbox_info</code>，exporter 采集）。<br><b>为何明细表行数可能与总数差几个</b>：两条链路采集时点不同——权威 /nodes 为实时值，exporter→Prometheus 有秒级 scrape 时延，而沙箱在持续创建/销毁，故明细表行数与权威总数可能相差几个，属正常最终一致性。<br><b>性能</b>：主矩阵表已启用<b>分页</b>（每页行数按面板高度自适应），表头 Filter 支持在<b>完整数据</b>中按沙箱ID/节点/Team/别名搜索，不受分页影响。<br><b>漏抓检测</b>：动态列出 exporter 在线但无沙箱指标的节点（排除管理节点），正常时为空。</div>",
+            "mode": "html"
+          },
+          "pluginVersion": "13.0.1+security-01",
+          "targets": [],
+          "title": "说明 / 数据口径",
+          "type": "text"
+        }
+      ],
+      "title": "沙箱矩阵（节点 × 沙箱 × Team × 模板）· 点击展开加载",
+      "type": "row"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "id": 25,
+      "title": "每 Team 沙箱数统计",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "mixed",
+        "uid": "-- Mixed --"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": [
+                "count"
+              ]
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "count by (team_id) (e2b_sandbox_info)",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_POSTGRES}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT tl.id::text AS team_id, t.name AS team_name, tl.concurrent_sandboxes, tl.concurrent_template_builds, tl.max_vcpu, round(tl.max_ram_mb/1024.0,1) AS max_ram_gb, round(tl.disk_mb/1024.0,1) AS disk_gb, round(tl.default_free_disk_size_mb/1024.0,1) AS default_free_disk_gb, round(tl.max_disk_size_mb/1024.0,1) AS max_disk_gb, tl.max_length_hours, tl.events_ttl_days FROM team_limits tl JOIN teams t ON t.id = tl.id",
+          "refId": "B"
+        }
+      ],
+      "title": "每 Team 沙箱数与配额（实时 · PG）",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "team_id",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "prometheus": true
+            },
+            "indexByName": {
+              "Value": 2,
+              "concurrent_sandboxes": 3,
+              "concurrent_template_builds": 4,
+              "default_free_disk_gb": 8,
+              "disk_gb": 7,
+              "events_ttl_days": 11,
+              "max_disk_gb": 9,
+              "max_length_hours": 10,
+              "max_ram_gb": 6,
+              "max_vcpu": 5,
+              "team_id": 1,
+              "team_name": 0
+            },
+            "renameByName": {
+              "Value": "当前沙箱数",
+              "concurrent_sandboxes": "并发沙箱上限",
+              "concurrent_template_builds": "并发构建上限",
+              "default_free_disk_gb": "默认空闲盘GB",
+              "disk_gb": "磁盘配额GB",
+              "events_ttl_days": "事件TTL天",
+              "max_disk_gb": "最大盘GB",
+              "max_length_hours": "最长时长h",
+              "max_ram_gb": "最大内存GB",
+              "max_vcpu": "最大vCPU",
+              "team_id": "TeamID",
+              "team_name": "Team名称"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": "",
+            "sort": [
+              {
+                "desc": true,
+                "field": "当前沙箱数"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "5m",
+  "schemaVersion": 42,
+  "tags": [
+    "e2b",
+    "sandbox",
+    "matrix"
+  ],
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "1m",
+      "3m",
+      "5m",
+      "15m"
+    ]
+  },
+  "timezone": "browser",
+  "title": "⑦ E2B 沙箱矩阵总览（当前活跃）",
+  "uid": "e2b-sandbox-matrix",
+  "version": 78,
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "HK",
+          "value": "afoh4xrv0awowc"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "数据源",
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "postgres",
+          "value": "bfzscvk9p4bggb"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "PG 数据源",
+        "name": "DS_POSTGRES",
+        "options": [],
+        "query": "grafana-postgresql-datasource",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "infinity",
+          "value": "bfz0dki630zr4a"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Infinity 数据源",
+        "name": "DS_INFINITY",
+        "options": [],
+        "query": "yesoreyeram-infinity-datasource",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  }
+}

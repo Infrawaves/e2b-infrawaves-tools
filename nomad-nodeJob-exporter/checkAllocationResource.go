@@ -64,6 +64,17 @@ func getAllocationResourceInfo(allocID string, nodeID string, nodeName string) (
 			continue
 		}
 
+		// 内存硬上限行,形如 "                Max: 300 GiB"(memory_max)。
+		// 单独成行,出现在 CPU/Memory/Disk 资源行之后。只取 "Max:" 后的大小。
+		if strings.Contains(line, "Max:") {
+			idx := strings.Index(line, "Max:")
+			maxStr := strings.TrimSpace(line[idx+len("Max:"):])
+			if m := parseSize(maxStr); m > 0 {
+				resourceInfo.MemoryMax = m
+			}
+			continue
+		}
+
 		// 资源数据行(CPU、Memory、Disk)
 		if strings.Contains(line, "MHz") && (strings.Contains(line, "MiB") || strings.Contains(line, "GiB")) {
 			// 多空格分隔
