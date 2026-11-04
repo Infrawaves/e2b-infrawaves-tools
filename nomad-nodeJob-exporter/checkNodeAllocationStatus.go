@@ -30,11 +30,11 @@ type AllocationResourceInfo struct {
 	// MemoryMax 是 task 的内存硬上限(nomad alloc status 里的 "Max:" 行,对应 memory_max)。
 	// MemoryLimit 只是软上限(reserve),超过它可借用到 MemoryMax 才会 OOM。
 	// 0 表示该 alloc 未声明 memory_max,此时百分比分母回退到 MemoryLimit。
-	MemoryMax    float64
-	DiskUsage    float64
-	DiskLimit    float64
-	NodeID       string
-	NodeName     string
+	MemoryMax float64
+	DiskUsage float64
+	DiskLimit float64
+	NodeID    string
+	NodeName  string
 }
 
 // getNodeInfo 通过 `nomad node status -verbose -self` 取本节点的 ID / Name / Meta。
