@@ -45,15 +45,20 @@ groups:
         annotations:
           summary: '节点 {{ $labels.node_name }} 上 Allocation {{ $labels.job_name }} CPU 占用 {{ printf "%.0f" $value }}%'
 
+      # 内存饱和判定用硬上限 memory_max(接近 OOM 的真实水位),阈值 70%。
+      # _max 指标自带 mem_usage_mib / mem_limit_mib / mem_max_mib 标签,文案里软硬两个分母一起带出,
+      # 无需跨指标 join(转换脚本是行式解析,也不支持多行块标量 / query 模板函数)。
+      # 旧指标 nomad_allocation_memory_usage_percentage(分母=memory_limit)语义保持不变、仍在上报,
+      # 仅不再作为本告警触发条件,避免可借用内存的 task 恒 >100% 误报。
       - alert: Allocation 内存饱和
         uid: e2b-alloc-mem-saturated
-        expr: nomad_allocation_memory_usage_percentage > 90
+        expr: nomad_allocation_memory_usage_percentage_max > 70
         for: 10m
         labels:
           severity: warning
           project: e2b
         annotations:
-          summary: '节点 {{ $labels.node_name }} 上 Allocation {{ $labels.job_name }} 内存占用 {{ printf "%.0f" $value }}%'
+          summary: '节点 {{ $labels.node_name }} 上 {{ $labels.job_name }} 内存 {{ printf "%.0f" $value }}%(÷memory_max 硬上限={{ $labels.mem_max_mib }} MiB;软上限 memory_limit={{ $labels.mem_limit_mib }} MiB 仅供参考)'
 
       - alert: Firecracker 进程泄露
         uid: e2b-fc-leak
