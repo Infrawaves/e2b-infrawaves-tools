@@ -1,0 +1,2732 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "沙箱终止统计。**数据源：ClickHouse `sandbox_events`**（2026-09-22 从 Loki 切过来，旧查询留在脚本注释里）。\n默认 24h。\n⚠️ **稀有原因是阵发的，靠调窗口看不见** —— 实测 orphaned 的 614 条全落在 09-16~18，单小时峰值 311，之后四天为 0；24h 窗口下是 0。所以「稀有原因」那一行**固定查满 7 天（TTL 上限）、不跟随时间选择器**，那一行为空才代表真的没发生过。\nCH 独有：沙箱存活时长（execution_time，timeout 的 p50 正好贴 TTL 档位）、业务标签（sandbox_metadata，覆盖率 99.1%）。\n六种原因固定全列显示（countIf 出的列，为 0 也在）",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 28,
+      "title": "概览（当前时间范围内合计）",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "description": "`sandbox.lifecycle.killed` 事件数。\n数据源是 CH 的 sandbox_events（TTL 7 天）",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "database": "",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT count() AS cnt FROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID')",
+          "refId": "A"
+        }
+      ],
+      "title": "kill 总数",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "description": "用户主动调用 kill API。\n显示 0 = 这段时间没发生（不是面板坏了）",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 6,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "database": "",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT count() AS cnt FROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID') AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'request'",
+          "refId": "A"
+        }
+      ],
+      "title": "request",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "description": "TTL 到期，evictor 回收。\n显示 0 = 这段时间没发生（不是面板坏了）",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 9,
+        "y": 1
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "database": "",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT count() AS cnt FROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID') AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'timeout'",
+          "refId": "A"
+        }
+      ],
+      "title": "timeout",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "description": "管理员批量 kill。\n显示 0 = 这段时间没发生（不是面板坏了）",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 12,
+        "y": 1
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "database": "",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT count() AS cnt FROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID') AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'admin'",
+          "refId": "A"
+        }
+      ],
+      "title": "admin",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "description": "孤儿沙箱被系统清理。\n**值得查** —— 沙箱脱离了管理。\n显示 0 = 这段时间没发生（不是面板坏了）",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 15,
+        "y": 1
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "database": "",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT count() AS cnt FROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID') AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'orphaned'",
+          "refId": "A"
+        }
+      ],
+      "title": "orphaned",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "description": "依赖的基础模板丢失被系统清理。\n**值得查** —— 模板被删但沙箱还在跑。\n显示 0 = 这段时间没发生（不是面板坏了）",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              },
+              {
+                "color": "purple",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 18,
+        "y": 1
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "database": "",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT count() AS cnt FROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID') AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'base_template_missing'",
+          "refId": "A"
+        }
+      ],
+      "title": "base_template_missing",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "description": "未传递 kill 原因。\n显示 0 = 这段时间没发生（不是面板坏了）",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              },
+              {
+                "color": "text",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 21,
+        "y": 1
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "database": "",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT count() AS cnt FROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID') AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'unknown'",
+          "refId": "A"
+        }
+      ],
+      "title": "unknown",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 29,
+      "title": "稀有原因（固定最近 7 天，不随时间选择器）",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "description": "**固定查最近 7 天**（TTL 上限），不跟随上方的时间选择器 —— 稀有原因是阵发的，滚动窗口很容易恰好错过。\n只列 admin / orphaned / base_template_missing / unknown 四种；request 和 timeout 是正常生命周期，不在这里。\n**这个表为空 = 最近 7 天真的没发生过**，是有意义的结论；\n有行则点进「明细下钻」按那天的时间范围查具体沙箱",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "day"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "日期"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "total"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "合计"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "admin"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": 0
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "orphaned"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "base_template_missing"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": 0
+                    },
+                    {
+                      "color": "purple",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unknown"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": 0
+                    },
+                    {
+                      "color": "text",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "include",
+                "names": [
+                  "total",
+                  "admin",
+                  "orphaned",
+                  "base_template_missing",
+                  "unknown"
+                ]
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.footer.reducers",
+                "value": [
+                  "sum"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "orphaned"
+          }
+        ]
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "database": "",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT toString(toDate(timestamp)) AS day,\n  count() AS total,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'admin') AS admin,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'orphaned') AS orphaned,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'base_template_missing') AS base_template_missing,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'unknown') AS unknown\nFROM sandbox_events\nWHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill'))\n  AND timestamp >= now() - INTERVAL 7 DAY\n  AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') IN ('admin', 'orphaned', 'base_template_missing', 'unknown')\n  AND match(toString(sandbox_team_id), '$teamID')\nGROUP BY day ORDER BY day DESC",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": "7d",
+      "title": "四种稀有原因按天（固定 7d）",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "description": "同样固定 7 天。带首次/末次出现时间，用来判断是「一次性爆发」还是「持续发生」。\n实测 orphaned 涉及 6 个 team，是系统性事件而非单 team 问题 —— 如果只有一个 team 那更可能是调用方的用法问题",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "team"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7": {
+                        "index": 44,
+                        "text": "Ning's Project · 004f3f7c"
+                      },
+                      "01872fea-af86-4de1-9f38-ff439deef08d": {
+                        "index": 43,
+                        "text": "Liutongtong's Project · 01872fea"
+                      },
+                      "072e7581-1510-46cc-a875-c8f493f83179": {
+                        "index": 31,
+                        "text": "e2b-nexau@china-qijizhifeng.com · 072e7581"
+                      },
+                      "07fe4160-c034-4331-94a1-9075257c62ab": {
+                        "index": 4,
+                        "text": "2 · 07fe4160"
+                      },
+                      "085a9d00-4918-42e6-a596-dbeadf54ec4d": {
+                        "index": 10,
+                        "text": "3 · 085a9d00"
+                      },
+                      "0ad0730c-2860-4f30-948c-acd9c4f42d29": {
+                        "index": 71,
+                        "text": "符炫炜's Project · 0ad0730c"
+                      },
+                      "0ae5f9f7-d6ac-4fde-9279-92943a0b5a86": {
+                        "index": 49,
+                        "text": "Shaozhou's Project · 0ae5f9f7"
+                      },
+                      "0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf": {
+                        "index": 2,
+                        "text": "1 · 0cbaa95f"
+                      },
+                      "0db5fb8e-920d-4564-a712-30a345863244": {
+                        "index": 24,
+                        "text": "e2b-infra@china-qijizhifeng.com · 0db5fb8e"
+                      },
+                      "0f44e8fc-859c-4f6a-b7e4-3068de12123e": {
+                        "index": 66,
+                        "text": "张硕's Project · 0f44e8fc"
+                      },
+                      "12f3e83f-3979-4a59-b388-1effc55fa8f4": {
+                        "index": 16,
+                        "text": "7 · 12f3e83f"
+                      },
+                      "19ca40b0-aafb-416e-8ffa-b33f9eb940a9": {
+                        "index": 40,
+                        "text": "Infrawave_test2's Default Team · 19ca40b0"
+                      },
+                      "1e9c1e93-ad47-49ac-adb7-47a0606718cf": {
+                        "index": 7,
+                        "text": "22 · 1e9c1e93"
+                      },
+                      "1e9c4b44-fe65-4392-9de0-84542f3998cb": {
+                        "index": 14,
+                        "text": "5 · 1e9c4b44"
+                      },
+                      "258d442e-2159-48c9-9ac9-f3e1a0c1c452": {
+                        "index": 69,
+                        "text": "李慧's Project · 258d442e"
+                      },
+                      "2a8e0507-cbc5-4445-95dc-314347c607f4": {
+                        "index": 37,
+                        "text": "Hanszhuang's Default Team · 2a8e0507"
+                      },
+                      "2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334": {
+                        "index": 3,
+                        "text": "11 · 2ba8b18f"
+                      },
+                      "31738770-b0cd-480c-8ac5-9a5bf43d100b": {
+                        "index": 63,
+                        "text": "刘官明's Project · 31738770"
+                      },
+                      "32758328-00b9-4f5b-b66d-8ea5ebd02d5c": {
+                        "index": 53,
+                        "text": "system@localhost · 32758328"
+                      },
+                      "3ae3b6d7-f308-4b08-89a3-a6f412715806": {
+                        "index": 5,
+                        "text": "2 · 3ae3b6d7"
+                      },
+                      "3bf425ff-584d-4f11-abda-483a918b5897": {
+                        "index": 58,
+                        "text": "Zhangqi's Project · 3bf425ff"
+                      },
+                      "3c17296b-964e-40a8-a2b4-ae73efcc3010": {
+                        "index": 39,
+                        "text": "Infrawave_test1's Default Team · 3c17296b"
+                      },
+                      "3cbcdfb8-84e8-422e-9b87-21e7a50b6865": {
+                        "index": 11,
+                        "text": "3 · 3cbcdfb8"
+                      },
+                      "467334dc-5de9-4ac9-a04b-d703c148f3a5": {
+                        "index": 19,
+                        "text": "972963285@qq.com · 467334dc"
+                      },
+                      "4793fa63-b11e-4567-a1f0-bd5e0f93b551": {
+                        "index": 21,
+                        "text": "Chenjun's Project · 4793fa63"
+                      },
+                      "47eee04d-4660-480c-97e8-64c39934cf47": {
+                        "index": 20,
+                        "text": "972963285@qq.com · 47eee04d"
+                      },
+                      "4b893304-e299-4243-bea4-392feee74b7c": {
+                        "index": 64,
+                        "text": "张国强's Project · 4b893304"
+                      },
+                      "4e8177c9-134c-4311-b917-418314e587af": {
+                        "index": 75,
+                        "text": "郭品学's Project · 4e8177c9"
+                      },
+                      "4f0c2666-2773-42f9-ae24-12863e48dbce": {
+                        "index": 79,
+                        "text": "魏存琦's Project · 4f0c2666"
+                      },
+                      "560cc0a7-b536-419e-a038-8338148be13d": {
+                        "index": 28,
+                        "text": "e2b-nex2@china-qijizhifeng.com · 560cc0a7"
+                      },
+                      "5a6930b7-6ba8-49c5-b8cf-4126474cdbd3": {
+                        "index": 25,
+                        "text": "e2b-infra@china-qijizhifeng.com · 5a6930b7"
+                      },
+                      "6417ba56-ea10-4fce-aa2e-54d353d907ab": {
+                        "index": 45,
+                        "text": "pingzhang8-c@my.cityu.edu.hk · 6417ba56"
+                      },
+                      "65380065-c5bd-4d9f-b81c-1ce0866db931": {
+                        "index": 30,
+                        "text": "e2b-nex@china-qijizhifeng.com · 65380065"
+                      },
+                      "6d4eb009-5540-4951-830a-b0e10d06ed65": {
+                        "index": 62,
+                        "text": "何阳极's Project · 6d4eb009"
+                      },
+                      "6e7a55f9-5db0-4938-877b-c44d86eb25ab": {
+                        "index": 32,
+                        "text": "e2b-nexau@china-qijizhifeng.com · 6e7a55f9"
+                      },
+                      "6eb3900a-1fe8-4743-bdf7-12172b9771fc": {
+                        "index": 27,
+                        "text": "e2b-infrawaves@china-qijizhifeng.com · 6eb3900a"
+                      },
+                      "77a2927b-7d67-484c-8962-2d447b8179af": {
+                        "index": 38,
+                        "text": "Infra Team · 77a2927b"
+                      },
+                      "77b9f6a9-1672-4483-beb0-2f5b11b26801": {
+                        "index": 6,
+                        "text": "2 · 77b9f6a9"
+                      },
+                      "7fcbdf30-b95b-4d65-acef-b81b328bc5a5": {
+                        "index": 68,
+                        "text": "李以时's Project · 7fcbdf30"
+                      },
+                      "892c82ba-e2e0-4cf1-9496-44eac15a714f": {
+                        "index": 70,
+                        "text": "沈蔚's Project · 892c82ba"
+                      },
+                      "899fdcc3-4702-4a27-be10-9270eaf4b1cd": {
+                        "index": 56,
+                        "text": "Vision · 899fdcc3"
+                      },
+                      "8d3b4cd8-df63-4c1a-b82b-d0139563e12e": {
+                        "index": 12,
+                        "text": "4 · 8d3b4cd8"
+                      },
+                      "955127a8-51ec-41ef-ba1a-232a3b3e201b": {
+                        "index": 51,
+                        "text": "system1 · 955127a8"
+                      },
+                      "9989897b-2fd9-45dd-a473-a6512a8cd96d": {
+                        "index": 0,
+                        "text": "1 · 9989897b"
+                      },
+                      "9ad5ed4c-445b-4a9e-b856-d18232fa1fc6": {
+                        "index": 36,
+                        "text": "Guopinxue's Project · 9ad5ed4c"
+                      },
+                      "9b6bc955-415e-43c4-800a-d406f7c38864": {
+                        "index": 54,
+                        "text": "test · 9b6bc955"
+                      },
+                      "9bfcc2c7-0a17-486c-a79c-4b323eee7162": {
+                        "index": 76,
+                        "text": "锁祎然's Project · 9bfcc2c7"
+                      },
+                      "9db7bc25-1324-4330-85c4-f43dcde6d66d": {
+                        "index": 22,
+                        "text": "e2b-fde@china-qijizhifeng.com · 9db7bc25"
+                      },
+                      "a2bf5f96-7335-4b47-b894-39641aad6ed5": {
+                        "index": 34,
+                        "text": "e2b-xiaobei@china-qijizhifeng.com · a2bf5f96"
+                      },
+                      "a56704da-010b-48da-ab8e-d2aaaf8545e3": {
+                        "index": 73,
+                        "text": "谢天赐's Project · a56704da"
+                      },
+                      "a7124f1b-476a-45fb-a6c3-68d161fdc911": {
+                        "index": 1,
+                        "text": "1 · a7124f1b"
+                      },
+                      "a726f5e6-4237-4bb2-8ab0-13eac8180425": {
+                        "index": 9,
+                        "text": "3 · a726f5e6"
+                      },
+                      "ab785508-ba6c-4fdb-854a-2b39a2144354": {
+                        "index": 17,
+                        "text": "8 · ab785508"
+                      },
+                      "ac3eeb52-7268-45e3-a373-0e195e12a294": {
+                        "index": 8,
+                        "text": "3 · ac3eeb52"
+                      },
+                      "af487b23-9dba-4797-9627-c5b1b9ff3a42": {
+                        "index": 15,
+                        "text": "6 · af487b23"
+                      },
+                      "af8fc097-6343-4b33-b7bb-1c197789eabd": {
+                        "index": 59,
+                        "text": "zhaojiarong@qijizhifeng.com · af8fc097"
+                      },
+                      "b1940e54-3dbb-44cd-bf26-569382921299": {
+                        "index": 52,
+                        "text": "system@e2b.dev · b1940e54"
+                      },
+                      "b2b5b25c-5b4a-4466-8b68-779004eabba7": {
+                        "index": 60,
+                        "text": "Zhengmiao's Project · b2b5b25c"
+                      },
+                      "b9bbe0bc-8826-494b-84ca-6c3a5ff46bec": {
+                        "index": 29,
+                        "text": "e2b-nex@china-qijizhifeng.com · b9bbe0bc"
+                      },
+                      "bb20491c-f757-4043-846b-838b7f30a8d1": {
+                        "index": 57,
+                        "text": "zhangping@infrawaves.com · bb20491c"
+                      },
+                      "bf0cabd4-1d63-4c92-8018-56466250fc34": {
+                        "index": 80,
+                        "text": "默默's Default Team · bf0cabd4"
+                      },
+                      "c22d1774-82e6-4e16-8f24-9b0536744b18": {
+                        "index": 42,
+                        "text": "Linlizhi's Project · c22d1774"
+                      },
+                      "c383705d-81fa-4f85-8a19-dd81ef49f3eb": {
+                        "index": 72,
+                        "text": "蔡子坤's Project · c383705d"
+                      },
+                      "c5ac79f6-6155-47ac-9623-456cfb843878": {
+                        "index": 18,
+                        "text": "9 · c5ac79f6"
+                      },
+                      "c8c30b05-7068-41e6-ab31-15daeb2b94f1": {
+                        "index": 78,
+                        "text": "高杨帆's Project · c8c30b05"
+                      },
+                      "c99dee1b-a997-453d-85dd-be94aef8fbed": {
+                        "index": 13,
+                        "text": "4 · c99dee1b"
+                      },
+                      "cdc01774-0863-42dd-8475-22aefbe90997": {
+                        "index": 48,
+                        "text": "Service's Project · cdc01774"
+                      },
+                      "cf6c9163-60c9-4c5d-aa08-525b08ab5aaa": {
+                        "index": 23,
+                        "text": "e2b-fde@china-qijizhifeng.com · cf6c9163"
+                      },
+                      "e15b5877-779e-4359-9564-336c8cabe966": {
+                        "index": 41,
+                        "text": "Infrawave_test3's Project · e15b5877"
+                      },
+                      "e5c4b9f2-88d7-4bae-bde0-1480d82e9988": {
+                        "index": 61,
+                        "text": "Zhoumaosen's Project · e5c4b9f2"
+                      },
+                      "f0037e31-bd7a-4ad6-b16a-94c2790332da": {
+                        "index": 67,
+                        "text": "曹倚飞's Project · f0037e31"
+                      },
+                      "f03fb965-cfcc-4d58-94e4-9f062b09da53": {
+                        "index": 77,
+                        "text": "雷可鹏's Project · f03fb965"
+                      },
+                      "f081810f-4c2c-4b86-94b9-e69ebed18106": {
+                        "index": 46,
+                        "text": "RL · f081810f"
+                      },
+                      "f6eb883d-263d-4b71-831e-58ae7fd13878": {
+                        "index": 65,
+                        "text": "张朝运's Default Team · f6eb883d"
+                      },
+                      "f7e95758-34fe-44a2-bad9-6097a14ad656": {
+                        "index": 50,
+                        "text": "Sunpeng's Default Team · f7e95758"
+                      },
+                      "f9a89b02-0f1f-402d-9994-bc13ac9122ab": {
+                        "index": 26,
+                        "text": "e2b-infrawaves@china-qijizhifeng.com · f9a89b02"
+                      },
+                      "fb4e1d45-5ed4-474d-8144-68d4f5bc7871": {
+                        "index": 47,
+                        "text": "Ruizheng's Default Team · fb4e1d45"
+                      },
+                      "fcae3a36-0d3f-40df-aad0-3c97b33624a5": {
+                        "index": 35,
+                        "text": "e2b-xiaobei@china-qijizhifeng.com · fcae3a36"
+                      },
+                      "fcd649c5-0175-4d1e-98a5-1c218009dee4": {
+                        "index": 33,
+                        "text": "e2b-rl@china-qijizhifeng.com · fcd649c5"
+                      },
+                      "fe6493c4-af87-4f44-bf02-2acb426f1b81": {
+                        "index": 74,
+                        "text": "郑锐's Project · fe6493c4"
+                      },
+                      "fea203de-19f9-4fa4-b5c8-3f7e6b5c2606": {
+                        "index": 55,
+                        "text": "Tianyuhuai's Project · fea203de"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "reason"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "原因"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cnt"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "次数"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "first_seen"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "首次"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last_seen"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "末次"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cnt"
+            },
+            "properties": [
+              {
+                "id": "custom.footer.reducers",
+                "value": [
+                  "sum"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "database": "",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT toString(sandbox_team_id) AS team,\n  JSONExtractString(coalesce(event_data, '{}'),'kill_reason') AS reason,\n  count() AS cnt,\n  toString(min(timestamp)) AS first_seen,\n  toString(max(timestamp)) AS last_seen\nFROM sandbox_events\nWHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill'))\n  AND timestamp >= now() - INTERVAL 7 DAY\n  AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') IN ('admin', 'orphaned', 'base_template_missing', 'unknown')\n  AND match(toString(sandbox_team_id), '$teamID')\nGROUP BY team, reason ORDER BY cnt DESC LIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": "7d",
+      "title": "稀有原因涉及的 team（固定 7d）",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "创建时间"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "结束时间"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "存活秒数"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 999
+      },
+      "id": 31,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "format": 1,
+          "meta": {
+            "database": "",
+            "queryType": "table",
+            "table": ""
+          },
+          "queryType": "table",
+          "rawSql": "SELECT\n  toString(sandbox_id) AS \"沙箱ID\",\n  any(toString(sandbox_template_id)) AS \"模板ID\",\n  any(toString(sandbox_team_id)) AS \"TeamID\",\n  transform(any(toString(sandbox_team_id)), ['bf0cabd4-1d63-4c92-8018-56466250fc34','4f0c2666-2773-42f9-ae24-12863e48dbce','c8c30b05-7068-41e6-ab31-15daeb2b94f1','f03fb965-cfcc-4d58-94e4-9f062b09da53','9bfcc2c7-0a17-486c-a79c-4b323eee7162','4e8177c9-134c-4311-b917-418314e587af','fe6493c4-af87-4f44-bf02-2acb426f1b81','6f4f24b1-dba2-4cea-9daa-90a2cb06d21b','a56704da-010b-48da-ab8e-d2aaaf8545e3','c383705d-81fa-4f85-8a19-dd81ef49f3eb','0ad0730c-2860-4f30-948c-acd9c4f42d29','892c82ba-e2e0-4cf1-9496-44eac15a714f','258d442e-2159-48c9-9ac9-f3e1a0c1c452','7fcbdf30-b95b-4d65-acef-b81b328bc5a5','f0037e31-bd7a-4ad6-b16a-94c2790332da','0f44e8fc-859c-4f6a-b7e4-3068de12123e','f6eb883d-263d-4b71-831e-58ae7fd13878','4b893304-e299-4243-bea4-392feee74b7c','31738770-b0cd-480c-8ac5-9a5bf43d100b','6d4eb009-5540-4951-830a-b0e10d06ed65','e5c4b9f2-88d7-4bae-bde0-1480d82e9988','b2b5b25c-5b4a-4466-8b68-779004eabba7','af8fc097-6343-4b33-b7bb-1c197789eabd','3bf425ff-584d-4f11-abda-483a918b5897','bb20491c-f757-4043-846b-838b7f30a8d1','899fdcc3-4702-4a27-be10-9270eaf4b1cd','fea203de-19f9-4fa4-b5c8-3f7e6b5c2606','9b6bc955-415e-43c4-800a-d406f7c38864','955127a8-51ec-41ef-ba1a-232a3b3e201b','32758328-00b9-4f5b-b66d-8ea5ebd02d5c','b1940e54-3dbb-44cd-bf26-569382921299','f7e95758-34fe-44a2-bad9-6097a14ad656','0ae5f9f7-d6ac-4fde-9279-92943a0b5a86','cdc01774-0863-42dd-8475-22aefbe90997','fb4e1d45-5ed4-474d-8144-68d4f5bc7871','f081810f-4c2c-4b86-94b9-e69ebed18106','6417ba56-ea10-4fce-aa2e-54d353d907ab','004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7','01872fea-af86-4de1-9f38-ff439deef08d','c22d1774-82e6-4e16-8f24-9b0536744b18','78c62422-584c-47b6-88c3-318266c033d2','e15b5877-779e-4359-9564-336c8cabe966','19ca40b0-aafb-416e-8ffa-b33f9eb940a9','3c17296b-964e-40a8-a2b4-ae73efcc3010','77a2927b-7d67-484c-8962-2d447b8179af','2a8e0507-cbc5-4445-95dc-314347c607f4','9ad5ed4c-445b-4a9e-b856-d18232fa1fc6','fcae3a36-0d3f-40df-aad0-3c97b33624a5','a2bf5f96-7335-4b47-b894-39641aad6ed5','fcd649c5-0175-4d1e-98a5-1c218009dee4','6e7a55f9-5db0-4938-877b-c44d86eb25ab','072e7581-1510-46cc-a875-c8f493f83179','560cc0a7-b536-419e-a038-8338148be13d','65380065-c5bd-4d9f-b81c-1ce0866db931','b9bbe0bc-8826-494b-84ca-6c3a5ff46bec','6eb3900a-1fe8-4743-bdf7-12172b9771fc','f9a89b02-0f1f-402d-9994-bc13ac9122ab','0db5fb8e-920d-4564-a712-30a345863244','5a6930b7-6ba8-49c5-b8cf-4126474cdbd3','cf6c9163-60c9-4c5d-aa08-525b08ab5aaa','9db7bc25-1324-4330-85c4-f43dcde6d66d','4793fa63-b11e-4567-a1f0-bd5e0f93b551','47eee04d-4660-480c-97e8-64c39934cf47','467334dc-5de9-4ac9-a04b-d703c148f3a5','c5ac79f6-6155-47ac-9623-456cfb843878','ab785508-ba6c-4fdb-854a-2b39a2144354','12f3e83f-3979-4a59-b388-1effc55fa8f4','af487b23-9dba-4797-9627-c5b1b9ff3a42','1e9c4b44-fe65-4392-9de0-84542f3998cb','8d3b4cd8-df63-4c1a-b82b-d0139563e12e','c99dee1b-a997-453d-85dd-be94aef8fbed','ac3eeb52-7268-45e3-a373-0e195e12a294','3cbcdfb8-84e8-422e-9b87-21e7a50b6865','085a9d00-4918-42e6-a596-dbeadf54ec4d','a726f5e6-4237-4bb2-8ab0-13eac8180425','1e9c1e93-ad47-49ac-adb7-47a0606718cf','77b9f6a9-1672-4483-beb0-2f5b11b26801','07fe4160-c034-4331-94a1-9075257c62ab','3ae3b6d7-f308-4b08-89a3-a6f412715806','2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334','a7124f1b-476a-45fb-a6c3-68d161fdc911','9989897b-2fd9-45dd-a473-a6512a8cd96d','0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf'], ['默默\\'s Default Team','魏存琦\\'s Project','高杨帆\\'s Project','雷可鹏\\'s Project','锁祎然\\'s Project','郭品学\\'s Project','郑锐\\'s Project','郑淼\\'s Project','谢天赐\\'s Project','蔡子坤\\'s Project','符炫炜\\'s Project','沈蔚\\'s Project','李慧\\'s Project','李以时\\'s Project','曹倚飞\\'s Project','张硕\\'s Project','张朝运\\'s Default Team','张国强\\'s Project','刘官明\\'s Project','何阳极\\'s Project','Zhoumaosen\\'s Project','Zhengmiao\\'s Project','zhaojiarong@qijizhifeng.com','Zhangqi\\'s Project','zhangping@infrawaves.com','Vision','Tianyuhuai\\'s Project','test','system1','system@localhost','system@e2b.dev','Sunpeng\\'s Default Team','Shaozhou\\'s Project','Service\\'s Project','Ruizheng\\'s Default Team','RL','pingzhang8-c@my.cityu.edu.hk','Ning\\'s Project','Liutongtong\\'s Project','Linlizhi\\'s Project','Infrawave_测试1\\'s Project','Infrawave_test3\\'s Project','Infrawave_test2\\'s Default Team','Infrawave_test1\\'s Default Team','Infra Team','Hanszhuang\\'s Default Team','Guopinxue\\'s Project','e2b-xiaobei@china-qijizhifeng.com','e2b-xiaobei@china-qijizhifeng.com','e2b-rl@china-qijizhifeng.com','e2b-nexau@china-qijizhifeng.com','e2b-nexau@china-qijizhifeng.com','e2b-nex2@china-qijizhifeng.com','e2b-nex@china-qijizhifeng.com','e2b-nex@china-qijizhifeng.com','e2b-infrawaves@china-qijizhifeng.com','e2b-infrawaves@china-qijizhifeng.com','e2b-infra@china-qijizhifeng.com','e2b-infra@china-qijizhifeng.com','e2b-fde@china-qijizhifeng.com','e2b-fde@china-qijizhifeng.com','Chenjun\\'s Project','972963285@qq.com','972963285@qq.com','9','8','7','6','5','4','4','3','3','3','3','22','2','2','2','11','1','1','1'], any(toString(sandbox_team_id))) AS \"Team名称\",\n  anyIf(JSONExtractString(coalesce(event_data,'{}'),'kill_reason'), type='sandbox.lifecycle.killed') AS \"kill原因\",\n  minIf(timestamp, type='sandbox.lifecycle.created') AS \"创建时间\",\n  maxIf(timestamp, type='sandbox.lifecycle.killed') AS \"结束时间\",\n  toInt64(dateDiff('second', minIf(timestamp, type='sandbox.lifecycle.created'), maxIf(timestamp, type='sandbox.lifecycle.killed'))) AS \"存活秒数\"\nFROM sandbox_events\nWHERE timestamp >= $__fromTime AND timestamp <= $__toTime\n  AND match(toString(sandbox_team_id), '$teamID')\n  AND sandbox_id IN (\n    SELECT sandbox_id FROM sandbox_events\n    WHERE type='sandbox.lifecycle.killed'\n      AND JSONExtractString(coalesce(event_data,'{}'),'kill_reason') IN (${killReason:singlequote})\n      AND timestamp >= $__fromTime AND timestamp <= $__toTime\n  )\nGROUP BY sandbox_id\nORDER BY \"结束时间\" DESC\nLIMIT 500",
+          "refId": "A"
+        }
+      ],
+      "title": "特殊原因被 kill 的沙箱明细（admin/orphaned/base_template_missing/unknown）",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "id": 30,
+      "title": "按 team / 原因",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "description": "一根柱子 = 一个 team，按 kill 原因堆叠。\n绿 request（用户主动）、蓝 timeout（TTL 到期）都正常；\n橙 admin、红 orphaned、紫 base_template_missing 值得查",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "kill 次数",
+            "axisPlacement": "auto",
+            "fillOpacity": 85,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "team\\reason"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7": {
+                        "index": 44,
+                        "text": "Ning's Project · 004f3f7c"
+                      },
+                      "01872fea-af86-4de1-9f38-ff439deef08d": {
+                        "index": 43,
+                        "text": "Liutongtong's Project · 01872fea"
+                      },
+                      "072e7581-1510-46cc-a875-c8f493f83179": {
+                        "index": 31,
+                        "text": "e2b-nexau@china-qijizhifeng.com · 072e7581"
+                      },
+                      "07fe4160-c034-4331-94a1-9075257c62ab": {
+                        "index": 4,
+                        "text": "2 · 07fe4160"
+                      },
+                      "085a9d00-4918-42e6-a596-dbeadf54ec4d": {
+                        "index": 10,
+                        "text": "3 · 085a9d00"
+                      },
+                      "0ad0730c-2860-4f30-948c-acd9c4f42d29": {
+                        "index": 71,
+                        "text": "符炫炜's Project · 0ad0730c"
+                      },
+                      "0ae5f9f7-d6ac-4fde-9279-92943a0b5a86": {
+                        "index": 49,
+                        "text": "Shaozhou's Project · 0ae5f9f7"
+                      },
+                      "0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf": {
+                        "index": 2,
+                        "text": "1 · 0cbaa95f"
+                      },
+                      "0db5fb8e-920d-4564-a712-30a345863244": {
+                        "index": 24,
+                        "text": "e2b-infra@china-qijizhifeng.com · 0db5fb8e"
+                      },
+                      "0f44e8fc-859c-4f6a-b7e4-3068de12123e": {
+                        "index": 66,
+                        "text": "张硕's Project · 0f44e8fc"
+                      },
+                      "12f3e83f-3979-4a59-b388-1effc55fa8f4": {
+                        "index": 16,
+                        "text": "7 · 12f3e83f"
+                      },
+                      "19ca40b0-aafb-416e-8ffa-b33f9eb940a9": {
+                        "index": 40,
+                        "text": "Infrawave_test2's Default Team · 19ca40b0"
+                      },
+                      "1e9c1e93-ad47-49ac-adb7-47a0606718cf": {
+                        "index": 7,
+                        "text": "22 · 1e9c1e93"
+                      },
+                      "1e9c4b44-fe65-4392-9de0-84542f3998cb": {
+                        "index": 14,
+                        "text": "5 · 1e9c4b44"
+                      },
+                      "258d442e-2159-48c9-9ac9-f3e1a0c1c452": {
+                        "index": 69,
+                        "text": "李慧's Project · 258d442e"
+                      },
+                      "2a8e0507-cbc5-4445-95dc-314347c607f4": {
+                        "index": 37,
+                        "text": "Hanszhuang's Default Team · 2a8e0507"
+                      },
+                      "2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334": {
+                        "index": 3,
+                        "text": "11 · 2ba8b18f"
+                      },
+                      "31738770-b0cd-480c-8ac5-9a5bf43d100b": {
+                        "index": 63,
+                        "text": "刘官明's Project · 31738770"
+                      },
+                      "32758328-00b9-4f5b-b66d-8ea5ebd02d5c": {
+                        "index": 53,
+                        "text": "system@localhost · 32758328"
+                      },
+                      "3ae3b6d7-f308-4b08-89a3-a6f412715806": {
+                        "index": 5,
+                        "text": "2 · 3ae3b6d7"
+                      },
+                      "3bf425ff-584d-4f11-abda-483a918b5897": {
+                        "index": 58,
+                        "text": "Zhangqi's Project · 3bf425ff"
+                      },
+                      "3c17296b-964e-40a8-a2b4-ae73efcc3010": {
+                        "index": 39,
+                        "text": "Infrawave_test1's Default Team · 3c17296b"
+                      },
+                      "3cbcdfb8-84e8-422e-9b87-21e7a50b6865": {
+                        "index": 11,
+                        "text": "3 · 3cbcdfb8"
+                      },
+                      "467334dc-5de9-4ac9-a04b-d703c148f3a5": {
+                        "index": 19,
+                        "text": "972963285@qq.com · 467334dc"
+                      },
+                      "4793fa63-b11e-4567-a1f0-bd5e0f93b551": {
+                        "index": 21,
+                        "text": "Chenjun's Project · 4793fa63"
+                      },
+                      "47eee04d-4660-480c-97e8-64c39934cf47": {
+                        "index": 20,
+                        "text": "972963285@qq.com · 47eee04d"
+                      },
+                      "4b893304-e299-4243-bea4-392feee74b7c": {
+                        "index": 64,
+                        "text": "张国强's Project · 4b893304"
+                      },
+                      "4e8177c9-134c-4311-b917-418314e587af": {
+                        "index": 75,
+                        "text": "郭品学's Project · 4e8177c9"
+                      },
+                      "4f0c2666-2773-42f9-ae24-12863e48dbce": {
+                        "index": 79,
+                        "text": "魏存琦's Project · 4f0c2666"
+                      },
+                      "560cc0a7-b536-419e-a038-8338148be13d": {
+                        "index": 28,
+                        "text": "e2b-nex2@china-qijizhifeng.com · 560cc0a7"
+                      },
+                      "5a6930b7-6ba8-49c5-b8cf-4126474cdbd3": {
+                        "index": 25,
+                        "text": "e2b-infra@china-qijizhifeng.com · 5a6930b7"
+                      },
+                      "6417ba56-ea10-4fce-aa2e-54d353d907ab": {
+                        "index": 45,
+                        "text": "pingzhang8-c@my.cityu.edu.hk · 6417ba56"
+                      },
+                      "65380065-c5bd-4d9f-b81c-1ce0866db931": {
+                        "index": 30,
+                        "text": "e2b-nex@china-qijizhifeng.com · 65380065"
+                      },
+                      "6d4eb009-5540-4951-830a-b0e10d06ed65": {
+                        "index": 62,
+                        "text": "何阳极's Project · 6d4eb009"
+                      },
+                      "6e7a55f9-5db0-4938-877b-c44d86eb25ab": {
+                        "index": 32,
+                        "text": "e2b-nexau@china-qijizhifeng.com · 6e7a55f9"
+                      },
+                      "6eb3900a-1fe8-4743-bdf7-12172b9771fc": {
+                        "index": 27,
+                        "text": "e2b-infrawaves@china-qijizhifeng.com · 6eb3900a"
+                      },
+                      "77a2927b-7d67-484c-8962-2d447b8179af": {
+                        "index": 38,
+                        "text": "Infra Team · 77a2927b"
+                      },
+                      "77b9f6a9-1672-4483-beb0-2f5b11b26801": {
+                        "index": 6,
+                        "text": "2 · 77b9f6a9"
+                      },
+                      "7fcbdf30-b95b-4d65-acef-b81b328bc5a5": {
+                        "index": 68,
+                        "text": "李以时's Project · 7fcbdf30"
+                      },
+                      "892c82ba-e2e0-4cf1-9496-44eac15a714f": {
+                        "index": 70,
+                        "text": "沈蔚's Project · 892c82ba"
+                      },
+                      "899fdcc3-4702-4a27-be10-9270eaf4b1cd": {
+                        "index": 56,
+                        "text": "Vision · 899fdcc3"
+                      },
+                      "8d3b4cd8-df63-4c1a-b82b-d0139563e12e": {
+                        "index": 12,
+                        "text": "4 · 8d3b4cd8"
+                      },
+                      "955127a8-51ec-41ef-ba1a-232a3b3e201b": {
+                        "index": 51,
+                        "text": "system1 · 955127a8"
+                      },
+                      "9989897b-2fd9-45dd-a473-a6512a8cd96d": {
+                        "index": 0,
+                        "text": "1 · 9989897b"
+                      },
+                      "9ad5ed4c-445b-4a9e-b856-d18232fa1fc6": {
+                        "index": 36,
+                        "text": "Guopinxue's Project · 9ad5ed4c"
+                      },
+                      "9b6bc955-415e-43c4-800a-d406f7c38864": {
+                        "index": 54,
+                        "text": "test · 9b6bc955"
+                      },
+                      "9bfcc2c7-0a17-486c-a79c-4b323eee7162": {
+                        "index": 76,
+                        "text": "锁祎然's Project · 9bfcc2c7"
+                      },
+                      "9db7bc25-1324-4330-85c4-f43dcde6d66d": {
+                        "index": 22,
+                        "text": "e2b-fde@china-qijizhifeng.com · 9db7bc25"
+                      },
+                      "a2bf5f96-7335-4b47-b894-39641aad6ed5": {
+                        "index": 34,
+                        "text": "e2b-xiaobei@china-qijizhifeng.com · a2bf5f96"
+                      },
+                      "a56704da-010b-48da-ab8e-d2aaaf8545e3": {
+                        "index": 73,
+                        "text": "谢天赐's Project · a56704da"
+                      },
+                      "a7124f1b-476a-45fb-a6c3-68d161fdc911": {
+                        "index": 1,
+                        "text": "1 · a7124f1b"
+                      },
+                      "a726f5e6-4237-4bb2-8ab0-13eac8180425": {
+                        "index": 9,
+                        "text": "3 · a726f5e6"
+                      },
+                      "ab785508-ba6c-4fdb-854a-2b39a2144354": {
+                        "index": 17,
+                        "text": "8 · ab785508"
+                      },
+                      "ac3eeb52-7268-45e3-a373-0e195e12a294": {
+                        "index": 8,
+                        "text": "3 · ac3eeb52"
+                      },
+                      "af487b23-9dba-4797-9627-c5b1b9ff3a42": {
+                        "index": 15,
+                        "text": "6 · af487b23"
+                      },
+                      "af8fc097-6343-4b33-b7bb-1c197789eabd": {
+                        "index": 59,
+                        "text": "zhaojiarong@qijizhifeng.com · af8fc097"
+                      },
+                      "b1940e54-3dbb-44cd-bf26-569382921299": {
+                        "index": 52,
+                        "text": "system@e2b.dev · b1940e54"
+                      },
+                      "b2b5b25c-5b4a-4466-8b68-779004eabba7": {
+                        "index": 60,
+                        "text": "Zhengmiao's Project · b2b5b25c"
+                      },
+                      "b9bbe0bc-8826-494b-84ca-6c3a5ff46bec": {
+                        "index": 29,
+                        "text": "e2b-nex@china-qijizhifeng.com · b9bbe0bc"
+                      },
+                      "bb20491c-f757-4043-846b-838b7f30a8d1": {
+                        "index": 57,
+                        "text": "zhangping@infrawaves.com · bb20491c"
+                      },
+                      "bf0cabd4-1d63-4c92-8018-56466250fc34": {
+                        "index": 80,
+                        "text": "默默's Default Team · bf0cabd4"
+                      },
+                      "c22d1774-82e6-4e16-8f24-9b0536744b18": {
+                        "index": 42,
+                        "text": "Linlizhi's Project · c22d1774"
+                      },
+                      "c383705d-81fa-4f85-8a19-dd81ef49f3eb": {
+                        "index": 72,
+                        "text": "蔡子坤's Project · c383705d"
+                      },
+                      "c5ac79f6-6155-47ac-9623-456cfb843878": {
+                        "index": 18,
+                        "text": "9 · c5ac79f6"
+                      },
+                      "c8c30b05-7068-41e6-ab31-15daeb2b94f1": {
+                        "index": 78,
+                        "text": "高杨帆's Project · c8c30b05"
+                      },
+                      "c99dee1b-a997-453d-85dd-be94aef8fbed": {
+                        "index": 13,
+                        "text": "4 · c99dee1b"
+                      },
+                      "cdc01774-0863-42dd-8475-22aefbe90997": {
+                        "index": 48,
+                        "text": "Service's Project · cdc01774"
+                      },
+                      "cf6c9163-60c9-4c5d-aa08-525b08ab5aaa": {
+                        "index": 23,
+                        "text": "e2b-fde@china-qijizhifeng.com · cf6c9163"
+                      },
+                      "e15b5877-779e-4359-9564-336c8cabe966": {
+                        "index": 41,
+                        "text": "Infrawave_test3's Project · e15b5877"
+                      },
+                      "e5c4b9f2-88d7-4bae-bde0-1480d82e9988": {
+                        "index": 61,
+                        "text": "Zhoumaosen's Project · e5c4b9f2"
+                      },
+                      "f0037e31-bd7a-4ad6-b16a-94c2790332da": {
+                        "index": 67,
+                        "text": "曹倚飞's Project · f0037e31"
+                      },
+                      "f03fb965-cfcc-4d58-94e4-9f062b09da53": {
+                        "index": 77,
+                        "text": "雷可鹏's Project · f03fb965"
+                      },
+                      "f081810f-4c2c-4b86-94b9-e69ebed18106": {
+                        "index": 46,
+                        "text": "RL · f081810f"
+                      },
+                      "f6eb883d-263d-4b71-831e-58ae7fd13878": {
+                        "index": 65,
+                        "text": "张朝运's Default Team · f6eb883d"
+                      },
+                      "f7e95758-34fe-44a2-bad9-6097a14ad656": {
+                        "index": 50,
+                        "text": "Sunpeng's Default Team · f7e95758"
+                      },
+                      "f9a89b02-0f1f-402d-9994-bc13ac9122ab": {
+                        "index": 26,
+                        "text": "e2b-infrawaves@china-qijizhifeng.com · f9a89b02"
+                      },
+                      "fb4e1d45-5ed4-474d-8144-68d4f5bc7871": {
+                        "index": 47,
+                        "text": "Ruizheng's Default Team · fb4e1d45"
+                      },
+                      "fcae3a36-0d3f-40df-aad0-3c97b33624a5": {
+                        "index": 35,
+                        "text": "e2b-xiaobei@china-qijizhifeng.com · fcae3a36"
+                      },
+                      "fcd649c5-0175-4d1e-98a5-1c218009dee4": {
+                        "index": 33,
+                        "text": "e2b-rl@china-qijizhifeng.com · fcd649c5"
+                      },
+                      "fe6493c4-af87-4f44-bf02-2acb426f1b81": {
+                        "index": 74,
+                        "text": "郑锐's Project · fe6493c4"
+                      },
+                      "fea203de-19f9-4fa4-b5c8-3f7e6b5c2606": {
+                        "index": 55,
+                        "text": "Tianyuhuai's Project · fea203de"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "displayName",
+                "value": "team"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "request"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "timeout"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "admin"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "orphaned"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "base_template_missing"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unknown"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "text",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 14,
+        "x": 0,
+        "y": 16
+      },
+      "id": 13,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "normal",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "xField": "team\\reason",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "database": "",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT toString(sandbox_team_id) AS team,\n  JSONExtractString(coalesce(event_data, '{}'),'kill_reason') AS reason, count() AS cnt\nFROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID')\nGROUP BY team, reason ORDER BY cnt DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "kill 数按 team（按原因堆叠）",
+      "transformations": [
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "reason",
+            "emptyValue": "zero",
+            "rowField": "team",
+            "valueField": "cnt"
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "description": "**六种原因固定全列**（`countIf` 出的列，为 0 也在）—— 这点旧 Loki 版做不到：透视时全 0 的列会直接消失。\n按总数降序",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "team"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7": {
+                        "index": 44,
+                        "text": "Ning's Project · 004f3f7c"
+                      },
+                      "01872fea-af86-4de1-9f38-ff439deef08d": {
+                        "index": 43,
+                        "text": "Liutongtong's Project · 01872fea"
+                      },
+                      "072e7581-1510-46cc-a875-c8f493f83179": {
+                        "index": 31,
+                        "text": "e2b-nexau@china-qijizhifeng.com · 072e7581"
+                      },
+                      "07fe4160-c034-4331-94a1-9075257c62ab": {
+                        "index": 4,
+                        "text": "2 · 07fe4160"
+                      },
+                      "085a9d00-4918-42e6-a596-dbeadf54ec4d": {
+                        "index": 10,
+                        "text": "3 · 085a9d00"
+                      },
+                      "0ad0730c-2860-4f30-948c-acd9c4f42d29": {
+                        "index": 71,
+                        "text": "符炫炜's Project · 0ad0730c"
+                      },
+                      "0ae5f9f7-d6ac-4fde-9279-92943a0b5a86": {
+                        "index": 49,
+                        "text": "Shaozhou's Project · 0ae5f9f7"
+                      },
+                      "0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf": {
+                        "index": 2,
+                        "text": "1 · 0cbaa95f"
+                      },
+                      "0db5fb8e-920d-4564-a712-30a345863244": {
+                        "index": 24,
+                        "text": "e2b-infra@china-qijizhifeng.com · 0db5fb8e"
+                      },
+                      "0f44e8fc-859c-4f6a-b7e4-3068de12123e": {
+                        "index": 66,
+                        "text": "张硕's Project · 0f44e8fc"
+                      },
+                      "12f3e83f-3979-4a59-b388-1effc55fa8f4": {
+                        "index": 16,
+                        "text": "7 · 12f3e83f"
+                      },
+                      "19ca40b0-aafb-416e-8ffa-b33f9eb940a9": {
+                        "index": 40,
+                        "text": "Infrawave_test2's Default Team · 19ca40b0"
+                      },
+                      "1e9c1e93-ad47-49ac-adb7-47a0606718cf": {
+                        "index": 7,
+                        "text": "22 · 1e9c1e93"
+                      },
+                      "1e9c4b44-fe65-4392-9de0-84542f3998cb": {
+                        "index": 14,
+                        "text": "5 · 1e9c4b44"
+                      },
+                      "258d442e-2159-48c9-9ac9-f3e1a0c1c452": {
+                        "index": 69,
+                        "text": "李慧's Project · 258d442e"
+                      },
+                      "2a8e0507-cbc5-4445-95dc-314347c607f4": {
+                        "index": 37,
+                        "text": "Hanszhuang's Default Team · 2a8e0507"
+                      },
+                      "2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334": {
+                        "index": 3,
+                        "text": "11 · 2ba8b18f"
+                      },
+                      "31738770-b0cd-480c-8ac5-9a5bf43d100b": {
+                        "index": 63,
+                        "text": "刘官明's Project · 31738770"
+                      },
+                      "32758328-00b9-4f5b-b66d-8ea5ebd02d5c": {
+                        "index": 53,
+                        "text": "system@localhost · 32758328"
+                      },
+                      "3ae3b6d7-f308-4b08-89a3-a6f412715806": {
+                        "index": 5,
+                        "text": "2 · 3ae3b6d7"
+                      },
+                      "3bf425ff-584d-4f11-abda-483a918b5897": {
+                        "index": 58,
+                        "text": "Zhangqi's Project · 3bf425ff"
+                      },
+                      "3c17296b-964e-40a8-a2b4-ae73efcc3010": {
+                        "index": 39,
+                        "text": "Infrawave_test1's Default Team · 3c17296b"
+                      },
+                      "3cbcdfb8-84e8-422e-9b87-21e7a50b6865": {
+                        "index": 11,
+                        "text": "3 · 3cbcdfb8"
+                      },
+                      "467334dc-5de9-4ac9-a04b-d703c148f3a5": {
+                        "index": 19,
+                        "text": "972963285@qq.com · 467334dc"
+                      },
+                      "4793fa63-b11e-4567-a1f0-bd5e0f93b551": {
+                        "index": 21,
+                        "text": "Chenjun's Project · 4793fa63"
+                      },
+                      "47eee04d-4660-480c-97e8-64c39934cf47": {
+                        "index": 20,
+                        "text": "972963285@qq.com · 47eee04d"
+                      },
+                      "4b893304-e299-4243-bea4-392feee74b7c": {
+                        "index": 64,
+                        "text": "张国强's Project · 4b893304"
+                      },
+                      "4e8177c9-134c-4311-b917-418314e587af": {
+                        "index": 75,
+                        "text": "郭品学's Project · 4e8177c9"
+                      },
+                      "4f0c2666-2773-42f9-ae24-12863e48dbce": {
+                        "index": 79,
+                        "text": "魏存琦's Project · 4f0c2666"
+                      },
+                      "560cc0a7-b536-419e-a038-8338148be13d": {
+                        "index": 28,
+                        "text": "e2b-nex2@china-qijizhifeng.com · 560cc0a7"
+                      },
+                      "5a6930b7-6ba8-49c5-b8cf-4126474cdbd3": {
+                        "index": 25,
+                        "text": "e2b-infra@china-qijizhifeng.com · 5a6930b7"
+                      },
+                      "6417ba56-ea10-4fce-aa2e-54d353d907ab": {
+                        "index": 45,
+                        "text": "pingzhang8-c@my.cityu.edu.hk · 6417ba56"
+                      },
+                      "65380065-c5bd-4d9f-b81c-1ce0866db931": {
+                        "index": 30,
+                        "text": "e2b-nex@china-qijizhifeng.com · 65380065"
+                      },
+                      "6d4eb009-5540-4951-830a-b0e10d06ed65": {
+                        "index": 62,
+                        "text": "何阳极's Project · 6d4eb009"
+                      },
+                      "6e7a55f9-5db0-4938-877b-c44d86eb25ab": {
+                        "index": 32,
+                        "text": "e2b-nexau@china-qijizhifeng.com · 6e7a55f9"
+                      },
+                      "6eb3900a-1fe8-4743-bdf7-12172b9771fc": {
+                        "index": 27,
+                        "text": "e2b-infrawaves@china-qijizhifeng.com · 6eb3900a"
+                      },
+                      "77a2927b-7d67-484c-8962-2d447b8179af": {
+                        "index": 38,
+                        "text": "Infra Team · 77a2927b"
+                      },
+                      "77b9f6a9-1672-4483-beb0-2f5b11b26801": {
+                        "index": 6,
+                        "text": "2 · 77b9f6a9"
+                      },
+                      "7fcbdf30-b95b-4d65-acef-b81b328bc5a5": {
+                        "index": 68,
+                        "text": "李以时's Project · 7fcbdf30"
+                      },
+                      "892c82ba-e2e0-4cf1-9496-44eac15a714f": {
+                        "index": 70,
+                        "text": "沈蔚's Project · 892c82ba"
+                      },
+                      "899fdcc3-4702-4a27-be10-9270eaf4b1cd": {
+                        "index": 56,
+                        "text": "Vision · 899fdcc3"
+                      },
+                      "8d3b4cd8-df63-4c1a-b82b-d0139563e12e": {
+                        "index": 12,
+                        "text": "4 · 8d3b4cd8"
+                      },
+                      "955127a8-51ec-41ef-ba1a-232a3b3e201b": {
+                        "index": 51,
+                        "text": "system1 · 955127a8"
+                      },
+                      "9989897b-2fd9-45dd-a473-a6512a8cd96d": {
+                        "index": 0,
+                        "text": "1 · 9989897b"
+                      },
+                      "9ad5ed4c-445b-4a9e-b856-d18232fa1fc6": {
+                        "index": 36,
+                        "text": "Guopinxue's Project · 9ad5ed4c"
+                      },
+                      "9b6bc955-415e-43c4-800a-d406f7c38864": {
+                        "index": 54,
+                        "text": "test · 9b6bc955"
+                      },
+                      "9bfcc2c7-0a17-486c-a79c-4b323eee7162": {
+                        "index": 76,
+                        "text": "锁祎然's Project · 9bfcc2c7"
+                      },
+                      "9db7bc25-1324-4330-85c4-f43dcde6d66d": {
+                        "index": 22,
+                        "text": "e2b-fde@china-qijizhifeng.com · 9db7bc25"
+                      },
+                      "a2bf5f96-7335-4b47-b894-39641aad6ed5": {
+                        "index": 34,
+                        "text": "e2b-xiaobei@china-qijizhifeng.com · a2bf5f96"
+                      },
+                      "a56704da-010b-48da-ab8e-d2aaaf8545e3": {
+                        "index": 73,
+                        "text": "谢天赐's Project · a56704da"
+                      },
+                      "a7124f1b-476a-45fb-a6c3-68d161fdc911": {
+                        "index": 1,
+                        "text": "1 · a7124f1b"
+                      },
+                      "a726f5e6-4237-4bb2-8ab0-13eac8180425": {
+                        "index": 9,
+                        "text": "3 · a726f5e6"
+                      },
+                      "ab785508-ba6c-4fdb-854a-2b39a2144354": {
+                        "index": 17,
+                        "text": "8 · ab785508"
+                      },
+                      "ac3eeb52-7268-45e3-a373-0e195e12a294": {
+                        "index": 8,
+                        "text": "3 · ac3eeb52"
+                      },
+                      "af487b23-9dba-4797-9627-c5b1b9ff3a42": {
+                        "index": 15,
+                        "text": "6 · af487b23"
+                      },
+                      "af8fc097-6343-4b33-b7bb-1c197789eabd": {
+                        "index": 59,
+                        "text": "zhaojiarong@qijizhifeng.com · af8fc097"
+                      },
+                      "b1940e54-3dbb-44cd-bf26-569382921299": {
+                        "index": 52,
+                        "text": "system@e2b.dev · b1940e54"
+                      },
+                      "b2b5b25c-5b4a-4466-8b68-779004eabba7": {
+                        "index": 60,
+                        "text": "Zhengmiao's Project · b2b5b25c"
+                      },
+                      "b9bbe0bc-8826-494b-84ca-6c3a5ff46bec": {
+                        "index": 29,
+                        "text": "e2b-nex@china-qijizhifeng.com · b9bbe0bc"
+                      },
+                      "bb20491c-f757-4043-846b-838b7f30a8d1": {
+                        "index": 57,
+                        "text": "zhangping@infrawaves.com · bb20491c"
+                      },
+                      "bf0cabd4-1d63-4c92-8018-56466250fc34": {
+                        "index": 80,
+                        "text": "默默's Default Team · bf0cabd4"
+                      },
+                      "c22d1774-82e6-4e16-8f24-9b0536744b18": {
+                        "index": 42,
+                        "text": "Linlizhi's Project · c22d1774"
+                      },
+                      "c383705d-81fa-4f85-8a19-dd81ef49f3eb": {
+                        "index": 72,
+                        "text": "蔡子坤's Project · c383705d"
+                      },
+                      "c5ac79f6-6155-47ac-9623-456cfb843878": {
+                        "index": 18,
+                        "text": "9 · c5ac79f6"
+                      },
+                      "c8c30b05-7068-41e6-ab31-15daeb2b94f1": {
+                        "index": 78,
+                        "text": "高杨帆's Project · c8c30b05"
+                      },
+                      "c99dee1b-a997-453d-85dd-be94aef8fbed": {
+                        "index": 13,
+                        "text": "4 · c99dee1b"
+                      },
+                      "cdc01774-0863-42dd-8475-22aefbe90997": {
+                        "index": 48,
+                        "text": "Service's Project · cdc01774"
+                      },
+                      "cf6c9163-60c9-4c5d-aa08-525b08ab5aaa": {
+                        "index": 23,
+                        "text": "e2b-fde@china-qijizhifeng.com · cf6c9163"
+                      },
+                      "e15b5877-779e-4359-9564-336c8cabe966": {
+                        "index": 41,
+                        "text": "Infrawave_test3's Project · e15b5877"
+                      },
+                      "e5c4b9f2-88d7-4bae-bde0-1480d82e9988": {
+                        "index": 61,
+                        "text": "Zhoumaosen's Project · e5c4b9f2"
+                      },
+                      "f0037e31-bd7a-4ad6-b16a-94c2790332da": {
+                        "index": 67,
+                        "text": "曹倚飞's Project · f0037e31"
+                      },
+                      "f03fb965-cfcc-4d58-94e4-9f062b09da53": {
+                        "index": 77,
+                        "text": "雷可鹏's Project · f03fb965"
+                      },
+                      "f081810f-4c2c-4b86-94b9-e69ebed18106": {
+                        "index": 46,
+                        "text": "RL · f081810f"
+                      },
+                      "f6eb883d-263d-4b71-831e-58ae7fd13878": {
+                        "index": 65,
+                        "text": "张朝运's Default Team · f6eb883d"
+                      },
+                      "f7e95758-34fe-44a2-bad9-6097a14ad656": {
+                        "index": 50,
+                        "text": "Sunpeng's Default Team · f7e95758"
+                      },
+                      "f9a89b02-0f1f-402d-9994-bc13ac9122ab": {
+                        "index": 26,
+                        "text": "e2b-infrawaves@china-qijizhifeng.com · f9a89b02"
+                      },
+                      "fb4e1d45-5ed4-474d-8144-68d4f5bc7871": {
+                        "index": 47,
+                        "text": "Ruizheng's Default Team · fb4e1d45"
+                      },
+                      "fcae3a36-0d3f-40df-aad0-3c97b33624a5": {
+                        "index": 35,
+                        "text": "e2b-xiaobei@china-qijizhifeng.com · fcae3a36"
+                      },
+                      "fcd649c5-0175-4d1e-98a5-1c218009dee4": {
+                        "index": 33,
+                        "text": "e2b-rl@china-qijizhifeng.com · fcd649c5"
+                      },
+                      "fe6493c4-af87-4f44-bf02-2acb426f1b81": {
+                        "index": 74,
+                        "text": "郑锐's Project · fe6493c4"
+                      },
+                      "fea203de-19f9-4fa4-b5c8-3f7e6b5c2606": {
+                        "index": 55,
+                        "text": "Tianyuhuai's Project · fea203de"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 210
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "total"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "合计"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "blue",
+                      "value": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "request"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "timeout"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "blue",
+                      "value": 0
+                    },
+                    {
+                      "color": "blue",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "admin"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": 0
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "orphaned"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "base_template_missing"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": 0
+                    },
+                    {
+                      "color": "purple",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unknown"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": 0
+                    },
+                    {
+                      "color": "text",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "include",
+                "names": [
+                  "total",
+                  "request",
+                  "timeout",
+                  "admin",
+                  "orphaned",
+                  "base_template_missing",
+                  "unknown"
+                ]
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.footer.reducers",
+                "value": [
+                  "sum"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 10,
+        "x": 14,
+        "y": 16
+      },
+      "id": 14,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "database": "",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT toString(sandbox_team_id) AS team,\n  count() AS total,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'request') AS request,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'timeout') AS timeout,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'admin') AS admin,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'orphaned') AS orphaned,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'base_template_missing') AS base_template_missing,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'unknown') AS unknown\nFROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID')\nGROUP BY team ORDER BY total DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "各 team 明细（每种原因一列）",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "1h",
+  "schemaVersion": 42,
+  "tags": [
+    "e2b",
+    "sandbox",
+    "kill",
+    "clickhouse"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "prod_e2b_clickhouse",
+          "value": "cfyzcpdk3t7uoa"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "数据源",
+        "name": "DS_CLICKHOUSE",
+        "options": [],
+        "query": "grafana-clickhouse-datasource",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".+",
+        "allowCustomValue": true,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "${DS_CLICKHOUSE}"
+        },
+        "description": "从 CH 的 sandbox_events 取 team 列表。默认 All（全部 team）—— 本看板多数面板按 team 横向对比",
+        "hide": 0,
+        "includeAll": true,
+        "label": "team",
+        "multi": false,
+        "name": "teamID",
+        "options": [],
+        "query": {
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT DISTINCT toString(sandbox_team_id) AS team FROM sandbox_events WHERE timestamp >= now() - INTERVAL 24 HOUR ORDER BY team",
+          "refId": "teamID"
+        },
+        "refresh": 2,
+        "regex": "",
+        "regexApplyTo": "value",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": "'orphaned','admin','base_template_missing','unknown'",
+        "current": {
+          "text": [
+            "orphaned",
+            "admin",
+            "base_template_missing",
+            "unknown"
+          ],
+          "value": [
+            "orphaned",
+            "admin",
+            "base_template_missing",
+            "unknown"
+          ]
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "kill原因",
+        "multi": true,
+        "name": "killReason",
+        "options": [
+          {
+            "selected": true,
+            "text": "orphaned",
+            "value": "orphaned"
+          },
+          {
+            "selected": true,
+            "text": "admin",
+            "value": "admin"
+          },
+          {
+            "selected": true,
+            "text": "base_template_missing",
+            "value": "base_template_missing"
+          },
+          {
+            "selected": true,
+            "text": "unknown",
+            "value": "unknown"
+          }
+        ],
+        "query": "orphaned,admin,base_template_missing,unknown",
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "⑤ E2B 沙箱 kill 统计（按 team / 原因）",
+  "uid": "e2b-sbx-kill",
+  "version": 17
+}
