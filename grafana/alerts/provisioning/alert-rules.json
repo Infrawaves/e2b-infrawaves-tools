@@ -72,7 +72,7 @@
         }
       }
     ],
-    "updated": "2026-09-30T20:31:27+08:00",
+    "updated": "2026-11-23T19:45:42+08:00",
     "noDataState": "OK",
     "execErrState": "KeepLast",
     "for": "2m",
@@ -214,7 +214,7 @@
         }
       }
     ],
-    "updated": "2026-11-20T22:48:57+08:00",
+    "updated": "2026-11-23T19:45:47+08:00",
     "noDataState": "OK",
     "execErrState": "KeepLast",
     "for": "1m",
@@ -229,7 +229,7 @@
       "env": "hk-prod",
       "severity": "warning"
     },
-    "isPaused": false,
+    "isPaused": true,
     "notification_settings": null,
     "record": null
   },
@@ -1142,7 +1142,7 @@
         }
       }
     ],
-    "updated": "2026-11-13T15:07:25+08:00",
+    "updated": "2026-11-23T19:45:05+08:00",
     "noDataState": "OK",
     "execErrState": "KeepLast",
     "for": "0s",
@@ -1153,11 +1153,13 @@
       "summary": "沙箱磁盘不足：近5分钟出现磁盘空间不足"
     },
     "labels": {
+      "alert_kind": "sandbox-runtime",
       "env": "hk-prod",
       "service": "e2b",
       "severity": "warning"
     },
-    "isPaused": true,
+    "provenance": "api",
+    "isPaused": false,
     "notification_settings": null,
     "record": null
   },
@@ -1167,7 +1169,7 @@
     "orgID": 1,
     "folderUID": "efmfoahu15qtcc",
     "ruleGroup": "e2b-sandbox-runtime",
-    "title": "E2B æ²ç®±åæ ¸OOM (OOM Killed)",
+    "title": "E2B 沙箱内核OOM (OOM Killed)",
     "condition": "E",
     "data": [
       {
@@ -1259,7 +1261,7 @@
         }
       }
     ],
-    "updated": "2026-11-13T16:07:35+08:00",
+    "updated": "2026-11-23T19:45:06+08:00",
     "noDataState": "OK",
     "execErrState": "KeepLast",
     "for": "0s",
@@ -1267,15 +1269,16 @@
     "annotations": {
       "__dashboardUid__": "e2b-sbx-runtime",
       "__panelId__": "31",
-      "summary": "æ²ç®±åæ ¸OOMï¼è¿5åéåºç°åæ ¸ OOM Killer ç»æ­¢è¿ç¨"
+      "summary": "沙箱内核OOM：近5分钟出现内核 OOM Killer 终止进程"
     },
     "labels": {
+      "alert_kind": "sandbox-runtime",
       "env": "hk-prod",
       "service": "e2b",
       "severity": "warning"
     },
     "provenance": "api",
-    "isPaused": true,
+    "isPaused": false,
     "notification_settings": null,
     "record": null
   }
