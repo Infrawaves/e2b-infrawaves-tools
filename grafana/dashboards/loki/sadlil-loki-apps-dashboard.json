@@ -16,7 +16,6 @@
   "editable": false,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
   "links": [
     {
       "asDropdown": false,
@@ -478,6 +477,5 @@
     ]
   },
   "title": "📋 日志 / 应用服务",
-  "uid": "sadlil-loki-apps-dashboard",
-  "version": 21
+  "uid": "sadlil-loki-apps-dashboard"
 }
