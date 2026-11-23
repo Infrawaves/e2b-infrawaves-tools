@@ -1,0 +1,1496 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "按模板聚合的失败合集：构建失败(template-manager)，起沙箱失败(orchestrator,精简为次数+明细表)。跨所有 team、无 team 维度。",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 425,
+      "panels": [
+        {
+          "gridPos": {
+            "h": 2,
+            "w": 24,
+            "x": 0,
+            "y": 1
+          },
+          "id": 420,
+          "options": {
+            "content": "### 🔎 模板信息查询\n在上方 **模板 alias 或 ID** 变量框输入模板的 **alias**(如 `industrial-virtuoso-spectre-desktop-v1`)或 **模板ID**,回车即可查询该模板的全部信息。",
+            "mode": "markdown"
+          },
+          "pluginVersion": "",
+          "targets": [],
+          "title": "",
+          "type": "text"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_POSTGRES_ENVS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "filterable": true,
+                "inspect": true
+              }
+            }
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 3
+          },
+          "id": 421,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "",
+          "targets": [
+            {
+              "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRES_ENVS}"
+              },
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH resolved AS (SELECT COALESCE((SELECT env_id FROM env_aliases WHERE alias = '${tpl}' LIMIT 1),(SELECT id FROM envs WHERE id = '${tpl}' LIMIT 1)) AS env_id)\nSELECT e.id AS \"模板ID\", string_agg(DISTINCT a.alias, ', ') AS \"别名\",\n e.public AS \"是否公开\", t.name AS \"团队\", e.team_id AS \"团队ID\",\n e.build_count AS \"构建次数\", e.spawn_count AS \"启动次数\",\n e.last_spawned_at AS \"最后启动\", e.source AS \"来源\",\n e.created_at AS \"创建时间\", e.updated_at AS \"更新时间\", e.deleted_at AS \"删除时间\",\n e.created_by AS \"创建人ID\", e.cluster_id AS \"集群ID\", d.description AS \"描述\"\nFROM envs e\nJOIN resolved r ON e.id = r.env_id\nLEFT JOIN env_aliases a ON a.env_id = e.id\nLEFT JOIN teams t ON t.id = e.team_id\nLEFT JOIN env_defaults d ON d.env_id = e.id\nGROUP BY e.id, e.public, t.name, e.team_id, e.build_count, e.spawn_count,\n e.last_spawned_at, e.source, e.created_at, e.updated_at, e.deleted_at,\n e.created_by, e.cluster_id, d.description",
+              "refId": "A"
+            }
+          ],
+          "title": "模板概览(主表 / 团队 / 别名 / 描述)",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_POSTGRES_ENVS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "filterable": true,
+                "inspect": true
+              }
+            }
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 11
+          },
+          "id": 422,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "",
+          "targets": [
+            {
+              "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRES_ENVS}"
+              },
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH resolved AS (SELECT COALESCE((SELECT env_id FROM env_aliases WHERE alias = '${tpl}' LIMIT 1),(SELECT id FROM envs WHERE id = '${tpl}' LIMIT 1)) AS env_id)\nSELECT b.created_at AS \"构建时间\", b.finished_at AS \"完成时间\",\n b.status AS \"状态\", b.status_group AS \"状态组\", b.version AS \"版本\",\n b.vcpu AS \"vCPU\", b.ram_mb AS \"内存MB\",\n b.total_disk_size_mb AS \"总磁盘MB\", b.free_disk_size_mb AS \"空闲磁盘MB\",\n b.kernel_version AS \"内核\", b.firecracker_version AS \"FC版本\", b.envd_version AS \"envd版本\",\n b.cpu_architecture AS \"CPU架构\", b.cpu_model_name AS \"CPU型号\",\n b.cluster_node_id AS \"构建节点\", b.start_cmd AS \"启动命令\", b.ready_cmd AS \"就绪命令\",\n b.reason->>'message' AS \"原因\", b.id AS \"构建ID\"\nFROM env_builds b JOIN resolved r ON b.env_id = r.env_id\nORDER BY b.created_at DESC",
+              "refId": "A"
+            }
+          ],
+          "title": "构建历史(版本 / 资源 / 状态 / CPU / 节点)",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_POSTGRES_ENVS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "filterable": true,
+                "inspect": true
+              }
+            }
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 0,
+            "y": 21
+          },
+          "id": 423,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "",
+          "targets": [
+            {
+              "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRES_ENVS}"
+              },
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH resolved AS (SELECT COALESCE((SELECT env_id FROM env_aliases WHERE alias = '${tpl}' LIMIT 1),(SELECT id FROM envs WHERE id = '${tpl}' LIMIT 1)) AS env_id)\nSELECT a.alias AS \"别名\", a.namespace AS \"命名空间\",\n a.is_renamable AS \"可改名\", a.id AS \"别名ID\"\nFROM env_aliases a JOIN resolved r ON a.env_id = r.env_id\nORDER BY a.alias",
+              "refId": "A"
+            }
+          ],
+          "title": "全部别名",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_POSTGRES_ENVS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "filterable": true,
+                "inspect": true
+              }
+            }
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 16,
+            "x": 8,
+            "y": 21
+          },
+          "id": 424,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "",
+          "targets": [
+            {
+              "datasource": {
+                "type": "postgres",
+                "uid": "${DS_POSTGRES_ENVS}"
+              },
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH resolved AS (SELECT COALESCE((SELECT env_id FROM env_aliases WHERE alias = '${tpl}' LIMIT 1),(SELECT id FROM envs WHERE id = '${tpl}' LIMIT 1)) AS env_id)\nSELECT s.created_at AS \"快照时间\", s.sandbox_id AS \"沙箱ID\",\n s.base_env_id AS \"基础模板\", s.origin_node_id AS \"来源节点\",\n s.sandbox_started_at AS \"沙箱启动\", s.auto_pause AS \"自动暂停\",\n s.allow_internet_access AS \"允许联网\", s.env_secure AS \"安全环境\",\n s.metadata AS \"元数据\", s.id AS \"快照ID\"\nFROM snapshots s JOIN resolved r ON s.env_id = r.env_id\nORDER BY s.created_at DESC LIMIT 100",
+              "refId": "A"
+            }
+          ],
+          "title": "最近快照 / 沙箱(最多100条)",
+          "type": "table"
+        }
+      ],
+      "title": "🔎 模板信息查询(输入 alias 或模板ID)",
+      "type": "row"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 426,
+      "title": "模板构建失败 · build 阶段（造镜像时就没成功）",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "template-manager error 日志总条数",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "fixed"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 2
+      },
+      "id": 402,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({service_name=\"template-manager\"} | detected_level=`error` [$__range]))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "构建失败总数",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "多少个不同 envID 构建失败过",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 2
+      },
+      "id": 403,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "count(sum by (envID)(count_over_time({service_name=\"template-manager\"} | detected_level=`error` [$__range])))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "涉及模板数",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "失败的 build 次数",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "yellow",
+            "mode": "fixed"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "yellow",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 2
+      },
+      "id": 404,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "count(sum by (buildID)(count_over_time({service_name=\"template-manager\"} | detected_level=`error` [$__range])))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "涉及构建批次",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "脱敏归类后的原因种类数",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "purple",
+            "mode": "fixed"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 2
+      },
+      "id": 405,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "count(sum by (reason)(count_over_time({service_name=\"template-manager\"} | detected_level=`error` | json | label_format reason=`{{ regexReplaceAll \"'.*'\" .message \"'<cmd>'\" }}` [$__range])))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "失败原因种类",
+      "type": "stat"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 406,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "数据源 `template-manager` 的 error 日志 = **模板 build 失败**（造镜像阶段）。按模板（envID）与原因聚合，命令原文脱敏为 `<cmd>`。**无 team 维度**：build 态 teamID 恒为 unknown。构建低频，时间范围可自由拉长。",
+        "mode": "markdown"
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [],
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "哪些模板 build 失败最多",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "decimals": 0,
+          "noValue": "—",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "模板 ID (envID)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 360
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "失败次数"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "失败次数"
+            },
+            "properties": [
+              {
+                "id": "custom.footer.reducers",
+                "value": [
+                  "sum"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 407,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "topk(15, sum by (envID)(count_over_time({service_name=\"template-manager\"} | detected_level=`error` [$__range])))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "构建失败模板 TOP15",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "keepLabels": [
+              "envID"
+            ],
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "Value": "失败次数",
+              "envID": "模板 ID (envID)"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "失败次数"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "按原因归类",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "decimals": 0,
+          "noValue": "—",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "失败原因（命令已脱敏）"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 576
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "次数"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "次数"
+            },
+            "properties": [
+              {
+                "id": "custom.footer.reducers",
+                "value": [
+                  "sum"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 408,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "direction": "backward",
+          "editorMode": "code",
+          "expr": "sum by (reason)(count_over_time({service_name=\"template-manager\"} | detected_level=`error` | json | label_format reason=`{{ regexReplaceAll \"'.*'\" .message \"'<cmd>'\" }}` [$__range]))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "失败原因分布",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "keepLabels": [
+              "reason"
+            ],
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "Value": "次数",
+              "reason": "失败原因（命令已脱敏）"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "次数"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "每个 team 的模板构建失败总次数。失败数取自 template-manager 构建失败日志，team 靠 envID 关联 orchestration-api 模板请求反查（构建日志本身 teamID=unknown）。team 列为空=该模板近期无 API 足迹查不到。",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "decimals": 0,
+          "noValue": "—",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "team"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 380
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7": {
+                        "index": 44,
+                        "text": "Ning's Project · 004f3f7c"
+                      },
+                      "01872fea-af86-4de1-9f38-ff439deef08d": {
+                        "index": 43,
+                        "text": "Liutongtong's Project · 01872fea"
+                      },
+                      "072e7581-1510-46cc-a875-c8f493f83179": {
+                        "index": 31,
+                        "text": "e2b-nexau@china-qijizhifeng.com · 072e7581"
+                      },
+                      "07fe4160-c034-4331-94a1-9075257c62ab": {
+                        "index": 4,
+                        "text": "2 · 07fe4160"
+                      },
+                      "085a9d00-4918-42e6-a596-dbeadf54ec4d": {
+                        "index": 10,
+                        "text": "3 · 085a9d00"
+                      },
+                      "0ad0730c-2860-4f30-948c-acd9c4f42d29": {
+                        "index": 71,
+                        "text": "符炫炜's Project · 0ad0730c"
+                      },
+                      "0ae5f9f7-d6ac-4fde-9279-92943a0b5a86": {
+                        "index": 49,
+                        "text": "Shaozhou's Project · 0ae5f9f7"
+                      },
+                      "0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf": {
+                        "index": 2,
+                        "text": "1 · 0cbaa95f"
+                      },
+                      "0db5fb8e-920d-4564-a712-30a345863244": {
+                        "index": 24,
+                        "text": "e2b-infra@china-qijizhifeng.com · 0db5fb8e"
+                      },
+                      "0f44e8fc-859c-4f6a-b7e4-3068de12123e": {
+                        "index": 66,
+                        "text": "张硕's Project · 0f44e8fc"
+                      },
+                      "12f3e83f-3979-4a59-b388-1effc55fa8f4": {
+                        "index": 16,
+                        "text": "7 · 12f3e83f"
+                      },
+                      "19ca40b0-aafb-416e-8ffa-b33f9eb940a9": {
+                        "index": 40,
+                        "text": "Infrawave_test2's Default Team · 19ca40b0"
+                      },
+                      "1e9c1e93-ad47-49ac-adb7-47a0606718cf": {
+                        "index": 7,
+                        "text": "22 · 1e9c1e93"
+                      },
+                      "1e9c4b44-fe65-4392-9de0-84542f3998cb": {
+                        "index": 14,
+                        "text": "5 · 1e9c4b44"
+                      },
+                      "258d442e-2159-48c9-9ac9-f3e1a0c1c452": {
+                        "index": 69,
+                        "text": "李慧's Project · 258d442e"
+                      },
+                      "2a8e0507-cbc5-4445-95dc-314347c607f4": {
+                        "index": 37,
+                        "text": "Hanszhuang's Default Team · 2a8e0507"
+                      },
+                      "2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334": {
+                        "index": 3,
+                        "text": "11 · 2ba8b18f"
+                      },
+                      "31738770-b0cd-480c-8ac5-9a5bf43d100b": {
+                        "index": 63,
+                        "text": "刘官明's Project · 31738770"
+                      },
+                      "32758328-00b9-4f5b-b66d-8ea5ebd02d5c": {
+                        "index": 53,
+                        "text": "system@localhost · 32758328"
+                      },
+                      "3ae3b6d7-f308-4b08-89a3-a6f412715806": {
+                        "index": 5,
+                        "text": "2 · 3ae3b6d7"
+                      },
+                      "3bf425ff-584d-4f11-abda-483a918b5897": {
+                        "index": 58,
+                        "text": "Zhangqi's Project · 3bf425ff"
+                      },
+                      "3c17296b-964e-40a8-a2b4-ae73efcc3010": {
+                        "index": 39,
+                        "text": "Infrawave_test1's Default Team · 3c17296b"
+                      },
+                      "3cbcdfb8-84e8-422e-9b87-21e7a50b6865": {
+                        "index": 11,
+                        "text": "3 · 3cbcdfb8"
+                      },
+                      "467334dc-5de9-4ac9-a04b-d703c148f3a5": {
+                        "index": 19,
+                        "text": "972963285@qq.com · 467334dc"
+                      },
+                      "4793fa63-b11e-4567-a1f0-bd5e0f93b551": {
+                        "index": 21,
+                        "text": "Chenjun's Project · 4793fa63"
+                      },
+                      "47eee04d-4660-480c-97e8-64c39934cf47": {
+                        "index": 20,
+                        "text": "972963285@qq.com · 47eee04d"
+                      },
+                      "4b893304-e299-4243-bea4-392feee74b7c": {
+                        "index": 64,
+                        "text": "张国强's Project · 4b893304"
+                      },
+                      "4e8177c9-134c-4311-b917-418314e587af": {
+                        "index": 75,
+                        "text": "郭品学's Project · 4e8177c9"
+                      },
+                      "4f0c2666-2773-42f9-ae24-12863e48dbce": {
+                        "index": 79,
+                        "text": "魏存琦's Project · 4f0c2666"
+                      },
+                      "560cc0a7-b536-419e-a038-8338148be13d": {
+                        "index": 28,
+                        "text": "e2b-nex2@china-qijizhifeng.com · 560cc0a7"
+                      },
+                      "5a6930b7-6ba8-49c5-b8cf-4126474cdbd3": {
+                        "index": 25,
+                        "text": "e2b-infra@china-qijizhifeng.com · 5a6930b7"
+                      },
+                      "6417ba56-ea10-4fce-aa2e-54d353d907ab": {
+                        "index": 45,
+                        "text": "pingzhang8-c@my.cityu.edu.hk · 6417ba56"
+                      },
+                      "65380065-c5bd-4d9f-b81c-1ce0866db931": {
+                        "index": 30,
+                        "text": "e2b-nex@china-qijizhifeng.com · 65380065"
+                      },
+                      "6d4eb009-5540-4951-830a-b0e10d06ed65": {
+                        "index": 62,
+                        "text": "何阳极's Project · 6d4eb009"
+                      },
+                      "6e7a55f9-5db0-4938-877b-c44d86eb25ab": {
+                        "index": 32,
+                        "text": "e2b-nexau@china-qijizhifeng.com · 6e7a55f9"
+                      },
+                      "6eb3900a-1fe8-4743-bdf7-12172b9771fc": {
+                        "index": 27,
+                        "text": "e2b-infrawaves@china-qijizhifeng.com · 6eb3900a"
+                      },
+                      "77a2927b-7d67-484c-8962-2d447b8179af": {
+                        "index": 38,
+                        "text": "Infra Team · 77a2927b"
+                      },
+                      "77b9f6a9-1672-4483-beb0-2f5b11b26801": {
+                        "index": 6,
+                        "text": "2 · 77b9f6a9"
+                      },
+                      "7fcbdf30-b95b-4d65-acef-b81b328bc5a5": {
+                        "index": 68,
+                        "text": "李以时's Project · 7fcbdf30"
+                      },
+                      "892c82ba-e2e0-4cf1-9496-44eac15a714f": {
+                        "index": 70,
+                        "text": "沈蔚's Project · 892c82ba"
+                      },
+                      "899fdcc3-4702-4a27-be10-9270eaf4b1cd": {
+                        "index": 56,
+                        "text": "Vision · 899fdcc3"
+                      },
+                      "8d3b4cd8-df63-4c1a-b82b-d0139563e12e": {
+                        "index": 12,
+                        "text": "4 · 8d3b4cd8"
+                      },
+                      "955127a8-51ec-41ef-ba1a-232a3b3e201b": {
+                        "index": 51,
+                        "text": "system1 · 955127a8"
+                      },
+                      "9989897b-2fd9-45dd-a473-a6512a8cd96d": {
+                        "index": 0,
+                        "text": "1 · 9989897b"
+                      },
+                      "9ad5ed4c-445b-4a9e-b856-d18232fa1fc6": {
+                        "index": 36,
+                        "text": "Guopinxue's Project · 9ad5ed4c"
+                      },
+                      "9b6bc955-415e-43c4-800a-d406f7c38864": {
+                        "index": 54,
+                        "text": "test · 9b6bc955"
+                      },
+                      "9bfcc2c7-0a17-486c-a79c-4b323eee7162": {
+                        "index": 76,
+                        "text": "锁祎然's Project · 9bfcc2c7"
+                      },
+                      "9db7bc25-1324-4330-85c4-f43dcde6d66d": {
+                        "index": 22,
+                        "text": "e2b-fde@china-qijizhifeng.com · 9db7bc25"
+                      },
+                      "a2bf5f96-7335-4b47-b894-39641aad6ed5": {
+                        "index": 34,
+                        "text": "e2b-xiaobei@china-qijizhifeng.com · a2bf5f96"
+                      },
+                      "a56704da-010b-48da-ab8e-d2aaaf8545e3": {
+                        "index": 73,
+                        "text": "谢天赐's Project · a56704da"
+                      },
+                      "a7124f1b-476a-45fb-a6c3-68d161fdc911": {
+                        "index": 1,
+                        "text": "1 · a7124f1b"
+                      },
+                      "a726f5e6-4237-4bb2-8ab0-13eac8180425": {
+                        "index": 9,
+                        "text": "3 · a726f5e6"
+                      },
+                      "ab785508-ba6c-4fdb-854a-2b39a2144354": {
+                        "index": 17,
+                        "text": "8 · ab785508"
+                      },
+                      "ac3eeb52-7268-45e3-a373-0e195e12a294": {
+                        "index": 8,
+                        "text": "3 · ac3eeb52"
+                      },
+                      "af487b23-9dba-4797-9627-c5b1b9ff3a42": {
+                        "index": 15,
+                        "text": "6 · af487b23"
+                      },
+                      "af8fc097-6343-4b33-b7bb-1c197789eabd": {
+                        "index": 59,
+                        "text": "zhaojiarong@qijizhifeng.com · af8fc097"
+                      },
+                      "b1940e54-3dbb-44cd-bf26-569382921299": {
+                        "index": 52,
+                        "text": "system@e2b.dev · b1940e54"
+                      },
+                      "b2b5b25c-5b4a-4466-8b68-779004eabba7": {
+                        "index": 60,
+                        "text": "Zhengmiao's Project · b2b5b25c"
+                      },
+                      "b9bbe0bc-8826-494b-84ca-6c3a5ff46bec": {
+                        "index": 29,
+                        "text": "e2b-nex@china-qijizhifeng.com · b9bbe0bc"
+                      },
+                      "bb20491c-f757-4043-846b-838b7f30a8d1": {
+                        "index": 57,
+                        "text": "zhangping@infrawaves.com · bb20491c"
+                      },
+                      "bf0cabd4-1d63-4c92-8018-56466250fc34": {
+                        "index": 80,
+                        "text": "默默's Default Team · bf0cabd4"
+                      },
+                      "c22d1774-82e6-4e16-8f24-9b0536744b18": {
+                        "index": 42,
+                        "text": "Linlizhi's Project · c22d1774"
+                      },
+                      "c383705d-81fa-4f85-8a19-dd81ef49f3eb": {
+                        "index": 72,
+                        "text": "蔡子坤's Project · c383705d"
+                      },
+                      "c5ac79f6-6155-47ac-9623-456cfb843878": {
+                        "index": 18,
+                        "text": "9 · c5ac79f6"
+                      },
+                      "c8c30b05-7068-41e6-ab31-15daeb2b94f1": {
+                        "index": 78,
+                        "text": "高杨帆's Project · c8c30b05"
+                      },
+                      "c99dee1b-a997-453d-85dd-be94aef8fbed": {
+                        "index": 13,
+                        "text": "4 · c99dee1b"
+                      },
+                      "cdc01774-0863-42dd-8475-22aefbe90997": {
+                        "index": 48,
+                        "text": "Service's Project · cdc01774"
+                      },
+                      "cf6c9163-60c9-4c5d-aa08-525b08ab5aaa": {
+                        "index": 23,
+                        "text": "e2b-fde@china-qijizhifeng.com · cf6c9163"
+                      },
+                      "e15b5877-779e-4359-9564-336c8cabe966": {
+                        "index": 41,
+                        "text": "Infrawave_test3's Project · e15b5877"
+                      },
+                      "e5c4b9f2-88d7-4bae-bde0-1480d82e9988": {
+                        "index": 61,
+                        "text": "Zhoumaosen's Project · e5c4b9f2"
+                      },
+                      "f0037e31-bd7a-4ad6-b16a-94c2790332da": {
+                        "index": 67,
+                        "text": "曹倚飞's Project · f0037e31"
+                      },
+                      "f03fb965-cfcc-4d58-94e4-9f062b09da53": {
+                        "index": 77,
+                        "text": "雷可鹏's Project · f03fb965"
+                      },
+                      "f081810f-4c2c-4b86-94b9-e69ebed18106": {
+                        "index": 46,
+                        "text": "RL · f081810f"
+                      },
+                      "f6eb883d-263d-4b71-831e-58ae7fd13878": {
+                        "index": 65,
+                        "text": "张朝运's Default Team · f6eb883d"
+                      },
+                      "f7e95758-34fe-44a2-bad9-6097a14ad656": {
+                        "index": 50,
+                        "text": "Sunpeng's Default Team · f7e95758"
+                      },
+                      "f9a89b02-0f1f-402d-9994-bc13ac9122ab": {
+                        "index": 26,
+                        "text": "e2b-infrawaves@china-qijizhifeng.com · f9a89b02"
+                      },
+                      "fb4e1d45-5ed4-474d-8144-68d4f5bc7871": {
+                        "index": 47,
+                        "text": "Ruizheng's Default Team · fb4e1d45"
+                      },
+                      "fcae3a36-0d3f-40df-aad0-3c97b33624a5": {
+                        "index": 35,
+                        "text": "e2b-xiaobei@china-qijizhifeng.com · fcae3a36"
+                      },
+                      "fcd649c5-0175-4d1e-98a5-1c218009dee4": {
+                        "index": 33,
+                        "text": "e2b-rl@china-qijizhifeng.com · fcd649c5"
+                      },
+                      "fe6493c4-af87-4f44-bf02-2acb426f1b81": {
+                        "index": 74,
+                        "text": "郑锐's Project · fe6493c4"
+                      },
+                      "fea203de-19f9-4fa4-b5c8-3f7e6b5c2606": {
+                        "index": 55,
+                        "text": "Tianyuhuai's Project · fea203de"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "失败次数"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "失败次数"
+            },
+            "properties": [
+              {
+                "id": "custom.footer.reducers",
+                "value": [
+                  "sum"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 411,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "失败次数"
+          }
+        ]
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (envID)(count_over_time({service_name=\"template-manager\"} | detected_level=`error` [$__range]))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (envID, team_id)(count_over_time({service_name=\"orchestration-api\"} | path=~`/v2/templates/[a-z0-9]{20}.*` | label_format envID=`{{ regexReplaceAll \"^/v2/templates/([a-z0-9]+).*\" .path \"${1}\" }}` [$__range]))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "B"
+        }
+      ],
+      "title": "构建失败数按 team（envID 关联 team，聚合到 team 级）",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "envID",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "Value": "失败次数",
+              "Value #A": "失败次数",
+              "Value 1": "失败次数",
+              "Value A": "失败次数",
+              "team_id": "team"
+            }
+          }
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "team",
+                "失败次数"
+              ]
+            }
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "team": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "失败次数": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "team": 0
+            },
+            "renameByName": {
+              "失败次数 (sum)": "失败次数"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "失败次数"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "展开某条可看 envID、buildID、完整 message",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 409,
+      "options": {
+        "dedupStrategy": "none",
+        "enableInfiniteScrolling": true,
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showControls": false,
+        "showFieldSelector": false,
+        "showLabels": false,
+        "showLevel": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "timestampResolution": "ms",
+        "unwrappedColumns": false,
+        "wrapLogMessage": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "{service_name=\"template-manager\"} | detected_level=`error`",
+          "maxLines": 200,
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "构建失败原始日志（含 envID / buildID / 完整原因）",
+      "type": "logs"
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 42,
+  "tags": [
+    "e2b",
+    "template",
+    "failure"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Loki 数据源",
+        "multi": false,
+        "name": "DS_LOKI",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "PostgreSQL 数据源 (E2B envs 主库)",
+        "multi": false,
+        "name": "DS_POSTGRES_ENVS",
+        "options": [],
+        "query": "grafana-postgresql-datasource",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 0,
+        "label": "模板 alias 或 ID",
+        "name": "tpl",
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "④ E2B 问题模板（构建失败 / 起沙箱失败）",
+  "uid": "e2b-sbx-template"
+}

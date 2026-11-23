@@ -78,3 +78,56 @@ scripts/sync-grafana-alerts.py
 3. 替换/新建到对应子目录,文件名与 `uid` 一致 (`fc-overview.json`)。
 4. 检查 JSON 中的 `__inputs` 和 datasource UID 是否被参数化。
 5. 提交 PR;CI 会跑 `jq` 语法校验。
+
+---
+
+## 目录结构(2026-11 全量纳管后)
+
+```
+grafana/
+  dashboards/
+    sandbox/     ① 创建成功率 / ② 恢复 / ③ 运行期 / ④ 问题模板 / ⑤ kill / ⑦ 矩阵
+    firecracker/ fc 总览 / 集群健康 / 泄漏检测
+    nomad/       节点分配 / Job 内存监控
+    oom/         ⑥ orchestrator OOM(节点物理机 / 爆炸半径)
+    loki/        日志应用面板
+    _external/   非 e2b 面板存档(supabase / 火山 ALB / NodeExporter / loki-apps)——纯备份,按需推送
+  alerts/
+    firecracker.yaml              Prometheus 风格告警源(sync-grafana-alerts.py 推送)
+    provisioning/                 线上 Grafana 托管告警的「实况导出」(export 脚本产出)
+      alert-rules.json            11 条规则(含 PG 连通性 / 节点排空 / sandbox 创建&运行)
+      contact-points.json         飞书 webhook 联系点(url 已脱敏为 ${FEISHU_WEBHOOK_*})
+      notification-policies.json  通知路由(按 node_id / team_id 分组,repeat_interval)
+  provisioning/                   自管 Grafana 的 datasource / dashboard provider 配置
+```
+
+仓库根 `ops-scripts/` 放运维告警脚本(飞书推送 / TLS 日志代理),敏感默认值已脱敏,靠环境变量注入。
+
+## 数据源变量映射(多环境可移植)
+
+线上 dashboard 的 datasource 是具体 uid;入库前用 `scripts/import-grafana-dashboard.py` 统一替换成 `${DS_*}` 变量并注入 templating。映射(接新 e2b 环境时在脚本 `DS_MAP` 补该环境 uid):
+
+| 变量 | 数据源类型 | 本集群数据源 |
+| --- | --- | --- |
+| `${DS_PROMETHEUS}` | prometheus | HK |
+| `${DS_LOKI}` | loki | loki |
+| `${DS_CLICKHOUSE}` | grafana-clickhouse-datasource | prod_e2b_clickhouse |
+| `${DS_INFINITY}` | yesoreyeram-infinity-datasource | e2b-orchestrator |
+| `${DS_INFINITY_VOLCANO}` | 同上 | volcano-tls-alb |
+| `${DS_POSTGRES}` | grafana-postgresql-datasource | Supabase 只读 |
+| `${DS_POSTGRES_ENVS}` | 同上 | E2B envs 主库 |
+
+`sync-grafana.sh` 按**数据源名**回填 `DS_PROMETHEUS/DS_CLICKHOUSE/DS_LOKI` 的 current(名字在 `.env`:`DS_NAME`/`DS_CH_NAME`/`DS_LOKI_NAME`;本集群分别是 `HK`/`prod_e2b_clickhouse`/`loki`)。其余 DS 变量(infinity/postgres)由 Grafana 导入时按类型自动匹配。
+
+## 工具脚本
+
+| 脚本 | 用途 |
+| --- | --- |
+| `scripts/import-grafana-dashboard.py` | 线上导出的 dashboard(具体 uid)→ 仓库格式(`${DS_*}` 变量 + templating 注入),去掉易变 id/version |
+| `scripts/export-grafana-alerting.py` | 导出线上托管告警规则/联系点/策略到 `alerts/provisioning/`,webhook url 自动脱敏 |
+| `scripts/sync-grafana.sh` | 推 dashboards(`DRY_RUN=1` 校验) |
+| `scripts/sync-grafana-alerts.py` | 推 `alerts/*.yaml`(Prom 风格→Grafana 三阶段) |
+| `scripts/validate-grafana.py` | 跑全部 PromQL 对线上校验 |
+| `grafana/toggle_alert.sh` | 暂停/启用/查看单条告警规则 isPaused |
+
+> **注意**:`alerts/provisioning/*.json` 是线上实况的只读存档(便于审计/跨环境复制),当前**没有**自动回推脚本;修改托管告警仍走 provisioning API(见 `grafana/toggle_alert.sh` 的调用方式)。`contact-points.json` 里的 `${FEISHU_WEBHOOK_*}` 占位符需在目标环境用真实 webhook 替换后再导入。

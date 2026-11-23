@@ -5,3 +5,9 @@ nomad-nodeJob-exporter/nomad-nodeJob-exporter*
 **/.DS_Store
 __pycache__/
 **/__pycache__/
+
+# 编辑器个人配置
+.vscode/
+
+# 安全事件取证记录(含内网拓扑/入侵细节,仅本地保留,勿推远端)
+security/
