@@ -9,6 +9,25 @@
       "receiver": "feishu-e2b-sandbox",
       "group_by": [
         "alertname",
+        "tid",
+        "sid",
+        "eid"
+      ],
+      "object_matchers": [
+        [
+          "alert_kind",
+          "=",
+          "sandbox-runtime"
+        ]
+      ],
+      "group_wait": "0s",
+      "group_interval": "1m",
+      "repeat_interval": "1y"
+    },
+    {
+      "receiver": "feishu-e2b-sandbox",
+      "group_by": [
+        "alertname",
         "team_id",
         "status",
         "cat",
@@ -62,5 +81,6 @@
       "group_interval": "1m",
       "repeat_interval": "1y"
     }
-  ]
+  ],
+  "provenance": "api"
 }
