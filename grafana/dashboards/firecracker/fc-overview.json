@@ -3,7 +3,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -11,84 +14,117 @@
         "type": "dashboard"
       },
       {
-        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
         "enable": true,
+        "expr": "ALERTS{alertname=~\"E2B.*\", alertstate=\"firing\"}",
+        "hide": false,
         "iconColor": "red",
         "name": "Firing alerts (E2B)",
-        "expr": "ALERTS{alertname=~\"E2B.*\", alertstate=\"firing\"}",
-        "titleFormat": "{{alertname}}",
         "tagKeys": "severity,node_ip,sandbox_id",
+        "titleFormat": "{{alertname}}",
         "useValueForTime": false
       },
       {
-        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
         "enable": true,
+        "hide": false,
         "iconColor": "orange",
         "name": "Grafana-managed alerts",
-        "target": {"limit": 100, "matchAny": true, "tags": ["e2b"], "type": "tags"}
+        "target": {
+          "limit": 100,
+          "matchAny": true,
+          "tags": [
+            "e2b"
+          ],
+          "type": "tags"
+        }
       }
     ]
   },
-  "description": "Firecracker process-level metrics from nomad-nodeJob-exporter (e2b_fc_*).",
+  "description": "Firecracker 进程级指标（e2b_fc_*）+ 集群健康（沙箱 / 大页 / 磁盘 / 异常进程）。\n「集群健康（沙箱 / 大页 / 磁盘 / 异常进程）」行的面板原属看板『E2B 集群健康总览』（uid e2b-cluster-overview），已合并至此。\nnode_ip 变量用 query_result 取当前真在上报的节点（约 23 个），不用 label_values —— 后者会回看保留期，混入大量已下线节点。",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
-  "links": [],
   "liveNow": false,
   "panels": [
     {
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-      "description": "Number of nomad-nodeJob-exporter targets currently DOWN. Red = at least one exporter unreachable, visibility lost on that node.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {"mode": "thresholds"},
-          "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "red", "value": 1}]},
-          "unit": "short"
-        }
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
       },
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
-      "id": 10,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
-        "textMode": "auto"
-      },
-      "pluginVersion": "11.3.0",
-      "targets": [
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "count(up{job=\"nomad-nodeJob-exporter\"} == 0) OR on() vector(0)",
-          "refId": "A"
-        }
-      ],
-      "title": "Exporter 离线",
-      "type": "stat"
+      "id": 31,
+      "title": "Firecracker 进程（每节点 / 每进程）",
+      "type": "row"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-      "description": "Distinct nodes that reported firecracker processes in the selected window. If this drops, some node went silent.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "在选定时间窗口内上报了 Firecracker 进程的不同节点数。如果下降，说明某些节点的 exporter 可能掉线。",
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "thresholds"},
-          "thresholds": {"mode": "absolute", "steps": [{"color": "red"}, {"color": "green", "value": 1}]},
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
           "unit": "short"
         }
       },
-      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
       "id": 2,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
-        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
-        "textMode": "auto"
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "13.0.1+security-01",
       "targets": [
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "count(count by (node_ip) (e2b_fc_process_count{node_ip=~\"$node_ip\"}))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "count(count by (node_ip) (e2b_fc_process_count{node_ip=~\"$node_ip\"})) OR on() vector(0)",
           "refId": "A"
         }
       ],
@@ -96,27 +132,61 @@
       "type": "stat"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "集群中所有节点的 Firecracker 进程总数。",
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "thresholds"},
-          "thresholds": {"mode": "absolute", "steps": [{"color": "green"}]},
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
           "unit": "short"
         }
       },
-      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
       "id": 1,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
-        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
-        "textMode": "auto"
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "13.0.1+security-01",
       "targets": [
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sum(e2b_fc_process_count{node_ip=~\"$node_ip\"})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(e2b_fc_process_count{node_ip=~\"$node_ip\"}) OR on() vector(0)",
           "refId": "A"
         }
       ],
@@ -124,58 +194,293 @@
       "type": "stat"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-      "description": "Cumulative cmdline parse failures. Sustained increase means exporter cannot extract sandbox_id; leak detection is degraded.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "job=ecs 的 exporter(9106) 探活失败(up=0)的节点。为空=全部在线。已关联节点名(node_name)、nomad_id(node_id)、角色(role)。",
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "thresholds"},
-          "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "red", "value": 1}]},
-          "unit": "short"
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": [
+                "count"
+              ]
+            },
+            "inspect": false
+          },
+          "noValue": "✅ 全部在线，无离线 Exporter",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
         }
       },
-      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
-      "id": 3,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
-        "textMode": "auto"
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 1
       },
-      "pluginVersion": "11.3.0",
+      "id": 30,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.1+security-01",
       "targets": [
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sum(e2b_fc_process_parse_errors_total{node_ip=~\"$node_ip\"})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "(up{job=\"ecs\"} == 0) * on(instance) group_left(node_name, node_id, role) last_over_time(nomad_node_role[15m])",
+          "format": "table",
+          "instant": true,
           "refId": "A"
         }
       ],
-      "title": "Sandbox-ID 解析错误",
-      "type": "stat"
+      "title": "Exporter 离线节点（up=0）",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "job": true,
+              "prometheus": true
+            },
+            "indexByName": {
+              "instance": 0,
+              "node_id": 2,
+              "node_name": 1,
+              "role": 3
+            },
+            "renameByName": {
+              "instance": "离线节点 (ip:端口)",
+              "node_id": "nomad_id (node_id)",
+              "node_name": "节点名 (node_name)",
+              "role": "角色 (role)"
+            }
+          }
+        }
+      ],
+      "type": "table"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "集群所有节点 Firecracker 进程数之和的时间趋势。",
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "palette-classic"},
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
           "custom": {
-            "axisLabel": "processes",
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "进程数",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
             "lineWidth": 2,
-            "stacking": {"mode": "normal"}
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
           },
           "unit": "short"
         }
       },
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
-      "id": 4,
-      "options": {
-        "legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max"]},
-        "tooltip": {"mode": "multi"}
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 8
       },
+      "id": 13,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.1+security-01",
       "targets": [
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(e2b_fc_process_count{node_ip=~\"$node_ip\"})",
+          "legendFormat": "集群总计",
+          "refId": "A"
+        }
+      ],
+      "title": "Firecracker 进程总数趋势",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "每节点的 Firecracker 进程数趋势。分布不均可能表示调度倾斜或节点卡住。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "进程数",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 4,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
           "expr": "e2b_fc_process_count{node_ip=~\"$node_ip\"}",
           "legendFormat": "{{node_ip}}",
           "refId": "A"
@@ -185,50 +490,211 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "整机 CPU 使用率（e2b_node_cpu_usage_percent），口径与 orchestrator 放置准入的 cpuPercent 一致。超过 80% 阈值该节点会拒绝放置新沙箱（返回 ResourceExhausted），导致创建 5xx（Failed to place sandbox）。红线为 80% 准入阈值。",
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "palette-classic"},
-          "custom": {"axisLabel": "bytes", "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1},
-          "unit": "bytes"
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line+area"
+            }
+          },
+          "max": 100,
+          "min": 0,
+          "noValue": "⚠️ 指标 e2b_node_cpu_usage_percent 已停止上报（exporter CPU 采集模块异常，>24h 无数据）。需检查各节点 exporter。",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
         }
       },
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
-      "id": 5,
-      "options": {
-        "legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"]},
-        "tooltip": {"mode": "multi"}
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 22
       },
+      "id": 26,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.0.1+security-01",
       "targets": [
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sum by (node_ip) (e2b_fc_process_memory_hugetlb_bytes{node_ip=~\"$node_ip\"})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "e2b_node_cpu_usage_percent{node_ip=~\"$node_ip\"}",
           "legendFormat": "{{node_ip}}",
           "refId": "A"
         }
       ],
-      "title": "各节点 HugeTLB 内存",
+      "title": "各节点整机 CPU 使用率 %（准入阈值 80%）",
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-      "description": "Aggregated CPU usage per node, in cores (1.0 = one full CPU core busy on firecracker processes).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "每节点 Firecracker 进程的聚合 CPU 使用量（单位：核，1.0 = 一个完整 CPU 核心被占满）。",
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "palette-classic"},
-          "custom": {"axisLabel": "cores", "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1},
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "cores",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
           "unit": "none"
         }
       },
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
       "id": 6,
       "options": {
-        "legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"]},
-        "tooltip": {"mode": "multi"}
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
       },
+      "pluginVersion": "13.0.1+security-01",
       "targets": [
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
           "expr": "sum by (node_ip) (rate(e2b_fc_process_cpu_seconds_total{node_ip=~\"$node_ip\"}[5m]))",
           "legendFormat": "{{node_ip}}",
           "refId": "A"
@@ -238,154 +704,272 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-      "description": "Top nodes by total HugeTLB bytes consumed by firecracker processes. Outlier rows = candidates for leak / hot-spot.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "HugeTLB 2MB 大页使用率随时间变化的走势图，用于观察历史趋势。",
       "fieldConfig": {
         "defaults": {
-          "custom": {"align": "auto", "displayMode": "auto"},
-          "unit": "bytes"
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "使用率",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          },
+          "unit": "percentunit"
         }
       },
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
-      "id": 11,
-      "options": {
-        "showHeader": true,
-        "sortBy": [{"displayName": "hugetlb_bytes", "desc": true}]
+      "gridPos": {
+        "h": 10,
+        "w": 13,
+        "x": 0,
+        "y": 39
       },
+      "id": 23,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.0.1+security-01",
       "targets": [
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "topk(10, sum by (node_ip) (e2b_fc_process_memory_hugetlb_bytes{node_ip=~\"$node_ip\"}))",
-          "format": "table",
-          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "(e2b_node_hugepages_total{node_ip=~\"$node_ip\",size_bytes=\"2097152\"} - e2b_node_hugepages_free{node_ip=~\"$node_ip\",size_bytes=\"2097152\"}) / e2b_node_hugepages_total{node_ip=~\"$node_ip\",size_bytes=\"2097152\"}",
+          "legendFormat": "{{node_ip}}",
           "refId": "A"
         }
       ],
-      "title": "HugeTLB 占用 Top 10 节点",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {"Time": true, "__name__": true, "job": true, "instance": true},
-            "renameByName": {"Value": "hugetlb_bytes"}
-          }
-        }
-      ],
-      "type": "table"
+      "title": "HugeTLB 2MB 大页使用率走势(每节点)",
+      "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-      "description": "Top nodes by firecracker process count. Outlier = scheduling skew or stuck node.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "每节点本地磁盘使用率 + NFS 共享存储使用率。NFS (/mnt/nfs) 由 192.168.0.146 提供，所有节点共享同一存储，因此只显示一条。",
       "fieldConfig": {
         "defaults": {
-          "custom": {"align": "auto", "displayMode": "auto"},
-          "unit": "short"
+          "color": {
+            "mode": "thresholds"
+          },
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          },
+          "unit": "percentunit"
         }
       },
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
-      "id": 12,
-      "options": {
-        "showHeader": true,
-        "sortBy": [{"displayName": "fc_processes", "desc": true}]
+      "gridPos": {
+        "h": 10,
+        "w": 11,
+        "x": 13,
+        "y": 39
       },
+      "id": 21,
+      "options": {
+        "displayMode": "lcd",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "13.0.1+security-01",
       "targets": [
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "topk(10, sum by (node_ip) (e2b_fc_process_count{node_ip=~\"$node_ip\"}))",
-          "format": "table",
-          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "(e2b_node_disk_total_bytes{node_ip=~\"$node_ip\",path!=\"/mnt/nfs\"} - e2b_node_disk_free_bytes{node_ip=~\"$node_ip\",path!=\"/mnt/nfs\"}) / (e2b_node_disk_total_bytes{node_ip=~\"$node_ip\",path!=\"/mnt/nfs\"} > 0)",
+          "legendFormat": "{{node_ip}} {{path}}",
           "refId": "A"
         }
       ],
-      "title": "Firecracker 进程数 Top 10 节点",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {"Time": true, "__name__": true, "job": true, "instance": true},
-            "renameByName": {"Value": "fc_processes"}
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-      "fieldConfig": {
-        "defaults": {
-          "custom": {"align": "auto", "displayMode": "auto"},
-          "unit": "bytes"
-        }
-      },
-      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 28},
-      "id": 7,
-      "options": {
-        "showHeader": true,
-        "sortBy": [{"displayName": "hugetlb_bytes", "desc": true}]
-      },
-      "targets": [
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "topk(50, e2b_fc_process_memory_hugetlb_bytes{node_ip=~\"$node_ip\"})",
-          "format": "table",
-          "instant": true,
-          "refId": "A"
-        }
-      ],
-      "title": "HugeTLB 占用 Top 50 沙箱",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {"Time": true, "__name__": true, "job": true, "instance": true},
-            "renameByName": {"Value": "hugetlb_bytes"}
-          }
-        }
-      ],
-      "type": "table"
+      "title": "磁盘使用率(每节点 × 挂载点)",
+      "type": "bargauge"
     }
   ],
+  "preload": false,
   "refresh": "30s",
-  "schemaVersion": 39,
-  "tags": ["e2b", "firecracker"],
+  "schemaVersion": 42,
+  "tags": [
+    "e2b",
+    "firecracker",
+    "overview"
+  ],
   "templating": {
     "list": [
       {
-        "current": {"selected": true, "text": "HKProdVolc", "value": "cfmlanmx6zl6od"},
+        "allowCustomValue": true,
+        "current": {
+          "text": "HK",
+          "value": "afoh4xrv0awowc"
+        },
         "hide": 0,
         "includeAll": false,
         "label": "数据源",
+        "multi": false,
         "name": "DS_PROMETHEUS",
         "options": [],
         "query": "prometheus",
         "refresh": 1,
-        "regex": "",
+        "regex": "/^HK$/",
         "skipUrlSync": false,
         "type": "datasource"
       },
       {
-        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-        "definition": "label_values(e2b_fc_process_count, node_ip)",
+        "allowCustomValue": true,
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "query_result(count by (node_ip) (e2b_fc_process_count))",
         "hide": 0,
         "includeAll": true,
         "label": "节点 IP",
         "multi": true,
         "name": "node_ip",
         "options": [],
-        "query": {"query": "label_values(e2b_fc_process_count, node_ip)", "refId": "PrometheusVariableQueryEditor-VariableQuery"},
+        "query": {
+          "query": "query_result(count by (node_ip) (e2b_fc_process_count))",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
         "refresh": 2,
-        "regex": "",
+        "regex": "/node_ip=\"([^\"]+)\"/",
+        "regexApplyTo": "value",
         "skipUrlSync": false,
         "sort": 1,
         "type": "query"
       }
     ]
   },
-  "time": {"from": "now-1h", "to": "now"},
-  "timepicker": {},
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
   "timezone": "browser",
-  "title": "E2B / Firecracker 总览",
-  "uid": "e2b-fc-overview",
-  "version": 2,
-  "weekStart": ""
+  "title": "E2B Firecracker 与 集群总览",
+  "uid": "e2b-fc-overview"
 }

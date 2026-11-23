@@ -103,6 +103,8 @@ grafana/
 
 仓库根 `ops-scripts/` 放运维告警脚本(飞书推送 / TLS 日志代理),敏感默认值已脱敏,靠环境变量注入。
 
+> **已下线(线上 404)但仓库保留作历史**:`firecracker/cluster-overview.json`(uid `e2b-cluster-overview`,已并入 `fc-overview` → 现标题「Firecracker 与 集群总览」)、`nomad/nomad-node-allocations.json`(uid `e2b-nomad-node`)。`refresh-from-live.py` 不覆盖它们(线上已无),需要时手动删除或恢复。另 `_external/loki-apps.json` 与 `loki/sadlil-loki-apps-dashboard.json` 同 uid,前者是早期存档副本。
+
 ## 数据源变量映射(多环境可移植)
 
 线上 dashboard 的 datasource 是具体 uid;入库前用 `scripts/import-grafana-dashboard.py` 统一替换成 `${DS_*}` 变量并注入 templating。映射(接新 e2b 环境时在脚本 `DS_MAP` 补该环境 uid):
@@ -125,6 +127,7 @@ grafana/
 | --- | --- |
 | `scripts/import-grafana-dashboard.py` | 线上导出的 dashboard(具体 uid)→ 仓库格式(`${DS_*}` 变量 + templating 注入),去掉易变 id/version |
 | `scripts/export-grafana-alerting.py` | 导出线上托管告警规则/联系点/策略到 `alerts/provisioning/`,webhook url 自动脱敏 |
+| `scripts/refresh-from-live.py` | **一键全量回拉**:把线上全部 dashboard 和告警刷回仓库(串起上面两个转换器)。dashboard 按 `UID_PATH` 映射写回 `dashboards/<area>/`,告警导出到 `alerts/provisioning/`。用 **Bearer token**(线上 admin 口令已轮换,Basic 不可用):`GRAFANA_URL=... GRAFANA_TOKEN=glsa_xxx python scripts/refresh-from-live.py`,可加 `--dashboards-only` / `--alerts-only`。新增线上面板时在脚本 `UID_PATH` 补一行 |
 | `scripts/sync-grafana.sh` | 推 dashboards(`DRY_RUN=1` 校验) |
 | `scripts/sync-grafana-alerts.py` | 推 `alerts/*.yaml`(Prom 风格→Grafana 三阶段) |
 | `scripts/validate-grafana.py` | 跑全部 PromQL 对线上校验 |

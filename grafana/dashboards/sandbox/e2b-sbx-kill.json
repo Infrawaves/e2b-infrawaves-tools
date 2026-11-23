@@ -19,7 +19,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
   "liveNow": false,
   "panels": [
     {
@@ -30,7 +29,7 @@
         "x": 0,
         "y": 0
       },
-      "id": 28,
+      "id": 36,
       "title": "概览（当前时间范围内合计）",
       "type": "row"
     },
@@ -185,7 +184,7 @@
         "type": "grafana-clickhouse-datasource",
         "uid": "${DS_CLICKHOUSE}"
       },
-      "description": "TTL 到期，evictor 回收。\n显示 0 = 这段时间没发生（不是面板坏了）",
+      "description": "TTL 到期，evictor 回收。\n显示 0 = 这段时间没发生",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -250,7 +249,7 @@
           "refId": "A"
         }
       ],
-      "title": "timeout",
+      "title": "timeout-TTL",
       "type": "stat"
     },
     {
@@ -489,6 +488,79 @@
         "type": "grafana-clickhouse-datasource",
         "uid": "${DS_CLICKHOUSE}"
       },
+      "description": "PR#11 新增的平台侧 kill_reason 合计:resume_failed/thaw_failed/seal_failed/upload_failed。平台故障,出现即需查。数据源 CH sandbox_events(TTL 7天)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 18,
+        "y": 1
+      },
+      "id": 35,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "database": "",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT count() AS cnt FROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID') AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') IN ('resume_failed','thaw_failed','seal_failed','upload_failed')",
+          "refId": "A"
+        }
+      ],
+      "title": "其他平台故障 (resume/thaw/seal/upload)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
       "description": "未传递 kill 原因。\n显示 0 = 这段时间没发生（不是面板坏了）",
       "fieldConfig": {
         "defaults": {
@@ -562,79 +634,6 @@
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "grafana-clickhouse-datasource",
-        "uid": "${DS_CLICKHOUSE}"
-      },
-      "description": "PR#11 新增的平台侧 kill_reason 合计:resume_failed/thaw_failed/seal_failed/upload_failed。平台故障,出现即需查。数据源 CH sandbox_events(TTL 7天)",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 0,
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": 0
-              }
-            ]
-          },
-          "unit": "short"
-        }
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 3,
-        "x": 18,
-        "y": 1
-      },
-      "id": 35,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "13.0.1+security-01",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-clickhouse-datasource",
-            "uid": "${DS_CLICKHOUSE}"
-          },
-          "editorType": "sql",
-          "format": 1,
-          "meta": {
-            "builderOptions": {
-              "database": "",
-              "queryType": "table",
-              "table": ""
-            }
-          },
-          "queryType": "table",
-          "rawSql": "SELECT count() AS cnt FROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID') AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') IN ('resume_failed','thaw_failed','seal_failed','upload_failed')",
-          "refId": "A"
-        }
-      ],
-      "title": "其他平台故障 (resume/thaw/seal/upload)",
-      "type": "stat"
-    },
-    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -642,7 +641,7 @@
         "x": 0,
         "y": 6
       },
-      "id": 29,
+      "id": 37,
       "title": "稀有原因（固定最近 7 天，不随时间选择器）",
       "type": "row"
     },
@@ -1375,91 +1374,6 @@
       "type": "table"
     },
     {
-      "datasource": {
-        "type": "grafana-clickhouse-datasource",
-        "uid": "${DS_CLICKHOUSE}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "filterable": true
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "创建时间"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "dateTimeAsIso"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "结束时间"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "dateTimeAsIso"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "存活秒数"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "s"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 24,
-        "x": 0,
-        "y": 999
-      },
-      "id": 31,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
-        },
-        "showHeader": true
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-clickhouse-datasource",
-            "uid": "${DS_CLICKHOUSE}"
-          },
-          "format": 1,
-          "meta": {
-            "database": "",
-            "queryType": "table",
-            "table": ""
-          },
-          "queryType": "table",
-          "rawSql": "SELECT\n  toString(sandbox_id) AS \"沙箱ID\",\n  any(toString(sandbox_template_id)) AS \"模板ID\",\n  any(toString(sandbox_team_id)) AS \"TeamID\",\n  transform(any(toString(sandbox_team_id)), ['bf0cabd4-1d63-4c92-8018-56466250fc34','4f0c2666-2773-42f9-ae24-12863e48dbce','c8c30b05-7068-41e6-ab31-15daeb2b94f1','f03fb965-cfcc-4d58-94e4-9f062b09da53','9bfcc2c7-0a17-486c-a79c-4b323eee7162','4e8177c9-134c-4311-b917-418314e587af','fe6493c4-af87-4f44-bf02-2acb426f1b81','6f4f24b1-dba2-4cea-9daa-90a2cb06d21b','a56704da-010b-48da-ab8e-d2aaaf8545e3','c383705d-81fa-4f85-8a19-dd81ef49f3eb','0ad0730c-2860-4f30-948c-acd9c4f42d29','892c82ba-e2e0-4cf1-9496-44eac15a714f','258d442e-2159-48c9-9ac9-f3e1a0c1c452','7fcbdf30-b95b-4d65-acef-b81b328bc5a5','f0037e31-bd7a-4ad6-b16a-94c2790332da','0f44e8fc-859c-4f6a-b7e4-3068de12123e','f6eb883d-263d-4b71-831e-58ae7fd13878','4b893304-e299-4243-bea4-392feee74b7c','31738770-b0cd-480c-8ac5-9a5bf43d100b','6d4eb009-5540-4951-830a-b0e10d06ed65','e5c4b9f2-88d7-4bae-bde0-1480d82e9988','b2b5b25c-5b4a-4466-8b68-779004eabba7','af8fc097-6343-4b33-b7bb-1c197789eabd','3bf425ff-584d-4f11-abda-483a918b5897','bb20491c-f757-4043-846b-838b7f30a8d1','899fdcc3-4702-4a27-be10-9270eaf4b1cd','fea203de-19f9-4fa4-b5c8-3f7e6b5c2606','9b6bc955-415e-43c4-800a-d406f7c38864','955127a8-51ec-41ef-ba1a-232a3b3e201b','32758328-00b9-4f5b-b66d-8ea5ebd02d5c','b1940e54-3dbb-44cd-bf26-569382921299','f7e95758-34fe-44a2-bad9-6097a14ad656','0ae5f9f7-d6ac-4fde-9279-92943a0b5a86','cdc01774-0863-42dd-8475-22aefbe90997','fb4e1d45-5ed4-474d-8144-68d4f5bc7871','f081810f-4c2c-4b86-94b9-e69ebed18106','6417ba56-ea10-4fce-aa2e-54d353d907ab','004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7','01872fea-af86-4de1-9f38-ff439deef08d','c22d1774-82e6-4e16-8f24-9b0536744b18','78c62422-584c-47b6-88c3-318266c033d2','e15b5877-779e-4359-9564-336c8cabe966','19ca40b0-aafb-416e-8ffa-b33f9eb940a9','3c17296b-964e-40a8-a2b4-ae73efcc3010','77a2927b-7d67-484c-8962-2d447b8179af','2a8e0507-cbc5-4445-95dc-314347c607f4','9ad5ed4c-445b-4a9e-b856-d18232fa1fc6','fcae3a36-0d3f-40df-aad0-3c97b33624a5','a2bf5f96-7335-4b47-b894-39641aad6ed5','fcd649c5-0175-4d1e-98a5-1c218009dee4','6e7a55f9-5db0-4938-877b-c44d86eb25ab','072e7581-1510-46cc-a875-c8f493f83179','560cc0a7-b536-419e-a038-8338148be13d','65380065-c5bd-4d9f-b81c-1ce0866db931','b9bbe0bc-8826-494b-84ca-6c3a5ff46bec','6eb3900a-1fe8-4743-bdf7-12172b9771fc','f9a89b02-0f1f-402d-9994-bc13ac9122ab','0db5fb8e-920d-4564-a712-30a345863244','5a6930b7-6ba8-49c5-b8cf-4126474cdbd3','cf6c9163-60c9-4c5d-aa08-525b08ab5aaa','9db7bc25-1324-4330-85c4-f43dcde6d66d','4793fa63-b11e-4567-a1f0-bd5e0f93b551','47eee04d-4660-480c-97e8-64c39934cf47','467334dc-5de9-4ac9-a04b-d703c148f3a5','c5ac79f6-6155-47ac-9623-456cfb843878','ab785508-ba6c-4fdb-854a-2b39a2144354','12f3e83f-3979-4a59-b388-1effc55fa8f4','af487b23-9dba-4797-9627-c5b1b9ff3a42','1e9c4b44-fe65-4392-9de0-84542f3998cb','8d3b4cd8-df63-4c1a-b82b-d0139563e12e','c99dee1b-a997-453d-85dd-be94aef8fbed','ac3eeb52-7268-45e3-a373-0e195e12a294','3cbcdfb8-84e8-422e-9b87-21e7a50b6865','085a9d00-4918-42e6-a596-dbeadf54ec4d','a726f5e6-4237-4bb2-8ab0-13eac8180425','1e9c1e93-ad47-49ac-adb7-47a0606718cf','77b9f6a9-1672-4483-beb0-2f5b11b26801','07fe4160-c034-4331-94a1-9075257c62ab','3ae3b6d7-f308-4b08-89a3-a6f412715806','2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334','a7124f1b-476a-45fb-a6c3-68d161fdc911','9989897b-2fd9-45dd-a473-a6512a8cd96d','0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf'], ['默默\\'s Default Team','魏存琦\\'s Project','高杨帆\\'s Project','雷可鹏\\'s Project','锁祎然\\'s Project','郭品学\\'s Project','郑锐\\'s Project','郑淼\\'s Project','谢天赐\\'s Project','蔡子坤\\'s Project','符炫炜\\'s Project','沈蔚\\'s Project','李慧\\'s Project','李以时\\'s Project','曹倚飞\\'s Project','张硕\\'s Project','张朝运\\'s Default Team','张国强\\'s Project','刘官明\\'s Project','何阳极\\'s Project','Zhoumaosen\\'s Project','Zhengmiao\\'s Project','zhaojiarong@qijizhifeng.com','Zhangqi\\'s Project','zhangping@infrawaves.com','Vision','Tianyuhuai\\'s Project','test','system1','system@localhost','system@e2b.dev','Sunpeng\\'s Default Team','Shaozhou\\'s Project','Service\\'s Project','Ruizheng\\'s Default Team','RL','pingzhang8-c@my.cityu.edu.hk','Ning\\'s Project','Liutongtong\\'s Project','Linlizhi\\'s Project','Infrawave_测试1\\'s Project','Infrawave_test3\\'s Project','Infrawave_test2\\'s Default Team','Infrawave_test1\\'s Default Team','Infra Team','Hanszhuang\\'s Default Team','Guopinxue\\'s Project','e2b-xiaobei@china-qijizhifeng.com','e2b-xiaobei@china-qijizhifeng.com','e2b-rl@china-qijizhifeng.com','e2b-nexau@china-qijizhifeng.com','e2b-nexau@china-qijizhifeng.com','e2b-nex2@china-qijizhifeng.com','e2b-nex@china-qijizhifeng.com','e2b-nex@china-qijizhifeng.com','e2b-infrawaves@china-qijizhifeng.com','e2b-infrawaves@china-qijizhifeng.com','e2b-infra@china-qijizhifeng.com','e2b-infra@china-qijizhifeng.com','e2b-fde@china-qijizhifeng.com','e2b-fde@china-qijizhifeng.com','Chenjun\\'s Project','972963285@qq.com','972963285@qq.com','9','8','7','6','5','4','4','3','3','3','3','22','2','2','2','11','1','1','1'], any(toString(sandbox_team_id))) AS \"Team名称\",\n  anyIf(JSONExtractString(coalesce(event_data,'{}'),'kill_reason'), type='sandbox.lifecycle.killed') AS \"kill原因\",\n  minIf(timestamp, type='sandbox.lifecycle.created') AS \"创建时间\",\n  maxIf(timestamp, type='sandbox.lifecycle.killed') AS \"结束时间\",\n  toInt64(dateDiff('second', minIf(timestamp, type='sandbox.lifecycle.created'), maxIf(timestamp, type='sandbox.lifecycle.killed'))) AS \"存活秒数\"\nFROM sandbox_events\nWHERE timestamp >= $__fromTime AND timestamp <= $__toTime\n  AND match(toString(sandbox_team_id), '$teamID')\n  AND sandbox_id IN (\n    SELECT sandbox_id FROM sandbox_events\n    WHERE type='sandbox.lifecycle.killed'\n      AND JSONExtractString(coalesce(event_data,'{}'),'kill_reason') IN (${killReason:singlequote})\n      AND timestamp >= $__fromTime AND timestamp <= $__toTime\n  )\nGROUP BY sandbox_id\nORDER BY \"结束时间\" DESC\nLIMIT 500",
-          "refId": "A"
-        }
-      ],
-      "title": "特殊原因被 kill 的沙箱明细（admin/orphaned/base_template_missing/unknown）",
-      "type": "table"
-    },
-    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -1467,7 +1381,7 @@
         "x": 0,
         "y": 15
       },
-      "id": 30,
+      "id": 38,
       "title": "按 team / 原因",
       "type": "row"
     },
@@ -2671,6 +2585,109 @@
       ],
       "title": "各 team 明细（每种原因一列）",
       "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "创建时间"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "结束时间"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "存活秒数"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "id": 31,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "format": 1,
+          "meta": {
+            "database": "",
+            "queryType": "table",
+            "table": ""
+          },
+          "queryType": "table",
+          "rawSql": "SELECT\n  toString(sandbox_id) AS \"沙箱ID\",\n  any(toString(sandbox_template_id)) AS \"模板ID\",\n  any(toString(sandbox_team_id)) AS \"TeamID\",\n  transform(any(toString(sandbox_team_id)), ['bf0cabd4-1d63-4c92-8018-56466250fc34','4f0c2666-2773-42f9-ae24-12863e48dbce','c8c30b05-7068-41e6-ab31-15daeb2b94f1','f03fb965-cfcc-4d58-94e4-9f062b09da53','9bfcc2c7-0a17-486c-a79c-4b323eee7162','4e8177c9-134c-4311-b917-418314e587af','fe6493c4-af87-4f44-bf02-2acb426f1b81','6f4f24b1-dba2-4cea-9daa-90a2cb06d21b','a56704da-010b-48da-ab8e-d2aaaf8545e3','c383705d-81fa-4f85-8a19-dd81ef49f3eb','0ad0730c-2860-4f30-948c-acd9c4f42d29','892c82ba-e2e0-4cf1-9496-44eac15a714f','258d442e-2159-48c9-9ac9-f3e1a0c1c452','7fcbdf30-b95b-4d65-acef-b81b328bc5a5','f0037e31-bd7a-4ad6-b16a-94c2790332da','0f44e8fc-859c-4f6a-b7e4-3068de12123e','f6eb883d-263d-4b71-831e-58ae7fd13878','4b893304-e299-4243-bea4-392feee74b7c','31738770-b0cd-480c-8ac5-9a5bf43d100b','6d4eb009-5540-4951-830a-b0e10d06ed65','e5c4b9f2-88d7-4bae-bde0-1480d82e9988','b2b5b25c-5b4a-4466-8b68-779004eabba7','af8fc097-6343-4b33-b7bb-1c197789eabd','3bf425ff-584d-4f11-abda-483a918b5897','bb20491c-f757-4043-846b-838b7f30a8d1','899fdcc3-4702-4a27-be10-9270eaf4b1cd','fea203de-19f9-4fa4-b5c8-3f7e6b5c2606','9b6bc955-415e-43c4-800a-d406f7c38864','955127a8-51ec-41ef-ba1a-232a3b3e201b','32758328-00b9-4f5b-b66d-8ea5ebd02d5c','b1940e54-3dbb-44cd-bf26-569382921299','f7e95758-34fe-44a2-bad9-6097a14ad656','0ae5f9f7-d6ac-4fde-9279-92943a0b5a86','cdc01774-0863-42dd-8475-22aefbe90997','fb4e1d45-5ed4-474d-8144-68d4f5bc7871','f081810f-4c2c-4b86-94b9-e69ebed18106','6417ba56-ea10-4fce-aa2e-54d353d907ab','004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7','01872fea-af86-4de1-9f38-ff439deef08d','c22d1774-82e6-4e16-8f24-9b0536744b18','78c62422-584c-47b6-88c3-318266c033d2','e15b5877-779e-4359-9564-336c8cabe966','19ca40b0-aafb-416e-8ffa-b33f9eb940a9','3c17296b-964e-40a8-a2b4-ae73efcc3010','77a2927b-7d67-484c-8962-2d447b8179af','2a8e0507-cbc5-4445-95dc-314347c607f4','9ad5ed4c-445b-4a9e-b856-d18232fa1fc6','fcae3a36-0d3f-40df-aad0-3c97b33624a5','a2bf5f96-7335-4b47-b894-39641aad6ed5','fcd649c5-0175-4d1e-98a5-1c218009dee4','6e7a55f9-5db0-4938-877b-c44d86eb25ab','072e7581-1510-46cc-a875-c8f493f83179','560cc0a7-b536-419e-a038-8338148be13d','65380065-c5bd-4d9f-b81c-1ce0866db931','b9bbe0bc-8826-494b-84ca-6c3a5ff46bec','6eb3900a-1fe8-4743-bdf7-12172b9771fc','f9a89b02-0f1f-402d-9994-bc13ac9122ab','0db5fb8e-920d-4564-a712-30a345863244','5a6930b7-6ba8-49c5-b8cf-4126474cdbd3','cf6c9163-60c9-4c5d-aa08-525b08ab5aaa','9db7bc25-1324-4330-85c4-f43dcde6d66d','4793fa63-b11e-4567-a1f0-bd5e0f93b551','47eee04d-4660-480c-97e8-64c39934cf47','467334dc-5de9-4ac9-a04b-d703c148f3a5','c5ac79f6-6155-47ac-9623-456cfb843878','ab785508-ba6c-4fdb-854a-2b39a2144354','12f3e83f-3979-4a59-b388-1effc55fa8f4','af487b23-9dba-4797-9627-c5b1b9ff3a42','1e9c4b44-fe65-4392-9de0-84542f3998cb','8d3b4cd8-df63-4c1a-b82b-d0139563e12e','c99dee1b-a997-453d-85dd-be94aef8fbed','ac3eeb52-7268-45e3-a373-0e195e12a294','3cbcdfb8-84e8-422e-9b87-21e7a50b6865','085a9d00-4918-42e6-a596-dbeadf54ec4d','a726f5e6-4237-4bb2-8ab0-13eac8180425','1e9c1e93-ad47-49ac-adb7-47a0606718cf','77b9f6a9-1672-4483-beb0-2f5b11b26801','07fe4160-c034-4331-94a1-9075257c62ab','3ae3b6d7-f308-4b08-89a3-a6f412715806','2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334','a7124f1b-476a-45fb-a6c3-68d161fdc911','9989897b-2fd9-45dd-a473-a6512a8cd96d','0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf'], ['默默\\'s Default Team','魏存琦\\'s Project','高杨帆\\'s Project','雷可鹏\\'s Project','锁祎然\\'s Project','郭品学\\'s Project','郑锐\\'s Project','郑淼\\'s Project','谢天赐\\'s Project','蔡子坤\\'s Project','符炫炜\\'s Project','沈蔚\\'s Project','李慧\\'s Project','李以时\\'s Project','曹倚飞\\'s Project','张硕\\'s Project','张朝运\\'s Default Team','张国强\\'s Project','刘官明\\'s Project','何阳极\\'s Project','Zhoumaosen\\'s Project','Zhengmiao\\'s Project','zhaojiarong@qijizhifeng.com','Zhangqi\\'s Project','zhangping@infrawaves.com','Vision','Tianyuhuai\\'s Project','test','system1','system@localhost','system@e2b.dev','Sunpeng\\'s Default Team','Shaozhou\\'s Project','Service\\'s Project','Ruizheng\\'s Default Team','RL','pingzhang8-c@my.cityu.edu.hk','Ning\\'s Project','Liutongtong\\'s Project','Linlizhi\\'s Project','Infrawave_测试1\\'s Project','Infrawave_test3\\'s Project','Infrawave_test2\\'s Default Team','Infrawave_test1\\'s Default Team','Infra Team','Hanszhuang\\'s Default Team','Guopinxue\\'s Project','e2b-xiaobei@china-qijizhifeng.com','e2b-xiaobei@china-qijizhifeng.com','e2b-rl@china-qijizhifeng.com','e2b-nexau@china-qijizhifeng.com','e2b-nexau@china-qijizhifeng.com','e2b-nex2@china-qijizhifeng.com','e2b-nex@china-qijizhifeng.com','e2b-nex@china-qijizhifeng.com','e2b-infrawaves@china-qijizhifeng.com','e2b-infrawaves@china-qijizhifeng.com','e2b-infra@china-qijizhifeng.com','e2b-infra@china-qijizhifeng.com','e2b-fde@china-qijizhifeng.com','e2b-fde@china-qijizhifeng.com','Chenjun\\'s Project','972963285@qq.com','972963285@qq.com','9','8','7','6','5','4','4','3','3','3','3','22','2','2','2','11','1','1','1'], any(toString(sandbox_team_id))) AS \"Team名称\",\n  anyIf(JSONExtractString(coalesce(event_data,'{}'),'kill_reason'), type='sandbox.lifecycle.killed') AS \"kill原因\",\n  minIf(timestamp, type='sandbox.lifecycle.created') AS \"创建时间\",\n  maxIf(timestamp, type='sandbox.lifecycle.killed') AS \"结束时间\",\n  toInt64(dateDiff('second', minIf(timestamp, type='sandbox.lifecycle.created'), maxIf(timestamp, type='sandbox.lifecycle.killed'))) AS \"存活秒数\"\nFROM sandbox_events\nWHERE timestamp >= $__fromTime AND timestamp <= $__toTime\n  AND match(toString(sandbox_team_id), '$teamID')\n  AND sandbox_id IN (\n    SELECT sandbox_id FROM sandbox_events\n    WHERE type='sandbox.lifecycle.killed'\n      AND JSONExtractString(coalesce(event_data,'{}'),'kill_reason') IN (${killReason:singlequote})\n      AND timestamp >= $__fromTime AND timestamp <= $__toTime\n  )\nGROUP BY sandbox_id\nORDER BY \"结束时间\" DESC\nLIMIT 500",
+          "refId": "A"
+        }
+      ],
+      "title": "特殊原因被 kill 的沙箱明细（admin/orphaned/base_template_missing/unknown）",
+      "type": "table"
     }
   ],
   "preload": false,
@@ -2685,14 +2702,11 @@
   "templating": {
     "list": [
       {
-        "current": {
-          "selected": true,
-          "text": "prod_e2b_clickhouse",
-          "value": "cfyzcpdk3t7uoa"
-        },
+        "current": {},
         "hide": 0,
         "includeAll": false,
-        "label": "数据源",
+        "label": "ClickHouse 数据源",
+        "multi": false,
         "name": "DS_CLICKHOUSE",
         "options": [],
         "query": "grafana-clickhouse-datasource",
@@ -2734,6 +2748,7 @@
       },
       {
         "allValue": "'orphaned','admin','base_template_missing','resume_failed','thaw_failed','seal_failed','upload_failed','unknown'",
+        "allowCustomValue": true,
         "current": {
           "text": [
             "orphaned",
@@ -2763,48 +2778,50 @@
         "name": "killReason",
         "options": [
           {
-            "selected": true,
+            "selected": false,
             "text": "orphaned",
             "value": "orphaned"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "admin",
             "value": "admin"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "base_template_missing",
             "value": "base_template_missing"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "resume_failed",
             "value": "resume_failed"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "thaw_failed",
             "value": "thaw_failed"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "seal_failed",
             "value": "seal_failed"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "upload_failed",
             "value": "upload_failed"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "unknown",
             "value": "unknown"
           }
         ],
         "query": "orphaned,admin,base_template_missing,resume_failed,thaw_failed,seal_failed,upload_failed,unknown",
-        "type": "custom"
+        "skipUrlSync": false,
+        "type": "custom",
+        "valuesFormat": "csv"
       }
     ]
   },
@@ -2828,6 +2845,5 @@
   },
   "timezone": "browser",
   "title": "⑤ E2B 沙箱 kill 统计（按 team / 原因）",
-  "uid": "e2b-sbx-kill",
-  "version": 17
+  "uid": "e2b-sbx-kill"
 }
