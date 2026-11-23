@@ -1428,15 +1428,15 @@
             },
             "indexByName": {
               "instance": 2,
-              "md5": 4,
-              "md5 2": 3,
+              "md5": 3,
+              "md5 2": 4,
               "node_name": 0,
               "release": 1
             },
             "renameByName": {
               "instance": "抓取地址",
-              "md5": "envd MD5",
-              "md5 2": "orchestrator MD5",
+              "md5": "orchestrator MD5",
+              "md5 2": "envd MD5",
               "node_name": "节点ID",
               "release": "内核版本"
             }

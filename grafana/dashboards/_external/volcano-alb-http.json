@@ -1,0 +1,2648 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 174,
+      "title": "概览(沙箱创建 · api 日志 event 口径,对齐 e2b-sbx-create-teams)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "api 业务日志 event=sbx_create_attempt 计数。沙箱创建的\"发起\"次数(进入创建逻辑)。口径对齐 e2b-sbx-create-teams。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "id": 101,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "c",
+              "text": "c",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_type": "raw",
+            "data": "{\"topic\": \"1017a24d-a245-4e6a-830d-c19e76aeb705\", \"query\": \"service:orchestration-api and event:sbx_create_attempt | select count(*) as c\", \"from\": \"${__from}\", \"to\": \"${__to}\", \"limit\": 1000}",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "创建尝试 (event)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "api 业务日志 event=sbx_create_success 计数。沙箱创建\"成功\"次数。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "id": 102,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "c",
+              "text": "c",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_type": "raw",
+            "data": "{\"topic\": \"1017a24d-a245-4e6a-830d-c19e76aeb705\", \"query\": \"service:orchestration-api and event:sbx_create_success | select count(*) as c\", \"from\": \"${__from}\", \"to\": \"${__to}\", \"limit\": 1000}",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "创建成功 (event)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "api 日志 message=\"Failed to create sandbox\" 计数。节点层(orchestrator placement)创建失败,即异步阶段的真实失败日志(此时 HTTP 请求已返回 2xx)。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "id": 103,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "c",
+              "text": "c",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_type": "raw",
+            "data": "{\"topic\": \"1017a24d-a245-4e6a-830d-c19e76aeb705\", \"query\": \"* | select count(*) as c where message = ~SQ~Failed to create sandbox~SQ~\", \"from\": \"${__from}\", \"to\": \"${__to}\", \"limit\": 1000}",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "创建失败 (Failed to create sandbox)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "端到端成功率 = success / attempt。反映\"发起创建最终成功\"的比例。缺口(attempt−success)含节点层失败 + 用户取消/超时等无失败日志的情况。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 90
+              },
+              {
+                "color": "yellow",
+                "value": 98
+              },
+              {
+                "color": "green",
+                "value": 99.5
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 104,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "rate",
+              "text": "rate",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_type": "raw",
+            "data": "{\"topic\": \"1017a24d-a245-4e6a-830d-c19e76aeb705\", \"query\": \"service:orchestration-api and (event:sbx_create_attempt or event:sbx_create_success) | select round(100.0 * sum(case when event=~SQ~sbx_create_success~SQ~ then 1 else 0 end) / nullif(sum(case when event=~SQ~sbx_create_attempt~SQ~ then 1 else 0 end),0), 3) as rate\", \"from\": \"${__from}\", \"to\": \"${__to}\", \"limit\": 1000}",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "端到端成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "平台成功率 = success /(success + 节点层失败)。只用\"有结果\"的事件做分母,衡量平台侧创建可靠性,不含用户取消类。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 90
+              },
+              {
+                "color": "yellow",
+                "value": 98
+              },
+              {
+                "color": "green",
+                "value": 99.5
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 105,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "rate",
+              "text": "rate",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_type": "raw",
+            "data": "{\"topic\": \"1017a24d-a245-4e6a-830d-c19e76aeb705\", \"query\": \"* | select round(100.0 * sum(case when event=~SQ~sbx_create_success~SQ~ then 1 else 0 end) / nullif(sum(case when event=~SQ~sbx_create_success~SQ~ then 1 else 0 end) + sum(case when message=~SQ~Failed to create sandbox~SQ~ then 1 else 0 end),0), 3) as rate\", \"from\": \"${__from}\", \"to\": \"${__to}\", \"limit\": 1000}",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "平台成功率 (success / (success+节点层失败))",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 175,
+      "title": "按 team 的创建成功(api 日志 teamID)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "mixed",
+        "uid": "-- Mixed --"
+      },
+      "description": "按 team 的创建明细。teamID/尝试/成功来自 api 日志 event 聚合,team 名称经 PostgreSQL teams 表 join。成功率=成功/尝试(窗口边界可能略>100%,属 attempt 与 success 跨窗口错配)。",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "成功率"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": 0
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 0.9
+                    },
+                    {
+                      "color": "green",
+                      "value": 0.99
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 111,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "成功数"
+          }
+        ]
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "teamID",
+              "text": "teamID",
+              "type": "string"
+            },
+            {
+              "selector": "success",
+              "text": "success",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"1017a24d-a245-4e6a-830d-c19e76aeb705\",\"query\":\"service:orchestration-api and event:sbx_create_success | select teamID, count(*) as success group by teamID order by success desc limit 200\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [
+            {
+              "selector": "teamID",
+              "text": "teamID",
+              "type": "string"
+            },
+            {
+              "selector": "attempt",
+              "text": "attempt",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"1017a24d-a245-4e6a-830d-c19e76aeb705\",\"query\":\"service:orchestration-api and event:sbx_create_attempt | select teamID, count(*) as attempt group by teamID order by attempt desc limit 200\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_POSTGRES}"
+          },
+          "format": "table",
+          "rawSql": "SELECT id AS \"teamID\", name AS team_name FROM public.teams WHERE deleted_at IS NULL LIMIT 2000",
+          "refId": "C"
+        }
+      ],
+      "title": "各 team 创建明细(名称 · 尝试 · 成功 · 成功率)",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "teamID",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "成功率",
+            "binary": {
+              "left": "success A",
+              "operator": "/",
+              "right": "attempt B"
+            },
+            "mode": "binary",
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "attempt B": 2,
+              "success A": 3,
+              "teamID": 1,
+              "team_name": 0,
+              "成功率": 4
+            },
+            "renameByName": {
+              "attempt B": "尝试数",
+              "success A": "成功数",
+              "teamID": "teamID",
+              "team_name": "team名称"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": "",
+            "sort": [
+              {
+                "desc": true,
+                "field": "成功数"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 176,
+      "title": "创建时间分布(api 日志 event 口径)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "api 日志 event 口径的时间分布:每时间桶的 创建尝试(attempt) 与 创建成功(success) 曲线,看创建量随时间变化。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "id": 121,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "time",
+              "text": "time",
+              "type": "timestamp"
+            },
+            {
+              "selector": "尝试",
+              "text": "尝试",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_type": "raw",
+            "data": "{\"topic\": \"1017a24d-a245-4e6a-830d-c19e76aeb705\", \"query\": \"service:orchestration-api and event:sbx_create_attempt | select date_trunc(~SQ~minute~SQ~,__time__) as time, count(*) as 尝试 group by time order by time\", \"from\": \"${__from}\", \"to\": \"${__to}\", \"limit\": 1000}",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [
+            {
+              "selector": "time",
+              "text": "time",
+              "type": "timestamp"
+            },
+            {
+              "selector": "成功",
+              "text": "成功",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "refId": "B",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_type": "raw",
+            "data": "{\"topic\": \"1017a24d-a245-4e6a-830d-c19e76aeb705\", \"query\": \"service:orchestration-api and event:sbx_create_success | select date_trunc(~SQ~minute~SQ~,__time__) as time, count(*) as 成功 group by time order by time\", \"from\": \"${__from}\", \"to\": \"${__to}\", \"limit\": 1000}",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "创建尝试 / 成功 时间分布",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "节点层失败(Failed to create sandbox)随时间分布,定位失败是否集中在某些时段。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "id": 122,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "time",
+              "text": "time",
+              "type": "timestamp"
+            },
+            {
+              "selector": "失败",
+              "text": "失败",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_type": "raw",
+            "data": "{\"topic\": \"1017a24d-a245-4e6a-830d-c19e76aeb705\", \"query\": \"* | select date_trunc(~SQ~minute~SQ~,__time__) as time, count(*) as 失败 where message = ~SQ~Failed to create sandbox~SQ~ group by time order by time\", \"from\": \"${__from}\", \"to\": \"${__to}\", \"limit\": 1000}",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "节点层失败 时间分布",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 177,
+      "title": "失败归因(api 日志 · 节点层创建失败原文)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "mixed",
+        "uid": "-- Mixed --"
+      },
+      "description": "节点层创建失败明细(api 日志)。含失败原因 message、归因 attributes(exception + 完整调用栈),用于定位失败代码位置。",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "id": 131,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "timestamp",
+              "text": "时间",
+              "type": "string"
+            },
+            {
+              "selector": "sandboxID",
+              "text": "sandboxID",
+              "type": "string"
+            },
+            {
+              "selector": "失败原因",
+              "text": "失败原因",
+              "type": "string"
+            },
+            {
+              "selector": "buildID",
+              "text": "buildID",
+              "type": "string"
+            },
+            {
+              "selector": "node",
+              "text": "node",
+              "type": "string"
+            },
+            {
+              "selector": "attributes",
+              "text": "归因(attributes·含调用栈)",
+              "type": "string"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"1017a24d-a245-4e6a-830d-c19e76aeb705\",\"query\":\"message:~SQ~Failed to create sandbox~SQ~ | select timestamp, regexp_extract(attributes, '([a-z0-9]{20,})', 1) as sandboxID, regexp_extract(attributes, '\\\"exception.message\\\":\\\"([^\\\"]+)\\\"', 1) as 失败原因, regexp_extract(attributes, '\\\"build.id\\\":\\\"([^\\\"]+)\\\"', 1) as buildID, node, attributes order by timestamp desc limit 200\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [
+            {
+              "selector": "sandboxID",
+              "text": "sandboxID",
+              "type": "string"
+            },
+            {
+              "selector": "teamID",
+              "text": "teamID",
+              "type": "string"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"1017a24d-a245-4e6a-830d-c19e76aeb705\",\"query\":\"service:orchestration-api and teamID:* and sandboxID:* | select sandboxID, max(teamID) as teamID group by sandboxID limit 10000\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_POSTGRES}"
+          },
+          "format": "table",
+          "rawSql": "SELECT id AS \"teamID\", name AS team_name FROM public.teams WHERE deleted_at IS NULL LIMIT 2000",
+          "refId": "C"
+        }
+      ],
+      "title": "创建失败明细(team · 失败原因 · 调用栈归因)",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "sandboxID",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "buildID A": "buildID",
+              "node A": "node",
+              "teamID B": "teamID",
+              "失败原因 A": "失败原因",
+              "归因(attributes·含调用栈) A": "归因(attributes·含调用栈)",
+              "时间 A": "时间"
+            }
+          }
+        },
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "teamID",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "buildID": 5,
+              "node": 6,
+              "sandboxID": 3,
+              "teamID": 2,
+              "team_name": 1,
+              "失败原因": 4,
+              "归因(attributes·含调用栈)": 7,
+              "时间": 0
+            },
+            "renameByName": {
+              "team_name": "team名称"
+            }
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "isNotNull",
+                  "options": {}
+                },
+                "fieldName": "失败原因"
+              }
+            ],
+            "match": "any",
+            "type": "include"
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": "",
+            "sort": [
+              {
+                "desc": true,
+                "field": "时间"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
+      "id": 178,
+      "title": "入口 HTTP 状态码(ALB · 补 api 日志看不到的入口层失败)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "ALB 入口访问日志:POST /sandboxes 按 HTTP 状态码分布。201=成功,4xx/5xx=入口层失败。补 api event 口径看不到的入口失败。",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "id": 145,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "status",
+              "text": "状态码",
+              "type": "string"
+            },
+            {
+              "selector": "cnt",
+              "text": "次数",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "application/json",
+            "body_type": "raw",
+            "data": "{\"topic\": \"52861e07-f3f4-4eaa-a451-0a7999da5e37\", \"query\": \"* | select status, count(*) as cnt where request like ~SQ~POST /sandboxes HTTP%~SQ~ group by status order by cnt desc\", \"from\": \"${__from}\", \"to\": \"${__to}\", \"limit\": 1000}",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "ALB 创建请求按状态码(POST /sandboxes)",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 47
+      },
+      "id": 179,
+      "title": "ALB 创建成功率(入口视角 · HTTP 口径,补 api 盲区)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "ALB 创建成功率 = status201 / 全部 POST /sandboxes。入口视角(HTTP 口径),覆盖所有到达入口的创建请求。",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 3,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 0.95
+              },
+              {
+                "color": "green",
+                "value": 0.99
+              }
+            ]
+          },
+          "unit": "percentunit"
+        }
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 48
+      },
+      "id": 155,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^成功率%$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "ok",
+              "text": "ok",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"52861e07-f3f4-4eaa-a451-0a7999da5e37\",\"query\":\"status:201 | select count(*) as ok where request like ~SQ~POST /sandboxes HTTP%~SQ~\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [
+            {
+              "selector": "total",
+              "text": "total",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"52861e07-f3f4-4eaa-a451-0a7999da5e37\",\"query\":\"* | select count(*) as total where request like ~SQ~POST /sandboxes HTTP%~SQ~\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "ALB 创建成功率",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "成功率%",
+            "binary": {
+              "left": "ok",
+              "operator": "/",
+              "right": "total"
+            },
+            "mode": "binary",
+            "replaceFields": false
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "ALB 入口 POST /sandboxes 返回 201 的次数(HTTP 层创建成功)。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 48
+      },
+      "id": 156,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "c",
+              "text": "c",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"52861e07-f3f4-4eaa-a451-0a7999da5e37\",\"query\":\"status:201 | select count(*) as c where request like ~SQ~POST /sandboxes HTTP%~SQ~\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "创建成功(201)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "ALB 入口 POST /sandboxes 返回非 201 的次数(HTTP 层失败,如 400/429/5xx)。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "fixed"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 48
+      },
+      "id": 157,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "c",
+              "text": "c",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"52861e07-f3f4-4eaa-a451-0a7999da5e37\",\"query\":\"not status:201 | select count(*) as c where request like ~SQ~POST /sandboxes HTTP%~SQ~\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "创建失败(非201)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "ALB 入口 POST /sandboxes 的总请求数。",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 48
+      },
+      "id": 158,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "c",
+              "text": "c",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"52861e07-f3f4-4eaa-a451-0a7999da5e37\",\"query\":\"* | select count(*) as c where request like ~SQ~POST /sandboxes HTTP%~SQ~\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "创建请求总数",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "POST /sandboxes 的 4xx 失败数(400/401/403/404/429/499)。客户端侧问题:参数错误、鉴权、限流(429)、客户端断开(499)。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 54
+      },
+      "id": 171,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "c",
+              "text": "c",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"52861e07-f3f4-4eaa-a451-0a7999da5e37\",\"query\":\"(status:400 or status:401 or status:403 or status:404 or status:429 or status:499) | select count(*) as c where request like ~SQ~POST /sandboxes HTTP%~SQ~\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "失败·4xx(客户端)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "POST /sandboxes 的 5xx 失败数(500/502/503/504)。服务端问题:503=服务不可用(本环境失败主力)、502=网关错误、504=网关超时。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "fixed"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 54
+      },
+      "id": 172,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "c",
+              "text": "c",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"52861e07-f3f4-4eaa-a451-0a7999da5e37\",\"query\":\"(status:500 or status:502 or status:503 or status:504) | select count(*) as c where request like ~SQ~POST /sandboxes HTTP%~SQ~\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "失败·5xx(服务端)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "503 单独计数。503 通常是上游 api/orchestrator 过载或无可用容量。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "fixed"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 54
+      },
+      "id": 173,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "c",
+              "text": "c",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"52861e07-f3f4-4eaa-a451-0a7999da5e37\",\"query\":\"status:503 | select count(*) as c where request like ~SQ~POST /sandboxes HTTP%~SQ~\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "其中 503(服务不可用)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "ALB 入口 POST /sandboxes 每分钟的总请求数与成功(201)数趋势。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 58
+      },
+      "id": 159,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "time",
+              "text": "time",
+              "type": "timestamp"
+            },
+            {
+              "selector": "总请求",
+              "text": "总请求",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"52861e07-f3f4-4eaa-a451-0a7999da5e37\",\"query\":\"* | select date_trunc('minute',__time__) as time, count(*) as 总请求 where request like ~SQ~POST /sandboxes HTTP%~SQ~ group by time order by time\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        },
+        {
+          "columns": [
+            {
+              "selector": "time",
+              "text": "time",
+              "type": "timestamp"
+            },
+            {
+              "selector": "成功201",
+              "text": "成功201",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "B",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"52861e07-f3f4-4eaa-a451-0a7999da5e37\",\"query\":\"status:201 | select date_trunc('minute',__time__) as time, count(*) as 成功201 where request like ~SQ~POST /sandboxes HTTP%~SQ~ group by time order by time\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "ALB 创建请求/成功 时间趋势(每分钟)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "ALB 入口创建失败(非201)请求明细。ALB 无 teamID/业务错误原因,但有 HTTP 状态码、耗时(可看超时)、落点 api 节点、客户端 IP、SDK 版本。时间用 __time__(time_iso8601 字段为空)。",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 66
+      },
+      "id": 160,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "时间",
+              "text": "时间",
+              "type": "string"
+            },
+            {
+              "selector": "状态码",
+              "text": "状态码",
+              "type": "string"
+            },
+            {
+              "selector": "上游状态",
+              "text": "上游状态",
+              "type": "string"
+            },
+            {
+              "selector": "耗时秒",
+              "text": "耗时秒",
+              "type": "number"
+            },
+            {
+              "selector": "落点api",
+              "text": "落点api",
+              "type": "string"
+            },
+            {
+              "selector": "客户端IP",
+              "text": "客户端IP",
+              "type": "string"
+            },
+            {
+              "selector": "SDK",
+              "text": "SDK",
+              "type": "string"
+            },
+            {
+              "selector": "request_id",
+              "text": "request_id",
+              "type": "string"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"52861e07-f3f4-4eaa-a451-0a7999da5e37\",\"query\":\"not status:201 | select from_unixtime(__time__/1000) as 时间, status as 状态码, upstream_status as 上游状态, request_time as 耗时秒, upstream_addr as 落点api, remote_addr as 客户端IP, http_user_agent as SDK, request_id where request like ~SQ~POST /sandboxes HTTP%~SQ~ order by __time__ desc limit 200\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "ALB 创建失败请求明细(状态码·耗时·落点api·客户端·SDK)",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 76
+      },
+      "id": 180,
+      "title": "端到端创建失败 · 详细日志(节点层 Failed to create sandbox · api 内部错误口径)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "mixed",
+        "uid": "-- Mixed --"
+      },
+      "description": "端到端创建失败明细(按 sandbox 聚合,每个失败 sandbox 一行)。sandboxID 从失败日志 attributes 正则抽;状态码=gRPC 错误码([Internal]/[FailedPrecondition] 等);teamID 经 ClickHouse sandbox_events 反查;team 名称由 value mapping 显示。无 sandboxID 的失败(多为 [Unavailable]/[Canceled])聚为空 sandbox 一行。注意:B 的 CH IN 列表与 teamID value mapping 需随新增失败 sandbox/team 更新。",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "teamID"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "team(名称)"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "4e8177c9-134c-4311-b917-418314e587af": {
+                        "index": 0,
+                        "text": "郭品学's Project"
+                      },
+                      "b2b5b25c-5b4a-4466-8b68-779004eabba7": {
+                        "index": 2,
+                        "text": "Zhengmiao's Project"
+                      },
+                      "e5c4b9f2-88d7-4bae-bde0-1480d82e9988": {
+                        "index": 1,
+                        "text": "Zhoumaosen's Project"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "失败原因"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 830
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 77
+      },
+      "id": 162,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "sandboxID",
+              "text": "sandboxID",
+              "type": "string"
+            },
+            {
+              "selector": "失败次数",
+              "text": "失败次数",
+              "type": "number"
+            },
+            {
+              "selector": "最近失败时间",
+              "text": "最近失败时间",
+              "type": "string"
+            },
+            {
+              "selector": "失败原因",
+              "text": "失败原因",
+              "type": "string"
+            },
+            {
+              "selector": "buildID",
+              "text": "buildID",
+              "type": "string"
+            },
+            {
+              "selector": "node",
+              "text": "node",
+              "type": "string"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"1017a24d-a245-4e6a-830d-c19e76aeb705\",\"query\":\"message:~SQ~Failed to create sandbox~SQ~ | select regexp_extract(attributes, '([a-z0-9]{20,})', 1) as sandboxID, count(*) as 失败次数, max(from_unixtime(__time__/1000)) as 最近失败时间, max(regexp_extract(attributes, '\\\"exception.message\\\":\\\"([^\\\"]+)\\\"', 1)) as 失败原因, max(regexp_extract(attributes, '\\\"build.id\\\":\\\"([^\\\"]+)\\\"', 1)) as buildID, max(node) as node group by sandboxID order by 失败次数 desc limit 200\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        },
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "mode": "list"
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT sandbox_id AS sandboxID, any(sandbox_team_id) AS teamID FROM sandbox_events WHERE timestamp >= now() - INTERVAL 30 DAY AND sandbox_id IN ('i83e3svgtqixs0izesw2f','iklcisjiqt5uoqc95kv8p','i3gm8dyawgj3fth9ik0mo','in0yhzzenvckmf2fkciuk','iib6kzlmez3xo55d32h5q','i84vdtzu35fssjr9xr8pg','iqz98qzcwb5c2gjsv2piz','iroq25d2jo048po27tduk','iupt51msedm97pkobjtyl','iwruivxgvpz9dgmg9yfg8','ib4yowalyxq4udz717b98','isye0vsz7bnzrinq62bc7','idkph7ubqmo0wfhozo56c','izzdlwx7lxhokrbn4pmin','iwubxmyrxsdkhdrhv1wio') GROUP BY sandbox_id",
+          "refId": "B"
+        }
+      ],
+      "title": "创建失败明细(按 sandbox 聚合 · team via CH→PG · 失败原因)",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "sandboxID",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "buildID A": "buildID",
+              "node A": "node",
+              "teamID B": "teamID",
+              "失败原因 A": "失败原因",
+              "失败次数 A": "失败次数",
+              "最近失败时间 A": "最近失败时间"
+            }
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "isNotNull",
+                  "options": {}
+                },
+                "fieldName": "失败原因"
+              }
+            ],
+            "match": "all",
+            "type": "include"
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": "",
+            "sort": [
+              {
+                "desc": true,
+                "field": "失败次数"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY_VOLCANO}"
+      },
+      "description": "节点层创建失败按 gRPC 状态码(exception.message 前缀)归类统计。近7天280条分布:[Internal]192 / [FailedPrecondition]54 / [DeadlineExceeded]26 / [Canceled]6 / [Unavailable]2。",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "失败原因"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 1452
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 89
+      },
+      "id": 163,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "失败原因",
+              "text": "失败原因",
+              "type": "string"
+            },
+            {
+              "selector": "次数",
+              "text": "次数",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "${DS_INFINITY_VOLCANO}"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "http://192.168.128.246:19200/search",
+          "url_options": {
+            "body_content_type": "text/plain",
+            "body_type": "raw",
+            "data": "{\"topic\":\"1017a24d-a245-4e6a-830d-c19e76aeb705\",\"query\":\"message:~SQ~Failed to create sandbox~SQ~ | select regexp_extract(attributes, '\\\"exception.message\\\":\\\"([^\\\"]+)\\\"', 1) as 失败原因, count(*) as 次数 group by 失败原因 order by 次数 desc limit 100\",\"from\":\"${__from}\",\"to\":\"${__to}\",\"limit\":1000}",
+            "method": "POST"
+          }
+        }
+      ],
+      "title": "失败原因归类统计(按 exception.message)",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "5m",
+  "schemaVersion": 42,
+  "tags": [
+    "alb",
+    "volcano",
+    "create",
+    "e2b",
+    "sandbox"
+  ],
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "🌋 沙箱创建成功率",
+  "uid": "volcano-alb-http",
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "ClickHouse 数据源",
+        "multi": false,
+        "name": "DS_CLICKHOUSE",
+        "options": [],
+        "query": "grafana-clickhouse-datasource",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Infinity 数据源 (火山 ALB)",
+        "multi": false,
+        "name": "DS_INFINITY_VOLCANO",
+        "options": [],
+        "query": "yesoreyeram-infinity-datasource",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "PostgreSQL 数据源 (Supabase 只读)",
+        "multi": false,
+        "name": "DS_POSTGRES",
+        "options": [],
+        "query": "grafana-postgresql-datasource",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  }
+}

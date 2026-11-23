@@ -1,0 +1,70 @@
+name: PR checks
+
+# 对所有 PR 与 push-to-main 触发,产出一个名为 `build` 的必需状态检查。
+#
+# 背景:分支保护把 `build` 设为必需检查,但原有的
+# nomad-nodeJob-exporter-build.yml 带 paths 过滤,只在改动 exporter 时才跑。
+# 不碰 exporter 的 PR(如 grafana/脚本改动)永远拿不到 `build` 检查 → PR 永久
+# pending、无法合并。本 workflow 无 paths 过滤,保证每个 PR 都能产出 `build`,
+# 同时做真正有意义的校验(dashboard/provisioning JSON 合法性 + Python 语法)。
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate JSON (dashboards / alerts provisioning)
+        run: |
+          set -euo pipefail
+          fail=0
+          while IFS= read -r f; do
+            if ! python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f"; then
+              echo "::error file=$f::invalid JSON"
+              fail=1
+            fi
+          done < <(find grafana -name '*.json' -type f)
+          if [ "$fail" -ne 0 ]; then
+            echo "JSON validation failed"
+            exit 1
+          fi
+          echo "All grafana JSON files are valid."
+
+      - name: Check Python syntax (scripts / ops-scripts)
+        run: |
+          set -euo pipefail
+          mapfile -t pyfiles < <(find scripts ops-scripts -name '*.py' -type f 2>/dev/null || true)
+          if [ "${#pyfiles[@]}" -gt 0 ]; then
+            python3 -m py_compile "${pyfiles[@]}"
+            echo "Python syntax OK: ${#pyfiles[@]} file(s)."
+          else
+            echo "No Python files to check."
+          fi
+
+      - name: Guard against committed secrets
+        run: |
+          set -euo pipefail
+          # 粗检:不允许真实飞书 bot webhook token 混入(应为 ${FEISHU_WEBHOOK_*} 占位符)
+          if grep -rEn 'open\.feishu\.cn/open-apis/bot/v2/hook/[0-9a-fA-F-]{8,}' \
+               --include='*.json' --include='*.py' --include='*.sh' . 2>/dev/null \
+               | grep -v '\${'; then
+            echo "::error::疑似真实飞书 webhook token 泄漏,请脱敏为 \${FEISHU_WEBHOOK_*}"
+            exit 1
+          fi
+          echo "No obvious plaintext secrets found."

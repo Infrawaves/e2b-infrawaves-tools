@@ -1,0 +1,66 @@
+{
+  "receiver": "empty",
+  "group_by": [
+    "grafana_folder",
+    "alertname"
+  ],
+  "routes": [
+    {
+      "receiver": "feishu-e2b-sandbox",
+      "group_by": [
+        "alertname",
+        "team_id",
+        "status",
+        "cat",
+        "sbx"
+      ],
+      "object_matchers": [
+        [
+          "alert_kind",
+          "=",
+          "create-4xx"
+        ]
+      ],
+      "group_wait": "0s",
+      "group_interval": "1m",
+      "repeat_interval": "1y"
+    },
+    {
+      "receiver": "feishu-node-draining",
+      "group_by": [
+        "alertname",
+        "node_id"
+      ],
+      "object_matchers": [
+        [
+          "alert_type",
+          "=",
+          "node-draining"
+        ]
+      ],
+      "group_wait": "1m",
+      "group_interval": "1m",
+      "repeat_interval": "1y"
+    },
+    {
+      "receiver": "feishu-e2b-sandbox",
+      "group_by": [
+        "alertname",
+        "team_id",
+        "status",
+        "cat",
+        "sbx"
+      ],
+      "object_matchers": [
+        [
+          "service",
+          "=",
+          "e2b"
+        ]
+      ],
+      "group_wait": "0s",
+      "group_interval": "1m",
+      "repeat_interval": "1y"
+    }
+  ]
+}

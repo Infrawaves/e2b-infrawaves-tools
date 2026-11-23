@@ -61,7 +61,7 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 6,
+        "w": 3,
         "x": 0,
         "y": 1
       },
@@ -135,7 +135,7 @@
       "gridPos": {
         "h": 5,
         "w": 3,
-        "x": 6,
+        "x": 3,
         "y": 1
       },
       "id": 3,
@@ -208,7 +208,7 @@
       "gridPos": {
         "h": 5,
         "w": 3,
-        "x": 9,
+        "x": 6,
         "y": 1
       },
       "id": 4,
@@ -285,7 +285,7 @@
       "gridPos": {
         "h": 5,
         "w": 3,
-        "x": 12,
+        "x": 9,
         "y": 1
       },
       "id": 5,
@@ -362,7 +362,7 @@
       "gridPos": {
         "h": 5,
         "w": 3,
-        "x": 15,
+        "x": 12,
         "y": 1
       },
       "id": 6,
@@ -439,7 +439,7 @@
       "gridPos": {
         "h": 5,
         "w": 3,
-        "x": 18,
+        "x": 15,
         "y": 1
       },
       "id": 7,
@@ -559,6 +559,79 @@
         }
       ],
       "title": "unknown",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "description": "PR#11 新增的平台侧 kill_reason 合计:resume_failed/thaw_failed/seal_failed/upload_failed。平台故障,出现即需查。数据源 CH sandbox_events(TTL 7天)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 18,
+        "y": 1
+      },
+      "id": 35,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "database": "",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "queryType": "table",
+          "rawSql": "SELECT count() AS cnt FROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID') AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') IN ('resume_failed','thaw_failed','seal_failed','upload_failed')",
+          "refId": "A"
+        }
+      ],
+      "title": "其他平台故障 (resume/thaw/seal/upload)",
       "type": "stat"
     },
     {
@@ -813,7 +886,7 @@
             }
           },
           "queryType": "table",
-          "rawSql": "SELECT toString(toDate(timestamp)) AS day,\n  count() AS total,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'admin') AS admin,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'orphaned') AS orphaned,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'base_template_missing') AS base_template_missing,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'unknown') AS unknown\nFROM sandbox_events\nWHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill'))\n  AND timestamp >= now() - INTERVAL 7 DAY\n  AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') IN ('admin', 'orphaned', 'base_template_missing', 'unknown')\n  AND match(toString(sandbox_team_id), '$teamID')\nGROUP BY day ORDER BY day DESC",
+          "rawSql": "SELECT toString(toDate(timestamp)) AS day,\n  count() AS total,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'admin') AS admin,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'orphaned') AS orphaned,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'base_template_missing') AS base_template_missing,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'resume_failed') AS resume_failed,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'thaw_failed') AS thaw_failed,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'seal_failed') AS seal_failed,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'upload_failed') AS upload_failed,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'unknown') AS unknown\nFROM sandbox_events\nWHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill'))\n  AND timestamp >= now() - INTERVAL 7 DAY\n  AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') IN ('admin', 'orphaned', 'base_template_missing', 'resume_failed', 'thaw_failed', 'seal_failed', 'upload_failed', 'unknown')\n  AND match(toString(sandbox_team_id), '$teamID')\nGROUP BY day ORDER BY day DESC",
           "refId": "A"
         }
       ],
@@ -1293,7 +1366,7 @@
             }
           },
           "queryType": "table",
-          "rawSql": "SELECT toString(sandbox_team_id) AS team,\n  JSONExtractString(coalesce(event_data, '{}'),'kill_reason') AS reason,\n  count() AS cnt,\n  toString(min(timestamp)) AS first_seen,\n  toString(max(timestamp)) AS last_seen\nFROM sandbox_events\nWHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill'))\n  AND timestamp >= now() - INTERVAL 7 DAY\n  AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') IN ('admin', 'orphaned', 'base_template_missing', 'unknown')\n  AND match(toString(sandbox_team_id), '$teamID')\nGROUP BY team, reason ORDER BY cnt DESC LIMIT 15",
+          "rawSql": "SELECT toString(sandbox_team_id) AS team,\n  JSONExtractString(coalesce(event_data, '{}'),'kill_reason') AS reason,\n  count() AS cnt,\n  toString(min(timestamp)) AS first_seen,\n  toString(max(timestamp)) AS last_seen\nFROM sandbox_events\nWHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill'))\n  AND timestamp >= now() - INTERVAL 7 DAY\n  AND JSONExtractString(coalesce(event_data, '{}'),'kill_reason') IN ('admin', 'orphaned', 'base_template_missing', 'resume_failed', 'thaw_failed', 'seal_failed', 'upload_failed', 'unknown')\n  AND match(toString(sandbox_team_id), '$teamID')\nGROUP BY team, reason ORDER BY cnt DESC LIMIT 15",
           "refId": "A"
         }
       ],
@@ -2592,7 +2665,7 @@
             }
           },
           "queryType": "table",
-          "rawSql": "SELECT toString(sandbox_team_id) AS team,\n  count() AS total,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'request') AS request,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'timeout') AS timeout,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'admin') AS admin,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'orphaned') AS orphaned,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'base_template_missing') AS base_template_missing,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'unknown') AS unknown\nFROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID')\nGROUP BY team ORDER BY total DESC",
+          "rawSql": "SELECT toString(sandbox_team_id) AS team,\n  count() AS total,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'request') AS request,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'timeout') AS timeout,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'team_deleted') AS team_deleted,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'admin') AS admin,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'orphaned') AS orphaned,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'base_template_missing') AS base_template_missing,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'resume_failed') AS resume_failed,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'thaw_failed') AS thaw_failed,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'seal_failed') AS seal_failed,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'upload_failed') AS upload_failed,\n  countIf(JSONExtractString(coalesce(event_data, '{}'),'kill_reason') = 'unknown') AS unknown\nFROM sandbox_events WHERE (type = 'sandbox.lifecycle.killed' OR (event_category = 'lifecycle' AND event_label = 'kill')) AND timestamp >= $__fromTime AND timestamp <= $__toTime AND match(toString(sandbox_team_id), '$teamID')\nGROUP BY team ORDER BY total DESC",
           "refId": "A"
         }
       ],
@@ -2660,18 +2733,26 @@
         "type": "query"
       },
       {
-        "allValue": "'orphaned','admin','base_template_missing','unknown'",
+        "allValue": "'orphaned','admin','base_template_missing','resume_failed','thaw_failed','seal_failed','upload_failed','unknown'",
         "current": {
           "text": [
             "orphaned",
             "admin",
             "base_template_missing",
+            "resume_failed",
+            "thaw_failed",
+            "seal_failed",
+            "upload_failed",
             "unknown"
           ],
           "value": [
             "orphaned",
             "admin",
             "base_template_missing",
+            "resume_failed",
+            "thaw_failed",
+            "seal_failed",
+            "upload_failed",
             "unknown"
           ]
         },
@@ -2698,11 +2779,31 @@
           },
           {
             "selected": true,
+            "text": "resume_failed",
+            "value": "resume_failed"
+          },
+          {
+            "selected": true,
+            "text": "thaw_failed",
+            "value": "thaw_failed"
+          },
+          {
+            "selected": true,
+            "text": "seal_failed",
+            "value": "seal_failed"
+          },
+          {
+            "selected": true,
+            "text": "upload_failed",
+            "value": "upload_failed"
+          },
+          {
+            "selected": true,
             "text": "unknown",
             "value": "unknown"
           }
         ],
-        "query": "orphaned,admin,base_template_missing,unknown",
+        "query": "orphaned,admin,base_template_missing,resume_failed,thaw_failed,seal_failed,upload_failed,unknown",
         "type": "custom"
       }
     ]

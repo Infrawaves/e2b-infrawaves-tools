@@ -1,0 +1,2443 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "统计 POST /sandboxes/{id}/connect 路径。\n**201 = 自动恢复出新沙箱（算创建），200 = 连上已运行的沙箱（不算创建，已排除在尝试之外），5xx = 恢复失败，404 = 沙箱已不存在**。\n纯创建看『① 创建成功率』；沙箱起来后的运行期报错看『③ 运行期报错』",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 26,
+      "title": "概览（当前时间范围内合计）",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "201 + 4xx + 5xx。**不含 200** —— connect 返回 200 表示连上了已在运行的沙箱，没有创建行为，算进来会让成功率虚低",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "maxDataPoints": 500,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "direction": "backward",
+          "editorMode": "code",
+          "expr": "sum(count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=~`201|4..|5..` [$__range]))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "恢复尝试",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "status 201：从快照自动恢复出了新沙箱",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "id": 3,
+      "maxDataPoints": 500,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=`201` [$__range]))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "恢复成功（新沙箱）",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "主要是快照文件丢失（沙箱已被 kill）或节点放置失败",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "id": 4,
+      "maxDataPoints": 500,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=~`5..` [$__range]))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "恢复失败 (5xx)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "客户端持有的 sandbox ID 已失效。责任在调用方，应丢弃该 ID 不再重试",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "id": 5,
+      "maxDataPoints": 500,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=`404` [$__range]))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "沙箱不存在 (404)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "201 / (201+4xx+5xx)。上限锁在 100% —— 分子分母是两次独立扫描，窗口尾部摄入延迟会让低流量时算出 >100%",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 90
+              },
+              {
+                "color": "yellow",
+                "value": 98
+              },
+              {
+                "color": "green",
+                "value": 99.5
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 16,
+        "y": 1
+      },
+      "id": 6,
+      "maxDataPoints": 500,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "((sum(count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=`201` [$__range])) / sum(count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=~`201|4..|5..` [$__range])) * 100) <= 100) or (((sum(count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=`201` [$__range])) / sum(count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=~`201|4..|5..` [$__range])) * 100) > 100) * 0 + 100)",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "恢复成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "连上已在运行的沙箱，不算创建。单列出来做参照 —— 它通常远大于 201，是正常流量的主体",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "id": 7,
+      "maxDataPoints": 500,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=`200` [$__range]))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "重连已运行沙箱 (200)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 27,
+      "title": "按 team 的恢复成败",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "绿 = 恢复成功(201)，红 = 失败(5xx)，黄 = 沙箱不存在(4xx)。\n不含 200（重连已运行沙箱）",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "次数",
+            "axisPlacement": "auto",
+            "fillOpacity": 85,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "team_id\\outcome"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "01872fea-af86-4de1-9f38-ff439deef08d": {
+                        "index": 12,
+                        "text": "Liutongtong's Project · 01872fea"
+                      },
+                      "0ae5f9f7-d6ac-4fde-9279-92943a0b5a86": {
+                        "index": 14,
+                        "text": "Shaozhou's Project · 0ae5f9f7"
+                      },
+                      "0db5fb8e-920d-4564-a712-30a345863244": {
+                        "index": 4,
+                        "text": "e2b-infra · 0db5fb8e"
+                      },
+                      "0f44e8fc-859c-4f6a-b7e4-3068de12123e": {
+                        "index": 13,
+                        "text": "张硕's Project · 0f44e8fc"
+                      },
+                      "2a8e0507-cbc5-4445-95dc-314347c607f4": {
+                        "index": 11,
+                        "text": "Hanszhuang's Project · 2a8e0507"
+                      },
+                      "3bf425ff-584d-4f11-abda-483a918b5897": {
+                        "index": 1,
+                        "text": "Zhangqi's Project · 3bf425ff"
+                      },
+                      "4b893304-e299-4243-bea4-392feee74b7c": {
+                        "index": 10,
+                        "text": "张国强's Project · 4b893304"
+                      },
+                      "4e8177c9-134c-4311-b917-418314e587af": {
+                        "index": 7,
+                        "text": "郭品学's Project · 4e8177c9"
+                      },
+                      "6d4eb009-5540-4951-830a-b0e10d06ed65": {
+                        "index": 8,
+                        "text": "何阳极's Project · 6d4eb009"
+                      },
+                      "9bfcc2c7-0a17-486c-a79c-4b323eee7162": {
+                        "index": 5,
+                        "text": "锁祎然's Project · 9bfcc2c7"
+                      },
+                      "b2b5b25c-5b4a-4466-8b68-779004eabba7": {
+                        "index": 2,
+                        "text": "Zhengmiao's Project · b2b5b25c"
+                      },
+                      "c8c30b05-7068-41e6-ab31-15daeb2b94f1": {
+                        "index": 9,
+                        "text": "高杨帆's Project · c8c30b05"
+                      },
+                      "e5c4b9f2-88d7-4bae-bde0-1480d82e9988": {
+                        "index": 0,
+                        "text": "Zhoumaosen's Project · e5c4b9f2"
+                      },
+                      "f6eb883d-263d-4b71-831e-58ae7fd13878": {
+                        "index": 6,
+                        "text": "张朝运's Default Team · f6eb883d"
+                      },
+                      "fcd649c5-0175-4d1e-98a5-1c218009dee4": {
+                        "index": 3,
+                        "text": "e2b-rl · fcd649c5"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "displayName",
+                "value": "team"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "恢复成功"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "失败5xx"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "沙箱不存在4xx"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 14,
+        "x": 0,
+        "y": 7
+      },
+      "id": 9,
+      "maxDataPoints": 500,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "normal",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "xField": "team_id\\outcome",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (team_name, outcome) (label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(sum by (team_id, status) (count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=~`201|4..|5..` [$__range])), \"outcome\", \"恢复成功\", \"status\", \"201\"), \"outcome\", \"失败5xx\", \"status\", \"5..\"), \"outcome\", \"沙箱不存在4xx\", \"status\", \"4..\"), \"team_name\", \"默默's Default Team ┃ bf0cabd4-1d63-4c92-8018-56466250fc34\", \"team_id\", \"bf0cabd4-1d63-4c92-8018-56466250fc34\"), \"team_name\", \"魏存琦's Project ┃ 4f0c2666-2773-42f9-ae24-12863e48dbce\", \"team_id\", \"4f0c2666-2773-42f9-ae24-12863e48dbce\"), \"team_name\", \"高杨帆's Project ┃ c8c30b05-7068-41e6-ab31-15daeb2b94f1\", \"team_id\", \"c8c30b05-7068-41e6-ab31-15daeb2b94f1\"), \"team_name\", \"雷可鹏's Project ┃ f03fb965-cfcc-4d58-94e4-9f062b09da53\", \"team_id\", \"f03fb965-cfcc-4d58-94e4-9f062b09da53\"), \"team_name\", \"锁祎然's Project ┃ 9bfcc2c7-0a17-486c-a79c-4b323eee7162\", \"team_id\", \"9bfcc2c7-0a17-486c-a79c-4b323eee7162\"), \"team_name\", \"郭品学's Project ┃ 4e8177c9-134c-4311-b917-418314e587af\", \"team_id\", \"4e8177c9-134c-4311-b917-418314e587af\"), \"team_name\", \"郑锐's Project ┃ fe6493c4-af87-4f44-bf02-2acb426f1b81\", \"team_id\", \"fe6493c4-af87-4f44-bf02-2acb426f1b81\"), \"team_name\", \"郑淼's Project ┃ 6f4f24b1-dba2-4cea-9daa-90a2cb06d21b\", \"team_id\", \"6f4f24b1-dba2-4cea-9daa-90a2cb06d21b\"), \"team_name\", \"谢天赐's Project ┃ a56704da-010b-48da-ab8e-d2aaaf8545e3\", \"team_id\", \"a56704da-010b-48da-ab8e-d2aaaf8545e3\"), \"team_name\", \"蔡子坤's Project ┃ c383705d-81fa-4f85-8a19-dd81ef49f3eb\", \"team_id\", \"c383705d-81fa-4f85-8a19-dd81ef49f3eb\"), \"team_name\", \"符炫炜's Project ┃ 0ad0730c-2860-4f30-948c-acd9c4f42d29\", \"team_id\", \"0ad0730c-2860-4f30-948c-acd9c4f42d29\"), \"team_name\", \"沈蔚's Project ┃ 892c82ba-e2e0-4cf1-9496-44eac15a714f\", \"team_id\", \"892c82ba-e2e0-4cf1-9496-44eac15a714f\"), \"team_name\", \"李慧's Project ┃ 258d442e-2159-48c9-9ac9-f3e1a0c1c452\", \"team_id\", \"258d442e-2159-48c9-9ac9-f3e1a0c1c452\"), \"team_name\", \"李以时's Project ┃ 7fcbdf30-b95b-4d65-acef-b81b328bc5a5\", \"team_id\", \"7fcbdf30-b95b-4d65-acef-b81b328bc5a5\"), \"team_name\", \"曹倚飞's Project ┃ f0037e31-bd7a-4ad6-b16a-94c2790332da\", \"team_id\", \"f0037e31-bd7a-4ad6-b16a-94c2790332da\"), \"team_name\", \"张硕's Project ┃ 0f44e8fc-859c-4f6a-b7e4-3068de12123e\", \"team_id\", \"0f44e8fc-859c-4f6a-b7e4-3068de12123e\"), \"team_name\", \"张朝运's Default Team ┃ f6eb883d-263d-4b71-831e-58ae7fd13878\", \"team_id\", \"f6eb883d-263d-4b71-831e-58ae7fd13878\"), \"team_name\", \"张国强's Project ┃ 4b893304-e299-4243-bea4-392feee74b7c\", \"team_id\", \"4b893304-e299-4243-bea4-392feee74b7c\"), \"team_name\", \"刘官明's Project ┃ 31738770-b0cd-480c-8ac5-9a5bf43d100b\", \"team_id\", \"31738770-b0cd-480c-8ac5-9a5bf43d100b\"), \"team_name\", \"何阳极's Project ┃ 6d4eb009-5540-4951-830a-b0e10d06ed65\", \"team_id\", \"6d4eb009-5540-4951-830a-b0e10d06ed65\"), \"team_name\", \"Zhoumaosen's Project ┃ e5c4b9f2-88d7-4bae-bde0-1480d82e9988\", \"team_id\", \"e5c4b9f2-88d7-4bae-bde0-1480d82e9988\"), \"team_name\", \"Zhengmiao's Project ┃ b2b5b25c-5b4a-4466-8b68-779004eabba7\", \"team_id\", \"b2b5b25c-5b4a-4466-8b68-779004eabba7\"), \"team_name\", \"zhaojiarong@qijizhifeng.com ┃ af8fc097-6343-4b33-b7bb-1c197789eabd\", \"team_id\", \"af8fc097-6343-4b33-b7bb-1c197789eabd\"), \"team_name\", \"Zhangqi's Project ┃ 3bf425ff-584d-4f11-abda-483a918b5897\", \"team_id\", \"3bf425ff-584d-4f11-abda-483a918b5897\"), \"team_name\", \"zhangping@infrawaves.com ┃ bb20491c-f757-4043-846b-838b7f30a8d1\", \"team_id\", \"bb20491c-f757-4043-846b-838b7f30a8d1\"), \"team_name\", \"Vision ┃ 899fdcc3-4702-4a27-be10-9270eaf4b1cd\", \"team_id\", \"899fdcc3-4702-4a27-be10-9270eaf4b1cd\"), \"team_name\", \"Tianyuhuai's Project ┃ fea203de-19f9-4fa4-b5c8-3f7e6b5c2606\", \"team_id\", \"fea203de-19f9-4fa4-b5c8-3f7e6b5c2606\"), \"team_name\", \"test ┃ 9b6bc955-415e-43c4-800a-d406f7c38864\", \"team_id\", \"9b6bc955-415e-43c4-800a-d406f7c38864\"), \"team_name\", \"system1 ┃ 955127a8-51ec-41ef-ba1a-232a3b3e201b\", \"team_id\", \"955127a8-51ec-41ef-ba1a-232a3b3e201b\"), \"team_name\", \"system@localhost ┃ 32758328-00b9-4f5b-b66d-8ea5ebd02d5c\", \"team_id\", \"32758328-00b9-4f5b-b66d-8ea5ebd02d5c\"), \"team_name\", \"system@e2b.dev ┃ b1940e54-3dbb-44cd-bf26-569382921299\", \"team_id\", \"b1940e54-3dbb-44cd-bf26-569382921299\"), \"team_name\", \"Sunpeng's Default Team ┃ f7e95758-34fe-44a2-bad9-6097a14ad656\", \"team_id\", \"f7e95758-34fe-44a2-bad9-6097a14ad656\"), \"team_name\", \"Shaozhou's Project ┃ 0ae5f9f7-d6ac-4fde-9279-92943a0b5a86\", \"team_id\", \"0ae5f9f7-d6ac-4fde-9279-92943a0b5a86\"), \"team_name\", \"Service's Project ┃ cdc01774-0863-42dd-8475-22aefbe90997\", \"team_id\", \"cdc01774-0863-42dd-8475-22aefbe90997\"), \"team_name\", \"Ruizheng's Default Team ┃ fb4e1d45-5ed4-474d-8144-68d4f5bc7871\", \"team_id\", \"fb4e1d45-5ed4-474d-8144-68d4f5bc7871\"), \"team_name\", \"RL ┃ f081810f-4c2c-4b86-94b9-e69ebed18106\", \"team_id\", \"f081810f-4c2c-4b86-94b9-e69ebed18106\"), \"team_name\", \"pingzhang8-c@my.cityu.edu.hk ┃ 6417ba56-ea10-4fce-aa2e-54d353d907ab\", \"team_id\", \"6417ba56-ea10-4fce-aa2e-54d353d907ab\"), \"team_name\", \"Ning's Project ┃ 004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7\", \"team_id\", \"004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7\"), \"team_name\", \"Liutongtong's Project ┃ 01872fea-af86-4de1-9f38-ff439deef08d\", \"team_id\", \"01872fea-af86-4de1-9f38-ff439deef08d\"), \"team_name\", \"Linlizhi's Project ┃ c22d1774-82e6-4e16-8f24-9b0536744b18\", \"team_id\", \"c22d1774-82e6-4e16-8f24-9b0536744b18\"), \"team_name\", \"Infrawave_测试1's Project ┃ 78c62422-584c-47b6-88c3-318266c033d2\", \"team_id\", \"78c62422-584c-47b6-88c3-318266c033d2\"), \"team_name\", \"Infrawave_test3's Project ┃ e15b5877-779e-4359-9564-336c8cabe966\", \"team_id\", \"e15b5877-779e-4359-9564-336c8cabe966\"), \"team_name\", \"Infrawave_test2's Default Team ┃ 19ca40b0-aafb-416e-8ffa-b33f9eb940a9\", \"team_id\", \"19ca40b0-aafb-416e-8ffa-b33f9eb940a9\"), \"team_name\", \"Infrawave_test1's Default Team ┃ 3c17296b-964e-40a8-a2b4-ae73efcc3010\", \"team_id\", \"3c17296b-964e-40a8-a2b4-ae73efcc3010\"), \"team_name\", \"Infra Team ┃ 77a2927b-7d67-484c-8962-2d447b8179af\", \"team_id\", \"77a2927b-7d67-484c-8962-2d447b8179af\"), \"team_name\", \"Hanszhuang's Default Team ┃ 2a8e0507-cbc5-4445-95dc-314347c607f4\", \"team_id\", \"2a8e0507-cbc5-4445-95dc-314347c607f4\"), \"team_name\", \"Guopinxue's Project ┃ 9ad5ed4c-445b-4a9e-b856-d18232fa1fc6\", \"team_id\", \"9ad5ed4c-445b-4a9e-b856-d18232fa1fc6\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com ┃ fcae3a36-0d3f-40df-aad0-3c97b33624a5\", \"team_id\", \"fcae3a36-0d3f-40df-aad0-3c97b33624a5\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com ┃ a2bf5f96-7335-4b47-b894-39641aad6ed5\", \"team_id\", \"a2bf5f96-7335-4b47-b894-39641aad6ed5\"), \"team_name\", \"e2b-rl@china-qijizhifeng.com ┃ fcd649c5-0175-4d1e-98a5-1c218009dee4\", \"team_id\", \"fcd649c5-0175-4d1e-98a5-1c218009dee4\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com ┃ 6e7a55f9-5db0-4938-877b-c44d86eb25ab\", \"team_id\", \"6e7a55f9-5db0-4938-877b-c44d86eb25ab\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com ┃ 072e7581-1510-46cc-a875-c8f493f83179\", \"team_id\", \"072e7581-1510-46cc-a875-c8f493f83179\"), \"team_name\", \"e2b-nex2@china-qijizhifeng.com ┃ 560cc0a7-b536-419e-a038-8338148be13d\", \"team_id\", \"560cc0a7-b536-419e-a038-8338148be13d\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com ┃ 65380065-c5bd-4d9f-b81c-1ce0866db931\", \"team_id\", \"65380065-c5bd-4d9f-b81c-1ce0866db931\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com ┃ b9bbe0bc-8826-494b-84ca-6c3a5ff46bec\", \"team_id\", \"b9bbe0bc-8826-494b-84ca-6c3a5ff46bec\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com ┃ 6eb3900a-1fe8-4743-bdf7-12172b9771fc\", \"team_id\", \"6eb3900a-1fe8-4743-bdf7-12172b9771fc\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com ┃ f9a89b02-0f1f-402d-9994-bc13ac9122ab\", \"team_id\", \"f9a89b02-0f1f-402d-9994-bc13ac9122ab\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com ┃ 0db5fb8e-920d-4564-a712-30a345863244\", \"team_id\", \"0db5fb8e-920d-4564-a712-30a345863244\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com ┃ 5a6930b7-6ba8-49c5-b8cf-4126474cdbd3\", \"team_id\", \"5a6930b7-6ba8-49c5-b8cf-4126474cdbd3\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com ┃ cf6c9163-60c9-4c5d-aa08-525b08ab5aaa\", \"team_id\", \"cf6c9163-60c9-4c5d-aa08-525b08ab5aaa\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com ┃ 9db7bc25-1324-4330-85c4-f43dcde6d66d\", \"team_id\", \"9db7bc25-1324-4330-85c4-f43dcde6d66d\"), \"team_name\", \"Chenjun's Project ┃ 4793fa63-b11e-4567-a1f0-bd5e0f93b551\", \"team_id\", \"4793fa63-b11e-4567-a1f0-bd5e0f93b551\"), \"team_name\", \"972963285@qq.com ┃ 47eee04d-4660-480c-97e8-64c39934cf47\", \"team_id\", \"47eee04d-4660-480c-97e8-64c39934cf47\"), \"team_name\", \"972963285@qq.com ┃ 467334dc-5de9-4ac9-a04b-d703c148f3a5\", \"team_id\", \"467334dc-5de9-4ac9-a04b-d703c148f3a5\"), \"team_name\", \"9 ┃ c5ac79f6-6155-47ac-9623-456cfb843878\", \"team_id\", \"c5ac79f6-6155-47ac-9623-456cfb843878\"), \"team_name\", \"8 ┃ ab785508-ba6c-4fdb-854a-2b39a2144354\", \"team_id\", \"ab785508-ba6c-4fdb-854a-2b39a2144354\"), \"team_name\", \"7 ┃ 12f3e83f-3979-4a59-b388-1effc55fa8f4\", \"team_id\", \"12f3e83f-3979-4a59-b388-1effc55fa8f4\"), \"team_name\", \"6 ┃ af487b23-9dba-4797-9627-c5b1b9ff3a42\", \"team_id\", \"af487b23-9dba-4797-9627-c5b1b9ff3a42\"), \"team_name\", \"5 ┃ 1e9c4b44-fe65-4392-9de0-84542f3998cb\", \"team_id\", \"1e9c4b44-fe65-4392-9de0-84542f3998cb\"), \"team_name\", \"4 ┃ 8d3b4cd8-df63-4c1a-b82b-d0139563e12e\", \"team_id\", \"8d3b4cd8-df63-4c1a-b82b-d0139563e12e\"), \"team_name\", \"4 ┃ c99dee1b-a997-453d-85dd-be94aef8fbed\", \"team_id\", \"c99dee1b-a997-453d-85dd-be94aef8fbed\"), \"team_name\", \"3 ┃ ac3eeb52-7268-45e3-a373-0e195e12a294\", \"team_id\", \"ac3eeb52-7268-45e3-a373-0e195e12a294\"), \"team_name\", \"3 ┃ 3cbcdfb8-84e8-422e-9b87-21e7a50b6865\", \"team_id\", \"3cbcdfb8-84e8-422e-9b87-21e7a50b6865\"), \"team_name\", \"3 ┃ 085a9d00-4918-42e6-a596-dbeadf54ec4d\", \"team_id\", \"085a9d00-4918-42e6-a596-dbeadf54ec4d\"), \"team_name\", \"3 ┃ a726f5e6-4237-4bb2-8ab0-13eac8180425\", \"team_id\", \"a726f5e6-4237-4bb2-8ab0-13eac8180425\"), \"team_name\", \"22 ┃ 1e9c1e93-ad47-49ac-adb7-47a0606718cf\", \"team_id\", \"1e9c1e93-ad47-49ac-adb7-47a0606718cf\"), \"team_name\", \"2 ┃ 77b9f6a9-1672-4483-beb0-2f5b11b26801\", \"team_id\", \"77b9f6a9-1672-4483-beb0-2f5b11b26801\"), \"team_name\", \"2 ┃ 07fe4160-c034-4331-94a1-9075257c62ab\", \"team_id\", \"07fe4160-c034-4331-94a1-9075257c62ab\"), \"team_name\", \"2 ┃ 3ae3b6d7-f308-4b08-89a3-a6f412715806\", \"team_id\", \"3ae3b6d7-f308-4b08-89a3-a6f412715806\"), \"team_name\", \"11 ┃ 2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334\", \"team_id\", \"2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334\"), \"team_name\", \"1 ┃ a7124f1b-476a-45fb-a6c3-68d161fdc911\", \"team_id\", \"a7124f1b-476a-45fb-a6c3-68d161fdc911\"), \"team_name\", \"1 ┃ 9989897b-2fd9-45dd-a473-a6512a8cd96d\", \"team_id\", \"9989897b-2fd9-45dd-a473-a6512a8cd96d\"), \"team_name\", \"1 ┃ 0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf\", \"team_id\", \"0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf\"), \"team_name\", \"(未知team)\", \"team_name\", \"^$\"))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "各 team 恢复成败（堆叠）",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "keepLabels": [
+              "team_id",
+              "outcome"
+            ],
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "outcome",
+            "emptyValue": "zero",
+            "rowField": "team_id",
+            "valueField": "Value #A"
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "按失败数降序。\n**成功率 = 恢复成功 / (恢复成功+失败5xx+沙箱不存在4xx)，在浏览器端从左边三列算出**，所以和那三列必然算术一致，也不可能超过 100%。\n不含 200（重连已在运行的沙箱，没有创建行为）",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "team"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "01872fea-af86-4de1-9f38-ff439deef08d": {
+                        "index": 12,
+                        "text": "Liutongtong's Project · 01872fea"
+                      },
+                      "0ae5f9f7-d6ac-4fde-9279-92943a0b5a86": {
+                        "index": 14,
+                        "text": "Shaozhou's Project · 0ae5f9f7"
+                      },
+                      "0db5fb8e-920d-4564-a712-30a345863244": {
+                        "index": 4,
+                        "text": "e2b-infra · 0db5fb8e"
+                      },
+                      "0f44e8fc-859c-4f6a-b7e4-3068de12123e": {
+                        "index": 13,
+                        "text": "张硕's Project · 0f44e8fc"
+                      },
+                      "2a8e0507-cbc5-4445-95dc-314347c607f4": {
+                        "index": 11,
+                        "text": "Hanszhuang's Project · 2a8e0507"
+                      },
+                      "3bf425ff-584d-4f11-abda-483a918b5897": {
+                        "index": 1,
+                        "text": "Zhangqi's Project · 3bf425ff"
+                      },
+                      "4b893304-e299-4243-bea4-392feee74b7c": {
+                        "index": 10,
+                        "text": "张国强's Project · 4b893304"
+                      },
+                      "4e8177c9-134c-4311-b917-418314e587af": {
+                        "index": 7,
+                        "text": "郭品学's Project · 4e8177c9"
+                      },
+                      "6d4eb009-5540-4951-830a-b0e10d06ed65": {
+                        "index": 8,
+                        "text": "何阳极's Project · 6d4eb009"
+                      },
+                      "9bfcc2c7-0a17-486c-a79c-4b323eee7162": {
+                        "index": 5,
+                        "text": "锁祎然's Project · 9bfcc2c7"
+                      },
+                      "b2b5b25c-5b4a-4466-8b68-779004eabba7": {
+                        "index": 2,
+                        "text": "Zhengmiao's Project · b2b5b25c"
+                      },
+                      "c8c30b05-7068-41e6-ab31-15daeb2b94f1": {
+                        "index": 9,
+                        "text": "高杨帆's Project · c8c30b05"
+                      },
+                      "e5c4b9f2-88d7-4bae-bde0-1480d82e9988": {
+                        "index": 0,
+                        "text": "Zhoumaosen's Project · e5c4b9f2"
+                      },
+                      "f6eb883d-263d-4b71-831e-58ae7fd13878": {
+                        "index": 6,
+                        "text": "张朝运's Default Team · f6eb883d"
+                      },
+                      "fcd649c5-0175-4d1e-98a5-1c218009dee4": {
+                        "index": 3,
+                        "text": "e2b-rl · fcd649c5"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 230
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "恢复成功"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "失败5xx"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "沙箱不存在4xx"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": 0
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "成功率"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "basic",
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 1
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": 0
+                    },
+                    {
+                      "color": "orange",
+                      "value": 0.9
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 0.98
+                    },
+                    {
+                      "color": "green",
+                      "value": 0.995
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "include",
+                "names": [
+                  "恢复成功",
+                  "失败5xx",
+                  "沙箱不存在4xx"
+                ]
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.footer.reducers",
+                "value": [
+                  "sum"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 10,
+        "x": 14,
+        "y": 7
+      },
+      "id": 10,
+      "maxDataPoints": 500,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (team_name, outcome) (label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(sum by (team_id, status) (count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=~`201|4..|5..` [$__range])), \"outcome\", \"恢复成功\", \"status\", \"201\"), \"outcome\", \"失败5xx\", \"status\", \"5..\"), \"outcome\", \"沙箱不存在4xx\", \"status\", \"4..\"), \"team_name\", \"默默's Default Team ┃ bf0cabd4-1d63-4c92-8018-56466250fc34\", \"team_id\", \"bf0cabd4-1d63-4c92-8018-56466250fc34\"), \"team_name\", \"魏存琦's Project ┃ 4f0c2666-2773-42f9-ae24-12863e48dbce\", \"team_id\", \"4f0c2666-2773-42f9-ae24-12863e48dbce\"), \"team_name\", \"高杨帆's Project ┃ c8c30b05-7068-41e6-ab31-15daeb2b94f1\", \"team_id\", \"c8c30b05-7068-41e6-ab31-15daeb2b94f1\"), \"team_name\", \"雷可鹏's Project ┃ f03fb965-cfcc-4d58-94e4-9f062b09da53\", \"team_id\", \"f03fb965-cfcc-4d58-94e4-9f062b09da53\"), \"team_name\", \"锁祎然's Project ┃ 9bfcc2c7-0a17-486c-a79c-4b323eee7162\", \"team_id\", \"9bfcc2c7-0a17-486c-a79c-4b323eee7162\"), \"team_name\", \"郭品学's Project ┃ 4e8177c9-134c-4311-b917-418314e587af\", \"team_id\", \"4e8177c9-134c-4311-b917-418314e587af\"), \"team_name\", \"郑锐's Project ┃ fe6493c4-af87-4f44-bf02-2acb426f1b81\", \"team_id\", \"fe6493c4-af87-4f44-bf02-2acb426f1b81\"), \"team_name\", \"郑淼's Project ┃ 6f4f24b1-dba2-4cea-9daa-90a2cb06d21b\", \"team_id\", \"6f4f24b1-dba2-4cea-9daa-90a2cb06d21b\"), \"team_name\", \"谢天赐's Project ┃ a56704da-010b-48da-ab8e-d2aaaf8545e3\", \"team_id\", \"a56704da-010b-48da-ab8e-d2aaaf8545e3\"), \"team_name\", \"蔡子坤's Project ┃ c383705d-81fa-4f85-8a19-dd81ef49f3eb\", \"team_id\", \"c383705d-81fa-4f85-8a19-dd81ef49f3eb\"), \"team_name\", \"符炫炜's Project ┃ 0ad0730c-2860-4f30-948c-acd9c4f42d29\", \"team_id\", \"0ad0730c-2860-4f30-948c-acd9c4f42d29\"), \"team_name\", \"沈蔚's Project ┃ 892c82ba-e2e0-4cf1-9496-44eac15a714f\", \"team_id\", \"892c82ba-e2e0-4cf1-9496-44eac15a714f\"), \"team_name\", \"李慧's Project ┃ 258d442e-2159-48c9-9ac9-f3e1a0c1c452\", \"team_id\", \"258d442e-2159-48c9-9ac9-f3e1a0c1c452\"), \"team_name\", \"李以时's Project ┃ 7fcbdf30-b95b-4d65-acef-b81b328bc5a5\", \"team_id\", \"7fcbdf30-b95b-4d65-acef-b81b328bc5a5\"), \"team_name\", \"曹倚飞's Project ┃ f0037e31-bd7a-4ad6-b16a-94c2790332da\", \"team_id\", \"f0037e31-bd7a-4ad6-b16a-94c2790332da\"), \"team_name\", \"张硕's Project ┃ 0f44e8fc-859c-4f6a-b7e4-3068de12123e\", \"team_id\", \"0f44e8fc-859c-4f6a-b7e4-3068de12123e\"), \"team_name\", \"张朝运's Default Team ┃ f6eb883d-263d-4b71-831e-58ae7fd13878\", \"team_id\", \"f6eb883d-263d-4b71-831e-58ae7fd13878\"), \"team_name\", \"张国强's Project ┃ 4b893304-e299-4243-bea4-392feee74b7c\", \"team_id\", \"4b893304-e299-4243-bea4-392feee74b7c\"), \"team_name\", \"刘官明's Project ┃ 31738770-b0cd-480c-8ac5-9a5bf43d100b\", \"team_id\", \"31738770-b0cd-480c-8ac5-9a5bf43d100b\"), \"team_name\", \"何阳极's Project ┃ 6d4eb009-5540-4951-830a-b0e10d06ed65\", \"team_id\", \"6d4eb009-5540-4951-830a-b0e10d06ed65\"), \"team_name\", \"Zhoumaosen's Project ┃ e5c4b9f2-88d7-4bae-bde0-1480d82e9988\", \"team_id\", \"e5c4b9f2-88d7-4bae-bde0-1480d82e9988\"), \"team_name\", \"Zhengmiao's Project ┃ b2b5b25c-5b4a-4466-8b68-779004eabba7\", \"team_id\", \"b2b5b25c-5b4a-4466-8b68-779004eabba7\"), \"team_name\", \"zhaojiarong@qijizhifeng.com ┃ af8fc097-6343-4b33-b7bb-1c197789eabd\", \"team_id\", \"af8fc097-6343-4b33-b7bb-1c197789eabd\"), \"team_name\", \"Zhangqi's Project ┃ 3bf425ff-584d-4f11-abda-483a918b5897\", \"team_id\", \"3bf425ff-584d-4f11-abda-483a918b5897\"), \"team_name\", \"zhangping@infrawaves.com ┃ bb20491c-f757-4043-846b-838b7f30a8d1\", \"team_id\", \"bb20491c-f757-4043-846b-838b7f30a8d1\"), \"team_name\", \"Vision ┃ 899fdcc3-4702-4a27-be10-9270eaf4b1cd\", \"team_id\", \"899fdcc3-4702-4a27-be10-9270eaf4b1cd\"), \"team_name\", \"Tianyuhuai's Project ┃ fea203de-19f9-4fa4-b5c8-3f7e6b5c2606\", \"team_id\", \"fea203de-19f9-4fa4-b5c8-3f7e6b5c2606\"), \"team_name\", \"test ┃ 9b6bc955-415e-43c4-800a-d406f7c38864\", \"team_id\", \"9b6bc955-415e-43c4-800a-d406f7c38864\"), \"team_name\", \"system1 ┃ 955127a8-51ec-41ef-ba1a-232a3b3e201b\", \"team_id\", \"955127a8-51ec-41ef-ba1a-232a3b3e201b\"), \"team_name\", \"system@localhost ┃ 32758328-00b9-4f5b-b66d-8ea5ebd02d5c\", \"team_id\", \"32758328-00b9-4f5b-b66d-8ea5ebd02d5c\"), \"team_name\", \"system@e2b.dev ┃ b1940e54-3dbb-44cd-bf26-569382921299\", \"team_id\", \"b1940e54-3dbb-44cd-bf26-569382921299\"), \"team_name\", \"Sunpeng's Default Team ┃ f7e95758-34fe-44a2-bad9-6097a14ad656\", \"team_id\", \"f7e95758-34fe-44a2-bad9-6097a14ad656\"), \"team_name\", \"Shaozhou's Project ┃ 0ae5f9f7-d6ac-4fde-9279-92943a0b5a86\", \"team_id\", \"0ae5f9f7-d6ac-4fde-9279-92943a0b5a86\"), \"team_name\", \"Service's Project ┃ cdc01774-0863-42dd-8475-22aefbe90997\", \"team_id\", \"cdc01774-0863-42dd-8475-22aefbe90997\"), \"team_name\", \"Ruizheng's Default Team ┃ fb4e1d45-5ed4-474d-8144-68d4f5bc7871\", \"team_id\", \"fb4e1d45-5ed4-474d-8144-68d4f5bc7871\"), \"team_name\", \"RL ┃ f081810f-4c2c-4b86-94b9-e69ebed18106\", \"team_id\", \"f081810f-4c2c-4b86-94b9-e69ebed18106\"), \"team_name\", \"pingzhang8-c@my.cityu.edu.hk ┃ 6417ba56-ea10-4fce-aa2e-54d353d907ab\", \"team_id\", \"6417ba56-ea10-4fce-aa2e-54d353d907ab\"), \"team_name\", \"Ning's Project ┃ 004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7\", \"team_id\", \"004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7\"), \"team_name\", \"Liutongtong's Project ┃ 01872fea-af86-4de1-9f38-ff439deef08d\", \"team_id\", \"01872fea-af86-4de1-9f38-ff439deef08d\"), \"team_name\", \"Linlizhi's Project ┃ c22d1774-82e6-4e16-8f24-9b0536744b18\", \"team_id\", \"c22d1774-82e6-4e16-8f24-9b0536744b18\"), \"team_name\", \"Infrawave_测试1's Project ┃ 78c62422-584c-47b6-88c3-318266c033d2\", \"team_id\", \"78c62422-584c-47b6-88c3-318266c033d2\"), \"team_name\", \"Infrawave_test3's Project ┃ e15b5877-779e-4359-9564-336c8cabe966\", \"team_id\", \"e15b5877-779e-4359-9564-336c8cabe966\"), \"team_name\", \"Infrawave_test2's Default Team ┃ 19ca40b0-aafb-416e-8ffa-b33f9eb940a9\", \"team_id\", \"19ca40b0-aafb-416e-8ffa-b33f9eb940a9\"), \"team_name\", \"Infrawave_test1's Default Team ┃ 3c17296b-964e-40a8-a2b4-ae73efcc3010\", \"team_id\", \"3c17296b-964e-40a8-a2b4-ae73efcc3010\"), \"team_name\", \"Infra Team ┃ 77a2927b-7d67-484c-8962-2d447b8179af\", \"team_id\", \"77a2927b-7d67-484c-8962-2d447b8179af\"), \"team_name\", \"Hanszhuang's Default Team ┃ 2a8e0507-cbc5-4445-95dc-314347c607f4\", \"team_id\", \"2a8e0507-cbc5-4445-95dc-314347c607f4\"), \"team_name\", \"Guopinxue's Project ┃ 9ad5ed4c-445b-4a9e-b856-d18232fa1fc6\", \"team_id\", \"9ad5ed4c-445b-4a9e-b856-d18232fa1fc6\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com ┃ fcae3a36-0d3f-40df-aad0-3c97b33624a5\", \"team_id\", \"fcae3a36-0d3f-40df-aad0-3c97b33624a5\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com ┃ a2bf5f96-7335-4b47-b894-39641aad6ed5\", \"team_id\", \"a2bf5f96-7335-4b47-b894-39641aad6ed5\"), \"team_name\", \"e2b-rl@china-qijizhifeng.com ┃ fcd649c5-0175-4d1e-98a5-1c218009dee4\", \"team_id\", \"fcd649c5-0175-4d1e-98a5-1c218009dee4\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com ┃ 6e7a55f9-5db0-4938-877b-c44d86eb25ab\", \"team_id\", \"6e7a55f9-5db0-4938-877b-c44d86eb25ab\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com ┃ 072e7581-1510-46cc-a875-c8f493f83179\", \"team_id\", \"072e7581-1510-46cc-a875-c8f493f83179\"), \"team_name\", \"e2b-nex2@china-qijizhifeng.com ┃ 560cc0a7-b536-419e-a038-8338148be13d\", \"team_id\", \"560cc0a7-b536-419e-a038-8338148be13d\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com ┃ 65380065-c5bd-4d9f-b81c-1ce0866db931\", \"team_id\", \"65380065-c5bd-4d9f-b81c-1ce0866db931\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com ┃ b9bbe0bc-8826-494b-84ca-6c3a5ff46bec\", \"team_id\", \"b9bbe0bc-8826-494b-84ca-6c3a5ff46bec\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com ┃ 6eb3900a-1fe8-4743-bdf7-12172b9771fc\", \"team_id\", \"6eb3900a-1fe8-4743-bdf7-12172b9771fc\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com ┃ f9a89b02-0f1f-402d-9994-bc13ac9122ab\", \"team_id\", \"f9a89b02-0f1f-402d-9994-bc13ac9122ab\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com ┃ 0db5fb8e-920d-4564-a712-30a345863244\", \"team_id\", \"0db5fb8e-920d-4564-a712-30a345863244\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com ┃ 5a6930b7-6ba8-49c5-b8cf-4126474cdbd3\", \"team_id\", \"5a6930b7-6ba8-49c5-b8cf-4126474cdbd3\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com ┃ cf6c9163-60c9-4c5d-aa08-525b08ab5aaa\", \"team_id\", \"cf6c9163-60c9-4c5d-aa08-525b08ab5aaa\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com ┃ 9db7bc25-1324-4330-85c4-f43dcde6d66d\", \"team_id\", \"9db7bc25-1324-4330-85c4-f43dcde6d66d\"), \"team_name\", \"Chenjun's Project ┃ 4793fa63-b11e-4567-a1f0-bd5e0f93b551\", \"team_id\", \"4793fa63-b11e-4567-a1f0-bd5e0f93b551\"), \"team_name\", \"972963285@qq.com ┃ 47eee04d-4660-480c-97e8-64c39934cf47\", \"team_id\", \"47eee04d-4660-480c-97e8-64c39934cf47\"), \"team_name\", \"972963285@qq.com ┃ 467334dc-5de9-4ac9-a04b-d703c148f3a5\", \"team_id\", \"467334dc-5de9-4ac9-a04b-d703c148f3a5\"), \"team_name\", \"9 ┃ c5ac79f6-6155-47ac-9623-456cfb843878\", \"team_id\", \"c5ac79f6-6155-47ac-9623-456cfb843878\"), \"team_name\", \"8 ┃ ab785508-ba6c-4fdb-854a-2b39a2144354\", \"team_id\", \"ab785508-ba6c-4fdb-854a-2b39a2144354\"), \"team_name\", \"7 ┃ 12f3e83f-3979-4a59-b388-1effc55fa8f4\", \"team_id\", \"12f3e83f-3979-4a59-b388-1effc55fa8f4\"), \"team_name\", \"6 ┃ af487b23-9dba-4797-9627-c5b1b9ff3a42\", \"team_id\", \"af487b23-9dba-4797-9627-c5b1b9ff3a42\"), \"team_name\", \"5 ┃ 1e9c4b44-fe65-4392-9de0-84542f3998cb\", \"team_id\", \"1e9c4b44-fe65-4392-9de0-84542f3998cb\"), \"team_name\", \"4 ┃ 8d3b4cd8-df63-4c1a-b82b-d0139563e12e\", \"team_id\", \"8d3b4cd8-df63-4c1a-b82b-d0139563e12e\"), \"team_name\", \"4 ┃ c99dee1b-a997-453d-85dd-be94aef8fbed\", \"team_id\", \"c99dee1b-a997-453d-85dd-be94aef8fbed\"), \"team_name\", \"3 ┃ ac3eeb52-7268-45e3-a373-0e195e12a294\", \"team_id\", \"ac3eeb52-7268-45e3-a373-0e195e12a294\"), \"team_name\", \"3 ┃ 3cbcdfb8-84e8-422e-9b87-21e7a50b6865\", \"team_id\", \"3cbcdfb8-84e8-422e-9b87-21e7a50b6865\"), \"team_name\", \"3 ┃ 085a9d00-4918-42e6-a596-dbeadf54ec4d\", \"team_id\", \"085a9d00-4918-42e6-a596-dbeadf54ec4d\"), \"team_name\", \"3 ┃ a726f5e6-4237-4bb2-8ab0-13eac8180425\", \"team_id\", \"a726f5e6-4237-4bb2-8ab0-13eac8180425\"), \"team_name\", \"22 ┃ 1e9c1e93-ad47-49ac-adb7-47a0606718cf\", \"team_id\", \"1e9c1e93-ad47-49ac-adb7-47a0606718cf\"), \"team_name\", \"2 ┃ 77b9f6a9-1672-4483-beb0-2f5b11b26801\", \"team_id\", \"77b9f6a9-1672-4483-beb0-2f5b11b26801\"), \"team_name\", \"2 ┃ 07fe4160-c034-4331-94a1-9075257c62ab\", \"team_id\", \"07fe4160-c034-4331-94a1-9075257c62ab\"), \"team_name\", \"2 ┃ 3ae3b6d7-f308-4b08-89a3-a6f412715806\", \"team_id\", \"3ae3b6d7-f308-4b08-89a3-a6f412715806\"), \"team_name\", \"11 ┃ 2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334\", \"team_id\", \"2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334\"), \"team_name\", \"1 ┃ a7124f1b-476a-45fb-a6c3-68d161fdc911\", \"team_id\", \"a7124f1b-476a-45fb-a6c3-68d161fdc911\"), \"team_name\", \"1 ┃ 9989897b-2fd9-45dd-a473-a6512a8cd96d\", \"team_id\", \"9989897b-2fd9-45dd-a473-a6512a8cd96d\"), \"team_name\", \"1 ┃ 0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf\", \"team_id\", \"0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf\"), \"team_name\", \"(未知team)\", \"team_name\", \"^$\"))",
+          "legendFormat": "",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "各 team 明细（含成功率）",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "keepLabels": [
+              "team_name",
+              "outcome"
+            ],
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "outcome",
+            "emptyValue": "zero",
+            "rowField": "team_name",
+            "valueField": "Value #A"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "尝试",
+            "mode": "reduceRow",
+            "reduce": {
+              "include": [
+                "恢复成功",
+                "失败5xx",
+                "沙箱不存在4xx"
+              ],
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "成功率",
+            "binary": {
+              "left": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "恢复成功"
+                }
+              },
+              "operator": "/",
+              "right": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "尝试"
+                }
+              }
+            },
+            "mode": "binary",
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "尝试": true
+            },
+            "indexByName": {
+              "team_name\\outcome": 0,
+              "失败5xx": 2,
+              "恢复成功": 1,
+              "成功率": 4,
+              "沙箱不存在4xx": 3
+            },
+            "renameByName": {
+              "team_name\\outcome": "Team(名称 ┃ ID)"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "失败5xx"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 28,
+      "title": "时间分布",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "不含 200。持续平稳的红色通常是某个客户端在死循环重连已失效的沙箱",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "次数/桶",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.9,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "恢复成功"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "失败5xx"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "沙箱不存在4xx"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "id": 12,
+      "maxDataPoints": 500,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=`201` [$__auto])) or vector(0)",
+          "legendFormat": "恢复成功",
+          "queryType": "range",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=~`5..` [$__auto])) or vector(0)",
+          "legendFormat": "失败5xx",
+          "queryType": "range",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=~`4..` [$__auto])) or vector(0)",
+          "legendFormat": "沙箱不存在4xx",
+          "queryType": "range",
+          "refId": "C"
+        }
+      ],
+      "title": "恢复成败时间分布",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "哪个 team 在刷失败的 connect",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "次数/桶",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.9,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "e5c4b9f2-88d7-4bae-bde0-1480d82e9988"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Zhoumaosen's Project · e5c4b9f2"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "3bf425ff-584d-4f11-abda-483a918b5897"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Zhangqi's Project · 3bf425ff"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "b2b5b25c-5b4a-4466-8b68-779004eabba7"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Zhengmiao's Project · b2b5b25c"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "fcd649c5-0175-4d1e-98a5-1c218009dee4"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "e2b-rl · fcd649c5"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "0db5fb8e-920d-4564-a712-30a345863244"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "e2b-infra · 0db5fb8e"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "9bfcc2c7-0a17-486c-a79c-4b323eee7162"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "锁祎然's Project · 9bfcc2c7"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "f6eb883d-263d-4b71-831e-58ae7fd13878"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "张朝运's Default Team · f6eb883d"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "4e8177c9-134c-4311-b917-418314e587af"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "郭品学's Project · 4e8177c9"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "6d4eb009-5540-4951-830a-b0e10d06ed65"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "何阳极's Project · 6d4eb009"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "c8c30b05-7068-41e6-ab31-15daeb2b94f1"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "高杨帆's Project · c8c30b05"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "4b893304-e299-4243-bea4-392feee74b7c"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "张国强's Project · 4b893304"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "2a8e0507-cbc5-4445-95dc-314347c607f4"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Hanszhuang's Project · 2a8e0507"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "01872fea-af86-4de1-9f38-ff439deef08d"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Liutongtong's Project · 01872fea"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "0f44e8fc-859c-4f6a-b7e4-3068de12123e"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "张硕's Project · 0f44e8fc"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "0ae5f9f7-d6ac-4fde-9279-92943a0b5a86"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Shaozhou's Project · 0ae5f9f7"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "id": 13,
+      "maxDataPoints": 500,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (team_id) (count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=~`[45]..` [$__auto]))",
+          "legendFormat": "{{team_id}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "失败时间分布（按 team）",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "id": 29,
+      "title": "归因（失败原因 / 重连热点沙箱）",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "connect 失败原因归类（全局，当前时间范围）。bar 高度固定紧凑，数据少时上方留白属正常。「其他」为未匹配到已知模式的兜底类目，占比大时建议展开下方原始日志核查具体 error。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-RdYlGr"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 29
+      },
+      "id": 15,
+      "maxDataPoints": 500,
+      "options": {
+        "displayMode": "gradient",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "maxVizHeight": 40,
+        "minVizHeight": 24,
+        "minVizWidth": 8,
+        "namePlacement": "left",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "manual",
+        "valueMode": "color"
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cat) (label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(sum by (error) (count_over_time({service_name=\"orchestration-api\"} |~ `error when creating instance|Failed to create sandbox` | attempt!=`1` | attempt!=`2` [$__range])), \"cat\", \"快照文件丢失\", \"error\", \".*sandbox files for.*not found.*\"), \"cat\", \"节点放置失败\", \"error\", \".*failed to place sandbox: failed to create a new sandbox.*\"), \"cat\", \"放置超时重试耗尽\", \"error\", \".*failed to place sandbox: request timed out.*\"), \"cat\", \"内存不足 uffd\", \"error\", \".*cannot allocate memory.*\"), \"cat\", \"envd 初始化超时\", \"error\", \".*syncing took too long.*\"), \"cat\", \"快照加载超时\", \"error\", \".*snapshot/load.*request timed out.*\"), \"cat\", \"gRPC keepalive 超时\", \"error\", \".*keepalive ping failed.*\"), \"cat\", \"上游取消/超时\", \"error\", \".*(context canceled|context deadline exceeded).*\"), \"cat\", \"其他\", \"cat\", \"^$\"))",
+          "legendFormat": "{{cat}}",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "失败原因分布（已归类，全局）",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "在当前时间范围内，connect 失败次数最多的沙箱 Top20（按 sandbox+status 聚合）。反复失败的同一沙箱往往是快照损坏/已删除。",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sandbox"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "沙箱"
+              },
+              {
+                "id": "custom.width",
+                "value": 220
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "状态"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #A"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "次数"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 29
+      },
+      "id": 25,
+      "maxDataPoints": 500,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "次数"
+          }
+        ]
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "direction": "backward",
+          "editorMode": "code",
+          "expr": "topk(20, sum by (sandbox, status) (count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=~`[45]..` | label_format sandbox=`{{ regexReplaceAll \"^/sandboxes/([^/]+)/connect$\" .path \"${1}\" }}` | keep sandbox, status [$__range]))",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "重连热点沙箱（失败次数 Top）",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "Value #A": 2,
+              "sandbox": 0,
+              "status": 1
+            },
+            "renameByName": {
+              "Value #A": "次数",
+              "sandbox": "沙箱",
+              "status": "状态"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
+      "id": 30,
+      "title": "明细下钻",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "description": "失败的 connect 请求（4xx/5xx）逐条明细：时间 / 状态 / 沙箱 / team / 错误 / 延迟 / SDK。team 列已映射为可读名称；点单元格可看完整内容。列头可排序、过滤。",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "状态"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sbx"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "沙箱"
+              },
+              {
+                "id": "custom.width",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "latency"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "延迟ns"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "user_agent"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SDK"
+              },
+              {
+                "id": "custom.width",
+                "value": 160
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "error"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 420
+              },
+              {
+                "id": "displayName",
+                "value": "错误"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "team_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "team"
+              },
+              {
+                "id": "custom.width",
+                "value": 260
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7": {
+                        "index": 44,
+                        "text": "Ning's Project · 004f3f7c"
+                      },
+                      "01872fea-af86-4de1-9f38-ff439deef08d": {
+                        "index": 43,
+                        "text": "Liutongtong's Project · 01872fea"
+                      },
+                      "072e7581-1510-46cc-a875-c8f493f83179": {
+                        "index": 31,
+                        "text": "e2b-nexau@china-qijizhifeng.com · 072e7581"
+                      },
+                      "07fe4160-c034-4331-94a1-9075257c62ab": {
+                        "index": 4,
+                        "text": "2 · 07fe4160"
+                      },
+                      "085a9d00-4918-42e6-a596-dbeadf54ec4d": {
+                        "index": 10,
+                        "text": "3 · 085a9d00"
+                      },
+                      "0ad0730c-2860-4f30-948c-acd9c4f42d29": {
+                        "index": 71,
+                        "text": "符炫炜's Project · 0ad0730c"
+                      },
+                      "0ae5f9f7-d6ac-4fde-9279-92943a0b5a86": {
+                        "index": 49,
+                        "text": "Shaozhou's Project · 0ae5f9f7"
+                      },
+                      "0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf": {
+                        "index": 2,
+                        "text": "1 · 0cbaa95f"
+                      },
+                      "0db5fb8e-920d-4564-a712-30a345863244": {
+                        "index": 24,
+                        "text": "e2b-infra@china-qijizhifeng.com · 0db5fb8e"
+                      },
+                      "0f44e8fc-859c-4f6a-b7e4-3068de12123e": {
+                        "index": 66,
+                        "text": "张硕's Project · 0f44e8fc"
+                      },
+                      "12f3e83f-3979-4a59-b388-1effc55fa8f4": {
+                        "index": 16,
+                        "text": "7 · 12f3e83f"
+                      },
+                      "19ca40b0-aafb-416e-8ffa-b33f9eb940a9": {
+                        "index": 40,
+                        "text": "Infrawave_test2's Default Team · 19ca40b0"
+                      },
+                      "1e9c1e93-ad47-49ac-adb7-47a0606718cf": {
+                        "index": 7,
+                        "text": "22 · 1e9c1e93"
+                      },
+                      "1e9c4b44-fe65-4392-9de0-84542f3998cb": {
+                        "index": 14,
+                        "text": "5 · 1e9c4b44"
+                      },
+                      "258d442e-2159-48c9-9ac9-f3e1a0c1c452": {
+                        "index": 69,
+                        "text": "李慧's Project · 258d442e"
+                      },
+                      "2a8e0507-cbc5-4445-95dc-314347c607f4": {
+                        "index": 37,
+                        "text": "Hanszhuang's Default Team · 2a8e0507"
+                      },
+                      "2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334": {
+                        "index": 3,
+                        "text": "11 · 2ba8b18f"
+                      },
+                      "31738770-b0cd-480c-8ac5-9a5bf43d100b": {
+                        "index": 63,
+                        "text": "刘官明's Project · 31738770"
+                      },
+                      "32758328-00b9-4f5b-b66d-8ea5ebd02d5c": {
+                        "index": 53,
+                        "text": "system@localhost · 32758328"
+                      },
+                      "3ae3b6d7-f308-4b08-89a3-a6f412715806": {
+                        "index": 5,
+                        "text": "2 · 3ae3b6d7"
+                      },
+                      "3bf425ff-584d-4f11-abda-483a918b5897": {
+                        "index": 58,
+                        "text": "Zhangqi's Project · 3bf425ff"
+                      },
+                      "3c17296b-964e-40a8-a2b4-ae73efcc3010": {
+                        "index": 39,
+                        "text": "Infrawave_test1's Default Team · 3c17296b"
+                      },
+                      "3cbcdfb8-84e8-422e-9b87-21e7a50b6865": {
+                        "index": 11,
+                        "text": "3 · 3cbcdfb8"
+                      },
+                      "467334dc-5de9-4ac9-a04b-d703c148f3a5": {
+                        "index": 19,
+                        "text": "972963285@qq.com · 467334dc"
+                      },
+                      "4793fa63-b11e-4567-a1f0-bd5e0f93b551": {
+                        "index": 21,
+                        "text": "Chenjun's Project · 4793fa63"
+                      },
+                      "47eee04d-4660-480c-97e8-64c39934cf47": {
+                        "index": 20,
+                        "text": "972963285@qq.com · 47eee04d"
+                      },
+                      "4b893304-e299-4243-bea4-392feee74b7c": {
+                        "index": 64,
+                        "text": "张国强's Project · 4b893304"
+                      },
+                      "4e8177c9-134c-4311-b917-418314e587af": {
+                        "index": 75,
+                        "text": "郭品学's Project · 4e8177c9"
+                      },
+                      "4f0c2666-2773-42f9-ae24-12863e48dbce": {
+                        "index": 79,
+                        "text": "魏存琦's Project · 4f0c2666"
+                      },
+                      "560cc0a7-b536-419e-a038-8338148be13d": {
+                        "index": 28,
+                        "text": "e2b-nex2@china-qijizhifeng.com · 560cc0a7"
+                      },
+                      "5a6930b7-6ba8-49c5-b8cf-4126474cdbd3": {
+                        "index": 25,
+                        "text": "e2b-infra@china-qijizhifeng.com · 5a6930b7"
+                      },
+                      "6417ba56-ea10-4fce-aa2e-54d353d907ab": {
+                        "index": 45,
+                        "text": "pingzhang8-c@my.cityu.edu.hk · 6417ba56"
+                      },
+                      "65380065-c5bd-4d9f-b81c-1ce0866db931": {
+                        "index": 30,
+                        "text": "e2b-nex@china-qijizhifeng.com · 65380065"
+                      },
+                      "6d4eb009-5540-4951-830a-b0e10d06ed65": {
+                        "index": 62,
+                        "text": "何阳极's Project · 6d4eb009"
+                      },
+                      "6e7a55f9-5db0-4938-877b-c44d86eb25ab": {
+                        "index": 32,
+                        "text": "e2b-nexau@china-qijizhifeng.com · 6e7a55f9"
+                      },
+                      "6eb3900a-1fe8-4743-bdf7-12172b9771fc": {
+                        "index": 27,
+                        "text": "e2b-infrawaves@china-qijizhifeng.com · 6eb3900a"
+                      },
+                      "77a2927b-7d67-484c-8962-2d447b8179af": {
+                        "index": 38,
+                        "text": "Infra Team · 77a2927b"
+                      },
+                      "77b9f6a9-1672-4483-beb0-2f5b11b26801": {
+                        "index": 6,
+                        "text": "2 · 77b9f6a9"
+                      },
+                      "7fcbdf30-b95b-4d65-acef-b81b328bc5a5": {
+                        "index": 68,
+                        "text": "李以时's Project · 7fcbdf30"
+                      },
+                      "892c82ba-e2e0-4cf1-9496-44eac15a714f": {
+                        "index": 70,
+                        "text": "沈蔚's Project · 892c82ba"
+                      },
+                      "899fdcc3-4702-4a27-be10-9270eaf4b1cd": {
+                        "index": 56,
+                        "text": "Vision · 899fdcc3"
+                      },
+                      "8d3b4cd8-df63-4c1a-b82b-d0139563e12e": {
+                        "index": 12,
+                        "text": "4 · 8d3b4cd8"
+                      },
+                      "955127a8-51ec-41ef-ba1a-232a3b3e201b": {
+                        "index": 51,
+                        "text": "system1 · 955127a8"
+                      },
+                      "9989897b-2fd9-45dd-a473-a6512a8cd96d": {
+                        "index": 0,
+                        "text": "1 · 9989897b"
+                      },
+                      "9ad5ed4c-445b-4a9e-b856-d18232fa1fc6": {
+                        "index": 36,
+                        "text": "Guopinxue's Project · 9ad5ed4c"
+                      },
+                      "9b6bc955-415e-43c4-800a-d406f7c38864": {
+                        "index": 54,
+                        "text": "test · 9b6bc955"
+                      },
+                      "9bfcc2c7-0a17-486c-a79c-4b323eee7162": {
+                        "index": 76,
+                        "text": "锁祎然's Project · 9bfcc2c7"
+                      },
+                      "9db7bc25-1324-4330-85c4-f43dcde6d66d": {
+                        "index": 22,
+                        "text": "e2b-fde@china-qijizhifeng.com · 9db7bc25"
+                      },
+                      "a2bf5f96-7335-4b47-b894-39641aad6ed5": {
+                        "index": 34,
+                        "text": "e2b-xiaobei@china-qijizhifeng.com · a2bf5f96"
+                      },
+                      "a56704da-010b-48da-ab8e-d2aaaf8545e3": {
+                        "index": 73,
+                        "text": "谢天赐's Project · a56704da"
+                      },
+                      "a7124f1b-476a-45fb-a6c3-68d161fdc911": {
+                        "index": 1,
+                        "text": "1 · a7124f1b"
+                      },
+                      "a726f5e6-4237-4bb2-8ab0-13eac8180425": {
+                        "index": 9,
+                        "text": "3 · a726f5e6"
+                      },
+                      "ab785508-ba6c-4fdb-854a-2b39a2144354": {
+                        "index": 17,
+                        "text": "8 · ab785508"
+                      },
+                      "ac3eeb52-7268-45e3-a373-0e195e12a294": {
+                        "index": 8,
+                        "text": "3 · ac3eeb52"
+                      },
+                      "af487b23-9dba-4797-9627-c5b1b9ff3a42": {
+                        "index": 15,
+                        "text": "6 · af487b23"
+                      },
+                      "af8fc097-6343-4b33-b7bb-1c197789eabd": {
+                        "index": 59,
+                        "text": "zhaojiarong@qijizhifeng.com · af8fc097"
+                      },
+                      "b1940e54-3dbb-44cd-bf26-569382921299": {
+                        "index": 52,
+                        "text": "system@e2b.dev · b1940e54"
+                      },
+                      "b2b5b25c-5b4a-4466-8b68-779004eabba7": {
+                        "index": 60,
+                        "text": "Zhengmiao's Project · b2b5b25c"
+                      },
+                      "b9bbe0bc-8826-494b-84ca-6c3a5ff46bec": {
+                        "index": 29,
+                        "text": "e2b-nex@china-qijizhifeng.com · b9bbe0bc"
+                      },
+                      "bb20491c-f757-4043-846b-838b7f30a8d1": {
+                        "index": 57,
+                        "text": "zhangping@infrawaves.com · bb20491c"
+                      },
+                      "bf0cabd4-1d63-4c92-8018-56466250fc34": {
+                        "index": 80,
+                        "text": "默默's Default Team · bf0cabd4"
+                      },
+                      "c22d1774-82e6-4e16-8f24-9b0536744b18": {
+                        "index": 42,
+                        "text": "Linlizhi's Project · c22d1774"
+                      },
+                      "c383705d-81fa-4f85-8a19-dd81ef49f3eb": {
+                        "index": 72,
+                        "text": "蔡子坤's Project · c383705d"
+                      },
+                      "c5ac79f6-6155-47ac-9623-456cfb843878": {
+                        "index": 18,
+                        "text": "9 · c5ac79f6"
+                      },
+                      "c8c30b05-7068-41e6-ab31-15daeb2b94f1": {
+                        "index": 78,
+                        "text": "高杨帆's Project · c8c30b05"
+                      },
+                      "c99dee1b-a997-453d-85dd-be94aef8fbed": {
+                        "index": 13,
+                        "text": "4 · c99dee1b"
+                      },
+                      "cdc01774-0863-42dd-8475-22aefbe90997": {
+                        "index": 48,
+                        "text": "Service's Project · cdc01774"
+                      },
+                      "cf6c9163-60c9-4c5d-aa08-525b08ab5aaa": {
+                        "index": 23,
+                        "text": "e2b-fde@china-qijizhifeng.com · cf6c9163"
+                      },
+                      "e15b5877-779e-4359-9564-336c8cabe966": {
+                        "index": 41,
+                        "text": "Infrawave_test3's Project · e15b5877"
+                      },
+                      "e5c4b9f2-88d7-4bae-bde0-1480d82e9988": {
+                        "index": 61,
+                        "text": "Zhoumaosen's Project · e5c4b9f2"
+                      },
+                      "f0037e31-bd7a-4ad6-b16a-94c2790332da": {
+                        "index": 67,
+                        "text": "曹倚飞's Project · f0037e31"
+                      },
+                      "f03fb965-cfcc-4d58-94e4-9f062b09da53": {
+                        "index": 77,
+                        "text": "雷可鹏's Project · f03fb965"
+                      },
+                      "f081810f-4c2c-4b86-94b9-e69ebed18106": {
+                        "index": 46,
+                        "text": "RL · f081810f"
+                      },
+                      "f6eb883d-263d-4b71-831e-58ae7fd13878": {
+                        "index": 65,
+                        "text": "张朝运's Default Team · f6eb883d"
+                      },
+                      "f7e95758-34fe-44a2-bad9-6097a14ad656": {
+                        "index": 50,
+                        "text": "Sunpeng's Default Team · f7e95758"
+                      },
+                      "f9a89b02-0f1f-402d-9994-bc13ac9122ab": {
+                        "index": 26,
+                        "text": "e2b-infrawaves@china-qijizhifeng.com · f9a89b02"
+                      },
+                      "fb4e1d45-5ed4-474d-8144-68d4f5bc7871": {
+                        "index": 47,
+                        "text": "Ruizheng's Default Team · fb4e1d45"
+                      },
+                      "fcae3a36-0d3f-40df-aad0-3c97b33624a5": {
+                        "index": 35,
+                        "text": "e2b-xiaobei@china-qijizhifeng.com · fcae3a36"
+                      },
+                      "fcd649c5-0175-4d1e-98a5-1c218009dee4": {
+                        "index": 33,
+                        "text": "e2b-rl@china-qijizhifeng.com · fcd649c5"
+                      },
+                      "fe6493c4-af87-4f44-bf02-2acb426f1b81": {
+                        "index": 74,
+                        "text": "郑锐's Project · fe6493c4"
+                      },
+                      "fea203de-19f9-4fa4-b5c8-3f7e6b5c2606": {
+                        "index": 55,
+                        "text": "Tianyuhuai's Project · fea203de"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "id": 24,
+      "maxDataPoints": 500,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "expr": "{service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes/[^/]+/connect$` | team_id=~`$team` | status=~`[45]..` | label_format sbx=`{{ regexReplaceAll \"^/sandboxes/([^/]+)/connect$\" .path \"${1}\" }}`",
+          "maxLines": 200,
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "失败的 connect 请求明细（字段成列）",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "keepTime": false,
+            "replace": false,
+            "source": "labels"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Line": true,
+              "__stream_shard__": true,
+              "code_file_path": true,
+              "code_function_name": true,
+              "code_line_number": true,
+              "code_stacktrace": true,
+              "detected_level": true,
+              "error": false,
+              "host_id": true,
+              "host_name": true,
+              "id": true,
+              "internal": true,
+              "labelTypes": true,
+              "labels": true,
+              "method": true,
+              "observed_timestamp": true,
+              "path": true,
+              "pid": true,
+              "query": true,
+              "scope_name": true,
+              "service": true,
+              "service_instance_id": true,
+              "service_name": true,
+              "service_version": true,
+              "severity_number": true,
+              "severity_text": true,
+              "span_id": true,
+              "telemetry_sdk_language": true,
+              "telemetry_sdk_name": true,
+              "trace_id": true,
+              "tsNs": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "error": 4,
+              "latency": 5,
+              "sbx": 2,
+              "status": 1,
+              "team_id": 3,
+              "user_agent": 6
+            },
+            "renameByName": {
+              "error": "错误",
+              "latency": "延迟ns",
+              "sbx": "沙箱",
+              "status": "状态",
+              "team_id": "team",
+              "user_agent": "SDK"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "5m",
+  "schemaVersion": 42,
+  "tags": [
+    "e2b",
+    "sandbox",
+    "resume"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Loki 数据源",
+        "multi": false,
+        "name": "DS_LOKI",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "text": ".+",
+          "value": ".+"
+        },
+        "description": "中间件日志里的 team_id 字段。留空或 .+ 表示全部。这里不能用下拉：team_id 是 structured metadata，Grafana 的 label_values 取不到值",
+        "hide": 0,
+        "label": "team (请求日志)",
+        "name": "team",
+        "query": ".+",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h"
+    ]
+  },
+  "timezone": "browser",
+  "title": "② E2B 沙箱恢复（resume/connect）",
+  "uid": "e2b-sbx-resume"
+}

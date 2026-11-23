@@ -1,0 +1,1282 @@
+[
+  {
+    "id": 10,
+    "uid": "e2b-exporter-node-down",
+    "orgID": 1,
+    "folderUID": "efmfoahu15qtcc",
+    "ruleGroup": "e2b-node-health",
+    "title": "E2B Exporter 节点离线 (up=0)",
+    "condition": "C",
+    "data": [
+      {
+        "refId": "A",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "afoh4xrv0awowc",
+        "model": {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afoh4xrv0awowc"
+          },
+          "expr": "(up{job=\"ecs\"} == 0) * on(instance) group_left(node_name, node_id, role) last_over_time(nomad_node_role[15m])",
+          "instant": true,
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "A"
+        }
+      },
+      {
+        "refId": "C",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [
+                  0
+                ],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": [
+                  "A"
+                ]
+              },
+              "reducer": {
+                "params": [],
+                "type": "last"
+              },
+              "type": "query"
+            }
+          ],
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "A",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "C",
+          "type": "threshold"
+        }
+      }
+    ],
+    "updated": "2026-09-30T20:31:27+08:00",
+    "noDataState": "OK",
+    "execErrState": "KeepLast",
+    "for": "2m",
+    "keep_firing_for": "0s",
+    "annotations": {
+      "description": "节点 {{ $labels.node_name }} (ip {{ $labels.instance }}, nomad_id {{ $labels.node_id }}, role {{ $labels.role }}) 的 exporter 已 2 分钟无法探活 (up=0)。",
+      "summary": "job=ecs 的 exporter(9106) 探活失败,节点可能离线"
+    },
+    "labels": {
+      "service": "e2b",
+      "severity": "critical"
+    },
+    "isPaused": false,
+    "notification_settings": null,
+    "record": null
+  },
+  {
+    "id": 13,
+    "uid": "e2b-node-draining-empty",
+    "orgID": 1,
+    "folderUID": "efmfoahu15qtcc",
+    "ruleGroup": "e2b-node-status",
+    "title": "E2B 节点排空完成 (draining 且沙箱数=0)",
+    "condition": "C",
+    "data": [
+      {
+        "refId": "A",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 600,
+          "to": 0
+        },
+        "datasourceUid": "bfz0dki630zr4a",
+        "model": {
+          "columns": [
+            {
+              "selector": "id",
+              "text": "node_id",
+              "type": "string"
+            },
+            {
+              "selector": "status",
+              "text": "status",
+              "type": "string"
+            },
+            {
+              "selector": "sandboxCount",
+              "text": "sandboxCount",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "bfz0dki630zr4a"
+          },
+          "filterExpression": "status == 'draining'",
+          "filters": [],
+          "format": "table",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "parser": "backend",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "summarizeBy": "none",
+          "type": "json",
+          "url": "http://192.168.0.146:3000/nodes",
+          "url_options": {
+            "data": "",
+            "method": "GET"
+          }
+        }
+      },
+      {
+        "refId": "B",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 600,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "A",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "reducer": "last",
+          "refId": "B",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "type": "reduce"
+        }
+      },
+      {
+        "refId": "C",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 600,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [
+                  1
+                ],
+                "type": "lt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": [
+                  "B"
+                ]
+              },
+              "reducer": {
+                "params": [],
+                "type": "last"
+              },
+              "type": "query"
+            }
+          ],
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "B",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "C",
+          "type": "threshold"
+        }
+      }
+    ],
+    "updated": "2026-11-20T22:48:57+08:00",
+    "noDataState": "OK",
+    "execErrState": "KeepLast",
+    "for": "1m",
+    "keep_firing_for": "10m",
+    "annotations": {
+      "__dashboardUid__": "e2b-sandbox-matrix",
+      "__panelId__": "13",
+      "summary": "节点已进入 draining 且沙箱数归零(排空完成)，可安全下线"
+    },
+    "labels": {
+      "alert_type": "node-draining",
+      "env": "hk-prod",
+      "severity": "warning"
+    },
+    "isPaused": false,
+    "notification_settings": null,
+    "record": null
+  },
+  {
+    "id": 8,
+    "uid": "e2b-pg-all-unreachable",
+    "orgID": 1,
+    "folderUID": "efmfoahu15qtcc",
+    "ruleGroup": "e2b-pg-connectivity",
+    "title": "PG 全链路不可达",
+    "condition": "C",
+    "data": [
+      {
+        "refId": "A",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "afoh4xrv0awowc",
+        "model": {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afoh4xrv0awowc"
+          },
+          "expr": "max(pg_connectivity_up{node_ip=\"192.168.0.146\"})",
+          "instant": true,
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "A"
+        }
+      },
+      {
+        "refId": "B",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "A",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "reducer": "last",
+          "refId": "B",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "type": "reduce"
+        }
+      },
+      {
+        "refId": "C",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [
+                  1
+                ],
+                "type": "lt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": [
+                  "B"
+                ]
+              },
+              "reducer": {
+                "params": [],
+                "type": "last"
+              },
+              "type": "query"
+            }
+          ],
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "B",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "C",
+          "type": "threshold"
+        }
+      }
+    ],
+    "updated": "2026-09-30T16:43:42+08:00",
+    "noDataState": "OK",
+    "execErrState": "KeepLast",
+    "for": "1m",
+    "keep_firing_for": "0s",
+    "annotations": {
+      "description": "192.168.0.146 上所有探测目标 pg_connectivity_up 均为 0,api/dashboard-api 极可能已连不上数据库。",
+      "summary": "api/dashboard-api 节点所有 PG 链路(direct+pooler)均不可达"
+    },
+    "labels": {
+      "service": "e2b",
+      "severity": "critical"
+    },
+    "isPaused": false,
+    "notification_settings": null,
+    "record": null
+  },
+  {
+    "id": 9,
+    "uid": "e2b-pg-connect-slow",
+    "orgID": 1,
+    "folderUID": "efmfoahu15qtcc",
+    "ruleGroup": "e2b-pg-connectivity",
+    "title": "PG 建连延迟过高",
+    "condition": "C",
+    "data": [
+      {
+        "refId": "A",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "afoh4xrv0awowc",
+        "model": {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afoh4xrv0awowc"
+          },
+          "expr": "max(pg_connectivity_latency_seconds{node_ip=\"192.168.0.146\"})",
+          "instant": true,
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "A"
+        }
+      },
+      {
+        "refId": "B",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "A",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "reducer": "last",
+          "refId": "B",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "type": "reduce"
+        }
+      },
+      {
+        "refId": "C",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [
+                  2
+                ],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": [
+                  "B"
+                ]
+              },
+              "reducer": {
+                "params": [],
+                "type": "last"
+              },
+              "type": "query"
+            }
+          ],
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "B",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "C",
+          "type": "threshold"
+        }
+      }
+    ],
+    "updated": "2026-09-30T16:43:42+08:00",
+    "noDataState": "OK",
+    "execErrState": "KeepLast",
+    "for": "5m",
+    "keep_firing_for": "0s",
+    "annotations": {
+      "description": "TCP 建连延迟持续 > 2s,接近超时阈值,可能是网络抖动或 PG 侧过载。",
+      "summary": "api/dashboard-api 节点到 PG 建连延迟过高"
+    },
+    "labels": {
+      "service": "e2b",
+      "severity": "warning"
+    },
+    "isPaused": false,
+    "notification_settings": null,
+    "record": null
+  },
+  {
+    "id": 7,
+    "uid": "e2b-pg-direct-unreachable",
+    "orgID": 1,
+    "folderUID": "efmfoahu15qtcc",
+    "ruleGroup": "e2b-pg-connectivity",
+    "title": "PG 直连不可达",
+    "condition": "C",
+    "data": [
+      {
+        "refId": "A",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "afoh4xrv0awowc",
+        "model": {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afoh4xrv0awowc"
+          },
+          "expr": "pg_connectivity_up{target=\"direct\",node_ip=\"192.168.0.146\"}",
+          "instant": true,
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "A"
+        }
+      },
+      {
+        "refId": "B",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "A",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "reducer": "last",
+          "refId": "B",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "type": "reduce"
+        }
+      },
+      {
+        "refId": "C",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [
+                  1
+                ],
+                "type": "lt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": [
+                  "B"
+                ]
+              },
+              "reducer": {
+                "params": [],
+                "type": "last"
+              },
+              "type": "query"
+            }
+          ],
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "B",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "C",
+          "type": "threshold"
+        }
+      }
+    ],
+    "updated": "2026-09-30T16:43:42+08:00",
+    "noDataState": "OK",
+    "execErrState": "KeepLast",
+    "for": "2m",
+    "keep_firing_for": "0s",
+    "annotations": {
+      "description": "从 192.168.0.146 看 PostgreSQL 直连地址已 2 分钟不可达。若 pooler 仍通,建议将服务切到 pooler。",
+      "summary": "api/dashboard-api 节点无法 TCP 连接 PG 直连地址"
+    },
+    "labels": {
+      "service": "e2b",
+      "severity": "warning"
+    },
+    "isPaused": false,
+    "notification_settings": null,
+    "record": null
+  },
+  {
+    "id": 12,
+    "uid": "e2b-sbx-create-499",
+    "orgID": 1,
+    "folderUID": "efmfoahu15qtcc",
+    "ruleGroup": "e2b-sandbox-create",
+    "title": "E2B 沙箱创建服务端超时 (499)",
+    "condition": "C",
+    "data": [
+      {
+        "refId": "A",
+        "queryType": "range",
+        "relativeTimeRange": {
+          "from": 120,
+          "to": 0
+        },
+        "datasourceUid": "afo6wk07j06iob",
+        "model": {
+          "datasource": {
+            "type": "loki",
+            "uid": "afo6wk07j06iob"
+          },
+          "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(sum by (team_id, status, cat, sbx) (count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes$` | status=`499` | error=`Failed to place sandbox` | label_format sbx=`{{ if eq .path \"/sandboxes\" }}{{ else }}{{ regexReplaceAll \"^/sandboxes/([^/]+)/connect$\" .path \"${1}\" }}{{ end }}` | label_format cat=`创建超时·服务端放置过慢(客户端请求超时断连)` [1m])), \"team_name\", \"默默's Default Team\", \"team_id\", \"bf0cabd4-1d63-4c92-8018-56466250fc34\"), \"team_name\", \"魏存琦's Project\", \"team_id\", \"4f0c2666-2773-42f9-ae24-12863e48dbce\"), \"team_name\", \"高杨帆's Project\", \"team_id\", \"c8c30b05-7068-41e6-ab31-15daeb2b94f1\"), \"team_name\", \"雷可鹏's Project\", \"team_id\", \"f03fb965-cfcc-4d58-94e4-9f062b09da53\"), \"team_name\", \"锁祎然's Project\", \"team_id\", \"9bfcc2c7-0a17-486c-a79c-4b323eee7162\"), \"team_name\", \"郭品学's Project\", \"team_id\", \"4e8177c9-134c-4311-b917-418314e587af\"), \"team_name\", \"郑锐's Project\", \"team_id\", \"fe6493c4-af87-4f44-bf02-2acb426f1b81\"), \"team_name\", \"郑淼's Project\", \"team_id\", \"6f4f24b1-dba2-4cea-9daa-90a2cb06d21b\"), \"team_name\", \"谢天赐's Project\", \"team_id\", \"a56704da-010b-48da-ab8e-d2aaaf8545e3\"), \"team_name\", \"蔡子坤's Project\", \"team_id\", \"c383705d-81fa-4f85-8a19-dd81ef49f3eb\"), \"team_name\", \"符炫炜's Project\", \"team_id\", \"0ad0730c-2860-4f30-948c-acd9c4f42d29\"), \"team_name\", \"沈蔚's Project\", \"team_id\", \"892c82ba-e2e0-4cf1-9496-44eac15a714f\"), \"team_name\", \"李慧's Project\", \"team_id\", \"258d442e-2159-48c9-9ac9-f3e1a0c1c452\"), \"team_name\", \"李以时's Project\", \"team_id\", \"7fcbdf30-b95b-4d65-acef-b81b328bc5a5\"), \"team_name\", \"曹倚飞's Project\", \"team_id\", \"f0037e31-bd7a-4ad6-b16a-94c2790332da\"), \"team_name\", \"张硕's Project\", \"team_id\", \"0f44e8fc-859c-4f6a-b7e4-3068de12123e\"), \"team_name\", \"张朝运's Default Team\", \"team_id\", \"f6eb883d-263d-4b71-831e-58ae7fd13878\"), \"team_name\", \"张国强's Project\", \"team_id\", \"4b893304-e299-4243-bea4-392feee74b7c\"), \"team_name\", \"刘官明's Project\", \"team_id\", \"31738770-b0cd-480c-8ac5-9a5bf43d100b\"), \"team_name\", \"何阳极's Project\", \"team_id\", \"6d4eb009-5540-4951-830a-b0e10d06ed65\"), \"team_name\", \"Zhoumaosen's Project\", \"team_id\", \"e5c4b9f2-88d7-4bae-bde0-1480d82e9988\"), \"team_name\", \"Zhengmiao's Project\", \"team_id\", \"b2b5b25c-5b4a-4466-8b68-779004eabba7\"), \"team_name\", \"zhaojiarong@qijizhifeng.com\", \"team_id\", \"af8fc097-6343-4b33-b7bb-1c197789eabd\"), \"team_name\", \"Zhangqi's Project\", \"team_id\", \"3bf425ff-584d-4f11-abda-483a918b5897\"), \"team_name\", \"zhangping@infrawaves.com\", \"team_id\", \"bb20491c-f757-4043-846b-838b7f30a8d1\"), \"team_name\", \"Vision\", \"team_id\", \"899fdcc3-4702-4a27-be10-9270eaf4b1cd\"), \"team_name\", \"Tianyuhuai's Project\", \"team_id\", \"fea203de-19f9-4fa4-b5c8-3f7e6b5c2606\"), \"team_name\", \"test\", \"team_id\", \"9b6bc955-415e-43c4-800a-d406f7c38864\"), \"team_name\", \"system1\", \"team_id\", \"955127a8-51ec-41ef-ba1a-232a3b3e201b\"), \"team_name\", \"system@localhost\", \"team_id\", \"32758328-00b9-4f5b-b66d-8ea5ebd02d5c\"), \"team_name\", \"system@e2b.dev\", \"team_id\", \"b1940e54-3dbb-44cd-bf26-569382921299\"), \"team_name\", \"Sunpeng's Default Team\", \"team_id\", \"f7e95758-34fe-44a2-bad9-6097a14ad656\"), \"team_name\", \"Shaozhou's Project\", \"team_id\", \"0ae5f9f7-d6ac-4fde-9279-92943a0b5a86\"), \"team_name\", \"Service's Project\", \"team_id\", \"cdc01774-0863-42dd-8475-22aefbe90997\"), \"team_name\", \"Ruizheng's Default Team\", \"team_id\", \"fb4e1d45-5ed4-474d-8144-68d4f5bc7871\"), \"team_name\", \"RL\", \"team_id\", \"f081810f-4c2c-4b86-94b9-e69ebed18106\"), \"team_name\", \"pingzhang8-c@my.cityu.edu.hk\", \"team_id\", \"6417ba56-ea10-4fce-aa2e-54d353d907ab\"), \"team_name\", \"Ning's Project\", \"team_id\", \"004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7\"), \"team_name\", \"Liutongtong's Project\", \"team_id\", \"01872fea-af86-4de1-9f38-ff439deef08d\"), \"team_name\", \"Linlizhi's Project\", \"team_id\", \"c22d1774-82e6-4e16-8f24-9b0536744b18\"), \"team_name\", \"Infrawave_测试1's Project\", \"team_id\", \"78c62422-584c-47b6-88c3-318266c033d2\"), \"team_name\", \"Infrawave_test3's Project\", \"team_id\", \"e15b5877-779e-4359-9564-336c8cabe966\"), \"team_name\", \"Infrawave_test2's Default Team\", \"team_id\", \"19ca40b0-aafb-416e-8ffa-b33f9eb940a9\"), \"team_name\", \"Infrawave_test1's Default Team\", \"team_id\", \"3c17296b-964e-40a8-a2b4-ae73efcc3010\"), \"team_name\", \"Infra Team\", \"team_id\", \"77a2927b-7d67-484c-8962-2d447b8179af\"), \"team_name\", \"Hanszhuang's Default Team\", \"team_id\", \"2a8e0507-cbc5-4445-95dc-314347c607f4\"), \"team_name\", \"Guopinxue's Project\", \"team_id\", \"9ad5ed4c-445b-4a9e-b856-d18232fa1fc6\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"team_id\", \"fcae3a36-0d3f-40df-aad0-3c97b33624a5\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"team_id\", \"a2bf5f96-7335-4b47-b894-39641aad6ed5\"), \"team_name\", \"e2b-rl@china-qijizhifeng.com\", \"team_id\", \"fcd649c5-0175-4d1e-98a5-1c218009dee4\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"team_id\", \"6e7a55f9-5db0-4938-877b-c44d86eb25ab\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"team_id\", \"072e7581-1510-46cc-a875-c8f493f83179\"), \"team_name\", \"e2b-nex2@china-qijizhifeng.com\", \"team_id\", \"560cc0a7-b536-419e-a038-8338148be13d\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"team_id\", \"65380065-c5bd-4d9f-b81c-1ce0866db931\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"team_id\", \"b9bbe0bc-8826-494b-84ca-6c3a5ff46bec\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"team_id\", \"6eb3900a-1fe8-4743-bdf7-12172b9771fc\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"team_id\", \"f9a89b02-0f1f-402d-9994-bc13ac9122ab\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"team_id\", \"0db5fb8e-920d-4564-a712-30a345863244\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"team_id\", \"5a6930b7-6ba8-49c5-b8cf-4126474cdbd3\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"team_id\", \"cf6c9163-60c9-4c5d-aa08-525b08ab5aaa\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"team_id\", \"9db7bc25-1324-4330-85c4-f43dcde6d66d\"), \"team_name\", \"Chenjun's Project\", \"team_id\", \"4793fa63-b11e-4567-a1f0-bd5e0f93b551\"), \"team_name\", \"972963285@qq.com\", \"team_id\", \"47eee04d-4660-480c-97e8-64c39934cf47\"), \"team_name\", \"972963285@qq.com\", \"team_id\", \"467334dc-5de9-4ac9-a04b-d703c148f3a5\"), \"team_name\", \"9\", \"team_id\", \"c5ac79f6-6155-47ac-9623-456cfb843878\"), \"team_name\", \"8\", \"team_id\", \"ab785508-ba6c-4fdb-854a-2b39a2144354\"), \"team_name\", \"7\", \"team_id\", \"12f3e83f-3979-4a59-b388-1effc55fa8f4\"), \"team_name\", \"6\", \"team_id\", \"af487b23-9dba-4797-9627-c5b1b9ff3a42\"), \"team_name\", \"5\", \"team_id\", \"1e9c4b44-fe65-4392-9de0-84542f3998cb\"), \"team_name\", \"4\", \"team_id\", \"8d3b4cd8-df63-4c1a-b82b-d0139563e12e\"), \"team_name\", \"4\", \"team_id\", \"c99dee1b-a997-453d-85dd-be94aef8fbed\"), \"team_name\", \"3\", \"team_id\", \"ac3eeb52-7268-45e3-a373-0e195e12a294\"), \"team_name\", \"3\", \"team_id\", \"3cbcdfb8-84e8-422e-9b87-21e7a50b6865\"), \"team_name\", \"3\", \"team_id\", \"085a9d00-4918-42e6-a596-dbeadf54ec4d\"), \"team_name\", \"3\", \"team_id\", \"a726f5e6-4237-4bb2-8ab0-13eac8180425\"), \"team_name\", \"22\", \"team_id\", \"1e9c1e93-ad47-49ac-adb7-47a0606718cf\"), \"team_name\", \"2\", \"team_id\", \"77b9f6a9-1672-4483-beb0-2f5b11b26801\"), \"team_name\", \"2\", \"team_id\", \"07fe4160-c034-4331-94a1-9075257c62ab\"), \"team_name\", \"2\", \"team_id\", \"3ae3b6d7-f308-4b08-89a3-a6f412715806\"), \"team_name\", \"11\", \"team_id\", \"2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334\"), \"team_name\", \"1\", \"team_id\", \"a7124f1b-476a-45fb-a6c3-68d161fdc911\"), \"team_name\", \"1\", \"team_id\", \"9989897b-2fd9-45dd-a473-a6512a8cd96d\"), \"team_name\", \"1\", \"team_id\", \"0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf\"), \"team_name\", \"(未知team)\", \"team_name\", \"^$\")",
+          "intervalMs": 60000,
+          "maxDataPoints": 43200,
+          "queryType": "range",
+          "refId": "A"
+        }
+      },
+      {
+        "refId": "B",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 120,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "A",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "reducer": "last",
+          "refId": "B",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "type": "reduce"
+        }
+      },
+      {
+        "refId": "C",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 120,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [
+                  0
+                ],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": [
+                  "B"
+                ]
+              },
+              "reducer": {
+                "params": [],
+                "type": "last"
+              },
+              "type": "query"
+            }
+          ],
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "B",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "C",
+          "type": "threshold"
+        }
+      }
+    ],
+    "updated": "2026-10-09T18:14:06+08:00",
+    "noDataState": "OK",
+    "execErrState": "Alerting",
+    "for": "0s",
+    "keep_firing_for": "0s",
+    "annotations": {
+      "__dashboardUid__": "e2b-sbx-create-teams",
+      "__panelId__": "5",
+      "summary": "沙箱创建服务端放置过慢，客户端请求超时断连(499)"
+    },
+    "labels": {
+      "env": "hk-prod",
+      "service": "e2b",
+      "severity": "warning"
+    },
+    "provenance": "api",
+    "isPaused": false,
+    "notification_settings": null,
+    "record": null
+  },
+  {
+    "id": 2,
+    "uid": "e2b-sbx-create-4xx",
+    "orgID": 1,
+    "folderUID": "efmfoahu15qtcc",
+    "ruleGroup": "e2b-sandbox-create",
+    "title": "E2B 沙箱创建客户端错误 (4xx)",
+    "condition": "C",
+    "data": [
+      {
+        "refId": "A",
+        "queryType": "range",
+        "relativeTimeRange": {
+          "from": 120,
+          "to": 0
+        },
+        "datasourceUid": "afo6wk07j06iob",
+        "model": {
+          "datasource": {
+            "type": "loki",
+            "uid": "afo6wk07j06iob"
+          },
+          "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(sum by (team_id, status, cat, sbx, tag, tpl) (count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes$` | status=~`4..` | status!=`499` | label_format sbx=`{{ if eq .path \"/sandboxes\" }}{{ else }}{{ regexReplaceAll \"^/sandboxes/([^/]+)/connect$\" .path \"${1}\" }}{{ end }}` | label_format cat=`{{ if eq .status \"404\" }}{{ if contains \"doesn't exist or you don't have access\" .exception_message }}沙箱不存在{{ else if contains \"does not exist for template\" .exception_message }}模板版本(tag)不存在{{ else if contains \"not found\" .exception_message }}模板不存在{{ else if contains \"Team not found\" .exception_message }}团队不存在/鉴权失败{{ else if contains \"method not allowed\" .exception_message }}请求方法错误{{ else }}资源不存在(404){{ end }}{{ else if eq .status \"400\" }}请求参数错误{{ else if eq .status \"401\" }}鉴权失败{{ else if eq .status \"429\" }}并发超限{{ else if eq .status \"500\" }}{{ if eq .path \"/sandboxes\" }}创建失败(放置/资源不足){{ else }}恢复失败(快照丢失/放置失败){{ end }}{{ else }}HTTP {{ .status }}{{ end }}` | label_format tag=`{{ if contains \"does not exist for template\" .exception_message }}{{ regexReplaceAll \"^tag '([^']*)'.*$\" .exception_message \"${1}\" }}{{ end }}` | label_format tpl=`{{ if contains \"does not exist for template\" .exception_message }}{{ regexReplaceAll \"^.*for template '([^']*)'$\" .exception_message \"${1}\" }}{{ end }}` [1m])), \"team_name\", \"默默's Default Team\", \"team_id\", \"bf0cabd4-1d63-4c92-8018-56466250fc34\"), \"team_name\", \"魏存琦's Project\", \"team_id\", \"4f0c2666-2773-42f9-ae24-12863e48dbce\"), \"team_name\", \"高杨帆's Project\", \"team_id\", \"c8c30b05-7068-41e6-ab31-15daeb2b94f1\"), \"team_name\", \"雷可鹏's Project\", \"team_id\", \"f03fb965-cfcc-4d58-94e4-9f062b09da53\"), \"team_name\", \"锁祎然's Project\", \"team_id\", \"9bfcc2c7-0a17-486c-a79c-4b323eee7162\"), \"team_name\", \"郭品学's Project\", \"team_id\", \"4e8177c9-134c-4311-b917-418314e587af\"), \"team_name\", \"郑锐's Project\", \"team_id\", \"fe6493c4-af87-4f44-bf02-2acb426f1b81\"), \"team_name\", \"郑淼's Project\", \"team_id\", \"6f4f24b1-dba2-4cea-9daa-90a2cb06d21b\"), \"team_name\", \"谢天赐's Project\", \"team_id\", \"a56704da-010b-48da-ab8e-d2aaaf8545e3\"), \"team_name\", \"蔡子坤's Project\", \"team_id\", \"c383705d-81fa-4f85-8a19-dd81ef49f3eb\"), \"team_name\", \"符炫炜's Project\", \"team_id\", \"0ad0730c-2860-4f30-948c-acd9c4f42d29\"), \"team_name\", \"沈蔚's Project\", \"team_id\", \"892c82ba-e2e0-4cf1-9496-44eac15a714f\"), \"team_name\", \"李慧's Project\", \"team_id\", \"258d442e-2159-48c9-9ac9-f3e1a0c1c452\"), \"team_name\", \"李以时's Project\", \"team_id\", \"7fcbdf30-b95b-4d65-acef-b81b328bc5a5\"), \"team_name\", \"曹倚飞's Project\", \"team_id\", \"f0037e31-bd7a-4ad6-b16a-94c2790332da\"), \"team_name\", \"张硕's Project\", \"team_id\", \"0f44e8fc-859c-4f6a-b7e4-3068de12123e\"), \"team_name\", \"张朝运's Default Team\", \"team_id\", \"f6eb883d-263d-4b71-831e-58ae7fd13878\"), \"team_name\", \"张国强's Project\", \"team_id\", \"4b893304-e299-4243-bea4-392feee74b7c\"), \"team_name\", \"刘官明's Project\", \"team_id\", \"31738770-b0cd-480c-8ac5-9a5bf43d100b\"), \"team_name\", \"何阳极's Project\", \"team_id\", \"6d4eb009-5540-4951-830a-b0e10d06ed65\"), \"team_name\", \"Zhoumaosen's Project\", \"team_id\", \"e5c4b9f2-88d7-4bae-bde0-1480d82e9988\"), \"team_name\", \"Zhengmiao's Project\", \"team_id\", \"b2b5b25c-5b4a-4466-8b68-779004eabba7\"), \"team_name\", \"zhaojiarong@qijizhifeng.com\", \"team_id\", \"af8fc097-6343-4b33-b7bb-1c197789eabd\"), \"team_name\", \"Zhangqi's Project\", \"team_id\", \"3bf425ff-584d-4f11-abda-483a918b5897\"), \"team_name\", \"zhangping@infrawaves.com\", \"team_id\", \"bb20491c-f757-4043-846b-838b7f30a8d1\"), \"team_name\", \"Vision\", \"team_id\", \"899fdcc3-4702-4a27-be10-9270eaf4b1cd\"), \"team_name\", \"Tianyuhuai's Project\", \"team_id\", \"fea203de-19f9-4fa4-b5c8-3f7e6b5c2606\"), \"team_name\", \"test\", \"team_id\", \"9b6bc955-415e-43c4-800a-d406f7c38864\"), \"team_name\", \"system1\", \"team_id\", \"955127a8-51ec-41ef-ba1a-232a3b3e201b\"), \"team_name\", \"system@localhost\", \"team_id\", \"32758328-00b9-4f5b-b66d-8ea5ebd02d5c\"), \"team_name\", \"system@e2b.dev\", \"team_id\", \"b1940e54-3dbb-44cd-bf26-569382921299\"), \"team_name\", \"Sunpeng's Default Team\", \"team_id\", \"f7e95758-34fe-44a2-bad9-6097a14ad656\"), \"team_name\", \"Shaozhou's Project\", \"team_id\", \"0ae5f9f7-d6ac-4fde-9279-92943a0b5a86\"), \"team_name\", \"Service's Project\", \"team_id\", \"cdc01774-0863-42dd-8475-22aefbe90997\"), \"team_name\", \"Ruizheng's Default Team\", \"team_id\", \"fb4e1d45-5ed4-474d-8144-68d4f5bc7871\"), \"team_name\", \"RL\", \"team_id\", \"f081810f-4c2c-4b86-94b9-e69ebed18106\"), \"team_name\", \"pingzhang8-c@my.cityu.edu.hk\", \"team_id\", \"6417ba56-ea10-4fce-aa2e-54d353d907ab\"), \"team_name\", \"Ning's Project\", \"team_id\", \"004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7\"), \"team_name\", \"Liutongtong's Project\", \"team_id\", \"01872fea-af86-4de1-9f38-ff439deef08d\"), \"team_name\", \"Linlizhi's Project\", \"team_id\", \"c22d1774-82e6-4e16-8f24-9b0536744b18\"), \"team_name\", \"Infrawave_测试1's Project\", \"team_id\", \"78c62422-584c-47b6-88c3-318266c033d2\"), \"team_name\", \"Infrawave_test3's Project\", \"team_id\", \"e15b5877-779e-4359-9564-336c8cabe966\"), \"team_name\", \"Infrawave_test2's Default Team\", \"team_id\", \"19ca40b0-aafb-416e-8ffa-b33f9eb940a9\"), \"team_name\", \"Infrawave_test1's Default Team\", \"team_id\", \"3c17296b-964e-40a8-a2b4-ae73efcc3010\"), \"team_name\", \"Infra Team\", \"team_id\", \"77a2927b-7d67-484c-8962-2d447b8179af\"), \"team_name\", \"Hanszhuang's Default Team\", \"team_id\", \"2a8e0507-cbc5-4445-95dc-314347c607f4\"), \"team_name\", \"Guopinxue's Project\", \"team_id\", \"9ad5ed4c-445b-4a9e-b856-d18232fa1fc6\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"team_id\", \"fcae3a36-0d3f-40df-aad0-3c97b33624a5\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"team_id\", \"a2bf5f96-7335-4b47-b894-39641aad6ed5\"), \"team_name\", \"e2b-rl@china-qijizhifeng.com\", \"team_id\", \"fcd649c5-0175-4d1e-98a5-1c218009dee4\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"team_id\", \"6e7a55f9-5db0-4938-877b-c44d86eb25ab\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"team_id\", \"072e7581-1510-46cc-a875-c8f493f83179\"), \"team_name\", \"e2b-nex2@china-qijizhifeng.com\", \"team_id\", \"560cc0a7-b536-419e-a038-8338148be13d\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"team_id\", \"65380065-c5bd-4d9f-b81c-1ce0866db931\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"team_id\", \"b9bbe0bc-8826-494b-84ca-6c3a5ff46bec\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"team_id\", \"6eb3900a-1fe8-4743-bdf7-12172b9771fc\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"team_id\", \"f9a89b02-0f1f-402d-9994-bc13ac9122ab\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"team_id\", \"0db5fb8e-920d-4564-a712-30a345863244\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"team_id\", \"5a6930b7-6ba8-49c5-b8cf-4126474cdbd3\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"team_id\", \"cf6c9163-60c9-4c5d-aa08-525b08ab5aaa\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"team_id\", \"9db7bc25-1324-4330-85c4-f43dcde6d66d\"), \"team_name\", \"Chenjun's Project\", \"team_id\", \"4793fa63-b11e-4567-a1f0-bd5e0f93b551\"), \"team_name\", \"972963285@qq.com\", \"team_id\", \"47eee04d-4660-480c-97e8-64c39934cf47\"), \"team_name\", \"972963285@qq.com\", \"team_id\", \"467334dc-5de9-4ac9-a04b-d703c148f3a5\"), \"team_name\", \"9\", \"team_id\", \"c5ac79f6-6155-47ac-9623-456cfb843878\"), \"team_name\", \"8\", \"team_id\", \"ab785508-ba6c-4fdb-854a-2b39a2144354\"), \"team_name\", \"7\", \"team_id\", \"12f3e83f-3979-4a59-b388-1effc55fa8f4\"), \"team_name\", \"6\", \"team_id\", \"af487b23-9dba-4797-9627-c5b1b9ff3a42\"), \"team_name\", \"5\", \"team_id\", \"1e9c4b44-fe65-4392-9de0-84542f3998cb\"), \"team_name\", \"4\", \"team_id\", \"8d3b4cd8-df63-4c1a-b82b-d0139563e12e\"), \"team_name\", \"4\", \"team_id\", \"c99dee1b-a997-453d-85dd-be94aef8fbed\"), \"team_name\", \"3\", \"team_id\", \"ac3eeb52-7268-45e3-a373-0e195e12a294\"), \"team_name\", \"3\", \"team_id\", \"3cbcdfb8-84e8-422e-9b87-21e7a50b6865\"), \"team_name\", \"3\", \"team_id\", \"085a9d00-4918-42e6-a596-dbeadf54ec4d\"), \"team_name\", \"3\", \"team_id\", \"a726f5e6-4237-4bb2-8ab0-13eac8180425\"), \"team_name\", \"22\", \"team_id\", \"1e9c1e93-ad47-49ac-adb7-47a0606718cf\"), \"team_name\", \"2\", \"team_id\", \"77b9f6a9-1672-4483-beb0-2f5b11b26801\"), \"team_name\", \"2\", \"team_id\", \"07fe4160-c034-4331-94a1-9075257c62ab\"), \"team_name\", \"2\", \"team_id\", \"3ae3b6d7-f308-4b08-89a3-a6f412715806\"), \"team_name\", \"11\", \"team_id\", \"2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334\"), \"team_name\", \"1\", \"team_id\", \"a7124f1b-476a-45fb-a6c3-68d161fdc911\"), \"team_name\", \"1\", \"team_id\", \"9989897b-2fd9-45dd-a473-a6512a8cd96d\"), \"team_name\", \"1\", \"team_id\", \"0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf\"), \"team_name\", \"(未知team)\", \"team_name\", \"^$\")",
+          "intervalMs": 60000,
+          "maxDataPoints": 43200,
+          "queryType": "range",
+          "refId": "A"
+        }
+      },
+      {
+        "refId": "B",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 120,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "A",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "reducer": "last",
+          "refId": "B",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "type": "reduce"
+        }
+      },
+      {
+        "refId": "C",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 120,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [
+                  0
+                ],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": [
+                  "B"
+                ]
+              },
+              "reducer": {
+                "params": [],
+                "type": "last"
+              },
+              "type": "query"
+            }
+          ],
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "B",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "C",
+          "type": "threshold"
+        }
+      }
+    ],
+    "updated": "2026-11-20T15:41:34+08:00",
+    "noDataState": "OK",
+    "execErrState": "Alerting",
+    "for": "0s",
+    "keep_firing_for": "0s",
+    "annotations": {
+      "__dashboardUid__": "e2b-sbx-create-teams",
+      "__panelId__": "5",
+      "summary": "沙箱创建请求被拒，客户端侧问题"
+    },
+    "labels": {
+      "alert_kind": "create-4xx",
+      "env": "hk-prod",
+      "service": "e2b",
+      "severity": "warning"
+    },
+    "provenance": "api",
+    "isPaused": false,
+    "notification_settings": null,
+    "record": null
+  },
+  {
+    "id": 1,
+    "uid": "e2b-sbx-create-5xx",
+    "orgID": 1,
+    "folderUID": "efmfoahu15qtcc",
+    "ruleGroup": "e2b-sandbox-create",
+    "title": "E2B 沙箱创建失败 (5xx)",
+    "condition": "C",
+    "data": [
+      {
+        "refId": "A",
+        "queryType": "range",
+        "relativeTimeRange": {
+          "from": 120,
+          "to": 0
+        },
+        "datasourceUid": "afo6wk07j06iob",
+        "model": {
+          "datasource": {
+            "type": "loki",
+            "uid": "afo6wk07j06iob"
+          },
+          "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(sum by (team_id, status, cat, sbx) (count_over_time({service_name=\"orchestration-api\"} | method=`POST` | path=~`^/sandboxes$` | status=~`5..` | label_format sbx=`{{ if eq .path \"/sandboxes\" }}{{ else }}{{ regexReplaceAll \"^/sandboxes/([^/]+)/connect$\" .path \"${1}\" }}{{ end }}` | label_format cat=`{{ if eq .status \"404\" }}模板或沙箱不存在{{ else if eq .status \"400\" }}请求参数错误{{ else if eq .status \"401\" }}鉴权失败{{ else if eq .status \"429\" }}并发超限{{ else if eq .status \"500\" }}{{ if eq .path \"/sandboxes\" }}创建失败(放置/资源不足){{ else }}恢复失败(快照丢失/放置失败){{ end }}{{ else }}HTTP {{ .status }}{{ end }}` [1m])), \"team_name\", \"默默's Default Team\", \"team_id\", \"bf0cabd4-1d63-4c92-8018-56466250fc34\"), \"team_name\", \"魏存琦's Project\", \"team_id\", \"4f0c2666-2773-42f9-ae24-12863e48dbce\"), \"team_name\", \"高杨帆's Project\", \"team_id\", \"c8c30b05-7068-41e6-ab31-15daeb2b94f1\"), \"team_name\", \"雷可鹏's Project\", \"team_id\", \"f03fb965-cfcc-4d58-94e4-9f062b09da53\"), \"team_name\", \"锁祎然's Project\", \"team_id\", \"9bfcc2c7-0a17-486c-a79c-4b323eee7162\"), \"team_name\", \"郭品学's Project\", \"team_id\", \"4e8177c9-134c-4311-b917-418314e587af\"), \"team_name\", \"郑锐's Project\", \"team_id\", \"fe6493c4-af87-4f44-bf02-2acb426f1b81\"), \"team_name\", \"郑淼's Project\", \"team_id\", \"6f4f24b1-dba2-4cea-9daa-90a2cb06d21b\"), \"team_name\", \"谢天赐's Project\", \"team_id\", \"a56704da-010b-48da-ab8e-d2aaaf8545e3\"), \"team_name\", \"蔡子坤's Project\", \"team_id\", \"c383705d-81fa-4f85-8a19-dd81ef49f3eb\"), \"team_name\", \"符炫炜's Project\", \"team_id\", \"0ad0730c-2860-4f30-948c-acd9c4f42d29\"), \"team_name\", \"沈蔚's Project\", \"team_id\", \"892c82ba-e2e0-4cf1-9496-44eac15a714f\"), \"team_name\", \"李慧's Project\", \"team_id\", \"258d442e-2159-48c9-9ac9-f3e1a0c1c452\"), \"team_name\", \"李以时's Project\", \"team_id\", \"7fcbdf30-b95b-4d65-acef-b81b328bc5a5\"), \"team_name\", \"曹倚飞's Project\", \"team_id\", \"f0037e31-bd7a-4ad6-b16a-94c2790332da\"), \"team_name\", \"张硕's Project\", \"team_id\", \"0f44e8fc-859c-4f6a-b7e4-3068de12123e\"), \"team_name\", \"张朝运's Default Team\", \"team_id\", \"f6eb883d-263d-4b71-831e-58ae7fd13878\"), \"team_name\", \"张国强's Project\", \"team_id\", \"4b893304-e299-4243-bea4-392feee74b7c\"), \"team_name\", \"刘官明's Project\", \"team_id\", \"31738770-b0cd-480c-8ac5-9a5bf43d100b\"), \"team_name\", \"何阳极's Project\", \"team_id\", \"6d4eb009-5540-4951-830a-b0e10d06ed65\"), \"team_name\", \"Zhoumaosen's Project\", \"team_id\", \"e5c4b9f2-88d7-4bae-bde0-1480d82e9988\"), \"team_name\", \"Zhengmiao's Project\", \"team_id\", \"b2b5b25c-5b4a-4466-8b68-779004eabba7\"), \"team_name\", \"zhaojiarong@qijizhifeng.com\", \"team_id\", \"af8fc097-6343-4b33-b7bb-1c197789eabd\"), \"team_name\", \"Zhangqi's Project\", \"team_id\", \"3bf425ff-584d-4f11-abda-483a918b5897\"), \"team_name\", \"zhangping@infrawaves.com\", \"team_id\", \"bb20491c-f757-4043-846b-838b7f30a8d1\"), \"team_name\", \"Vision\", \"team_id\", \"899fdcc3-4702-4a27-be10-9270eaf4b1cd\"), \"team_name\", \"Tianyuhuai's Project\", \"team_id\", \"fea203de-19f9-4fa4-b5c8-3f7e6b5c2606\"), \"team_name\", \"test\", \"team_id\", \"9b6bc955-415e-43c4-800a-d406f7c38864\"), \"team_name\", \"system1\", \"team_id\", \"955127a8-51ec-41ef-ba1a-232a3b3e201b\"), \"team_name\", \"system@localhost\", \"team_id\", \"32758328-00b9-4f5b-b66d-8ea5ebd02d5c\"), \"team_name\", \"system@e2b.dev\", \"team_id\", \"b1940e54-3dbb-44cd-bf26-569382921299\"), \"team_name\", \"Sunpeng's Default Team\", \"team_id\", \"f7e95758-34fe-44a2-bad9-6097a14ad656\"), \"team_name\", \"Shaozhou's Project\", \"team_id\", \"0ae5f9f7-d6ac-4fde-9279-92943a0b5a86\"), \"team_name\", \"Service's Project\", \"team_id\", \"cdc01774-0863-42dd-8475-22aefbe90997\"), \"team_name\", \"Ruizheng's Default Team\", \"team_id\", \"fb4e1d45-5ed4-474d-8144-68d4f5bc7871\"), \"team_name\", \"RL\", \"team_id\", \"f081810f-4c2c-4b86-94b9-e69ebed18106\"), \"team_name\", \"pingzhang8-c@my.cityu.edu.hk\", \"team_id\", \"6417ba56-ea10-4fce-aa2e-54d353d907ab\"), \"team_name\", \"Ning's Project\", \"team_id\", \"004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7\"), \"team_name\", \"Liutongtong's Project\", \"team_id\", \"01872fea-af86-4de1-9f38-ff439deef08d\"), \"team_name\", \"Linlizhi's Project\", \"team_id\", \"c22d1774-82e6-4e16-8f24-9b0536744b18\"), \"team_name\", \"Infrawave_测试1's Project\", \"team_id\", \"78c62422-584c-47b6-88c3-318266c033d2\"), \"team_name\", \"Infrawave_test3's Project\", \"team_id\", \"e15b5877-779e-4359-9564-336c8cabe966\"), \"team_name\", \"Infrawave_test2's Default Team\", \"team_id\", \"19ca40b0-aafb-416e-8ffa-b33f9eb940a9\"), \"team_name\", \"Infrawave_test1's Default Team\", \"team_id\", \"3c17296b-964e-40a8-a2b4-ae73efcc3010\"), \"team_name\", \"Infra Team\", \"team_id\", \"77a2927b-7d67-484c-8962-2d447b8179af\"), \"team_name\", \"Hanszhuang's Default Team\", \"team_id\", \"2a8e0507-cbc5-4445-95dc-314347c607f4\"), \"team_name\", \"Guopinxue's Project\", \"team_id\", \"9ad5ed4c-445b-4a9e-b856-d18232fa1fc6\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"team_id\", \"fcae3a36-0d3f-40df-aad0-3c97b33624a5\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"team_id\", \"a2bf5f96-7335-4b47-b894-39641aad6ed5\"), \"team_name\", \"e2b-rl@china-qijizhifeng.com\", \"team_id\", \"fcd649c5-0175-4d1e-98a5-1c218009dee4\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"team_id\", \"6e7a55f9-5db0-4938-877b-c44d86eb25ab\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"team_id\", \"072e7581-1510-46cc-a875-c8f493f83179\"), \"team_name\", \"e2b-nex2@china-qijizhifeng.com\", \"team_id\", \"560cc0a7-b536-419e-a038-8338148be13d\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"team_id\", \"65380065-c5bd-4d9f-b81c-1ce0866db931\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"team_id\", \"b9bbe0bc-8826-494b-84ca-6c3a5ff46bec\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"team_id\", \"6eb3900a-1fe8-4743-bdf7-12172b9771fc\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"team_id\", \"f9a89b02-0f1f-402d-9994-bc13ac9122ab\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"team_id\", \"0db5fb8e-920d-4564-a712-30a345863244\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"team_id\", \"5a6930b7-6ba8-49c5-b8cf-4126474cdbd3\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"team_id\", \"cf6c9163-60c9-4c5d-aa08-525b08ab5aaa\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"team_id\", \"9db7bc25-1324-4330-85c4-f43dcde6d66d\"), \"team_name\", \"Chenjun's Project\", \"team_id\", \"4793fa63-b11e-4567-a1f0-bd5e0f93b551\"), \"team_name\", \"972963285@qq.com\", \"team_id\", \"47eee04d-4660-480c-97e8-64c39934cf47\"), \"team_name\", \"972963285@qq.com\", \"team_id\", \"467334dc-5de9-4ac9-a04b-d703c148f3a5\"), \"team_name\", \"9\", \"team_id\", \"c5ac79f6-6155-47ac-9623-456cfb843878\"), \"team_name\", \"8\", \"team_id\", \"ab785508-ba6c-4fdb-854a-2b39a2144354\"), \"team_name\", \"7\", \"team_id\", \"12f3e83f-3979-4a59-b388-1effc55fa8f4\"), \"team_name\", \"6\", \"team_id\", \"af487b23-9dba-4797-9627-c5b1b9ff3a42\"), \"team_name\", \"5\", \"team_id\", \"1e9c4b44-fe65-4392-9de0-84542f3998cb\"), \"team_name\", \"4\", \"team_id\", \"8d3b4cd8-df63-4c1a-b82b-d0139563e12e\"), \"team_name\", \"4\", \"team_id\", \"c99dee1b-a997-453d-85dd-be94aef8fbed\"), \"team_name\", \"3\", \"team_id\", \"ac3eeb52-7268-45e3-a373-0e195e12a294\"), \"team_name\", \"3\", \"team_id\", \"3cbcdfb8-84e8-422e-9b87-21e7a50b6865\"), \"team_name\", \"3\", \"team_id\", \"085a9d00-4918-42e6-a596-dbeadf54ec4d\"), \"team_name\", \"3\", \"team_id\", \"a726f5e6-4237-4bb2-8ab0-13eac8180425\"), \"team_name\", \"22\", \"team_id\", \"1e9c1e93-ad47-49ac-adb7-47a0606718cf\"), \"team_name\", \"2\", \"team_id\", \"77b9f6a9-1672-4483-beb0-2f5b11b26801\"), \"team_name\", \"2\", \"team_id\", \"07fe4160-c034-4331-94a1-9075257c62ab\"), \"team_name\", \"2\", \"team_id\", \"3ae3b6d7-f308-4b08-89a3-a6f412715806\"), \"team_name\", \"11\", \"team_id\", \"2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334\"), \"team_name\", \"1\", \"team_id\", \"a7124f1b-476a-45fb-a6c3-68d161fdc911\"), \"team_name\", \"1\", \"team_id\", \"9989897b-2fd9-45dd-a473-a6512a8cd96d\"), \"team_name\", \"1\", \"team_id\", \"0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf\"), \"team_name\", \"(未知team)\", \"team_name\", \"^$\")",
+          "intervalMs": 60000,
+          "maxDataPoints": 43200,
+          "queryType": "range",
+          "refId": "A"
+        }
+      },
+      {
+        "refId": "B",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 120,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "A",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "reducer": "last",
+          "refId": "B",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "type": "reduce"
+        }
+      },
+      {
+        "refId": "C",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 120,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [
+                  0
+                ],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": [
+                  "B"
+                ]
+              },
+              "reducer": {
+                "params": [],
+                "type": "last"
+              },
+              "type": "query"
+            }
+          ],
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "B",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "C",
+          "type": "threshold"
+        }
+      }
+    ],
+    "updated": "2026-09-28T14:21:33+08:00",
+    "noDataState": "OK",
+    "execErrState": "KeepLast",
+    "for": "0s",
+    "keep_firing_for": "0s",
+    "annotations": {
+      "__dashboardUid__": "e2b-sbx-create-teams",
+      "__panelId__": "4",
+      "summary": "沙箱创建/恢复失败，服务端错误"
+    },
+    "labels": {
+      "env": "hk-prod",
+      "service": "e2b",
+      "severity": "critical"
+    },
+    "isPaused": false,
+    "notification_settings": null,
+    "record": null
+  },
+  {
+    "id": 5,
+    "uid": "e2b-sbx-abnormal-kill",
+    "orgID": 1,
+    "folderUID": "efmfoahu15qtcc",
+    "ruleGroup": "e2b-sandbox-runtime",
+    "title": "E2B 沙箱异常kill (orphaned/unknown/admin/模板丢失)",
+    "condition": "E",
+    "data": [
+      {
+        "refId": "A",
+        "queryType": "table",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "cfyzcpdk3t7uoa",
+        "model": {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "cfyzcpdk3t7uoa"
+          },
+          "format": 1,
+          "intervalMs": 1000,
+          "maxDataPoints": 1,
+          "queryType": "table",
+          "rawSql": "SELECT count() AS v FROM sandbox_events\nWHERE (type='sandbox.lifecycle.killed' OR (event_category='lifecycle' AND event_label='kill'))\nAND JSONExtractString(coalesce(event_data,'{}'),'kill_reason') IN ('orphaned','unknown','admin','base_template_missing')\nAND $__timeFilter(timestamp)",
+          "refId": "A"
+        }
+      },
+      {
+        "refId": "Ar",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 0,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "A",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "reducer": "last",
+          "refId": "Ar",
+          "settings": {
+            "mode": "replaceNN",
+            "replaceWithValue": 0
+          },
+          "type": "reduce"
+        }
+      },
+      {
+        "refId": "E",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 0,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [
+                  0
+                ],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": [
+                  "Ar"
+                ]
+              },
+              "reducer": {
+                "params": [],
+                "type": "last"
+              },
+              "type": "query"
+            }
+          ],
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "Ar",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "E",
+          "type": "threshold"
+        }
+      }
+    ],
+    "updated": "2026-09-28T20:29:45+08:00",
+    "noDataState": "OK",
+    "execErrState": "KeepLast",
+    "for": "0s",
+    "keep_firing_for": "0s",
+    "annotations": {
+      "__dashboardUid__": "e2b-sbx-kill",
+      "__panelId__": "13",
+      "summary": "沙箱异常kill：近5分钟出现 orphaned/unknown/admin/模板丢失 类异常终止"
+    },
+    "labels": {
+      "env": "hk-prod",
+      "service": "e2b",
+      "severity": "warning"
+    },
+    "isPaused": false,
+    "notification_settings": null,
+    "record": null
+  },
+  {
+    "id": 14,
+    "uid": "e2b-sbx-disk-full",
+    "orgID": 1,
+    "folderUID": "efmfoahu15qtcc",
+    "ruleGroup": "e2b-sandbox-runtime",
+    "title": "E2B 沙箱磁盘不足",
+    "condition": "E",
+    "data": [
+      {
+        "refId": "B",
+        "queryType": "instant",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "afo6wk07j06iob",
+        "model": {
+          "datasource": {
+            "type": "loki",
+            "uid": "afo6wk07j06iob"
+          },
+          "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(sum by (service_name, tid, sid, eid) (count_over_time({service_name=~`orchestrator_template-manager|envd`} |~ `not enough disk space` | label_format tid=`{{ if .teamID }}{{ .teamID }}{{ else }}{{ .team_id }}{{ end }}` | label_format sid=`{{ if .sandboxID }}{{ .sandboxID }}{{ else }}{{ .sandbox_id }}{{ end }}` | label_format eid=`{{ if .envID }}{{ .envID }}{{ else }}{{ .template_id }}{{ end }}` [5m])), \"team_name\", \"默默's Default Team\", \"tid\", \"bf0cabd4-1d63-4c92-8018-56466250fc34\"), \"team_name\", \"魏存琦's Project\", \"tid\", \"4f0c2666-2773-42f9-ae24-12863e48dbce\"), \"team_name\", \"高杨帆's Project\", \"tid\", \"c8c30b05-7068-41e6-ab31-15daeb2b94f1\"), \"team_name\", \"雷可鹏's Project\", \"tid\", \"f03fb965-cfcc-4d58-94e4-9f062b09da53\"), \"team_name\", \"锁祎然's Project\", \"tid\", \"9bfcc2c7-0a17-486c-a79c-4b323eee7162\"), \"team_name\", \"郭品学's Project\", \"tid\", \"4e8177c9-134c-4311-b917-418314e587af\"), \"team_name\", \"郑锐's Project\", \"tid\", \"fe6493c4-af87-4f44-bf02-2acb426f1b81\"), \"team_name\", \"郑淼's Project\", \"tid\", \"6f4f24b1-dba2-4cea-9daa-90a2cb06d21b\"), \"team_name\", \"谢天赐's Project\", \"tid\", \"a56704da-010b-48da-ab8e-d2aaaf8545e3\"), \"team_name\", \"蔡子坤's Project\", \"tid\", \"c383705d-81fa-4f85-8a19-dd81ef49f3eb\"), \"team_name\", \"符炫炜's Project\", \"tid\", \"0ad0730c-2860-4f30-948c-acd9c4f42d29\"), \"team_name\", \"沈蔚's Project\", \"tid\", \"892c82ba-e2e0-4cf1-9496-44eac15a714f\"), \"team_name\", \"李慧's Project\", \"tid\", \"258d442e-2159-48c9-9ac9-f3e1a0c1c452\"), \"team_name\", \"李以时's Project\", \"tid\", \"7fcbdf30-b95b-4d65-acef-b81b328bc5a5\"), \"team_name\", \"曹倚飞's Project\", \"tid\", \"f0037e31-bd7a-4ad6-b16a-94c2790332da\"), \"team_name\", \"张硕's Project\", \"tid\", \"0f44e8fc-859c-4f6a-b7e4-3068de12123e\"), \"team_name\", \"张朝运's Default Team\", \"tid\", \"f6eb883d-263d-4b71-831e-58ae7fd13878\"), \"team_name\", \"张国强's Project\", \"tid\", \"4b893304-e299-4243-bea4-392feee74b7c\"), \"team_name\", \"刘官明's Project\", \"tid\", \"31738770-b0cd-480c-8ac5-9a5bf43d100b\"), \"team_name\", \"何阳极's Project\", \"tid\", \"6d4eb009-5540-4951-830a-b0e10d06ed65\"), \"team_name\", \"Zhoumaosen's Project\", \"tid\", \"e5c4b9f2-88d7-4bae-bde0-1480d82e9988\"), \"team_name\", \"Zhengmiao's Project\", \"tid\", \"b2b5b25c-5b4a-4466-8b68-779004eabba7\"), \"team_name\", \"zhaojiarong@qijizhifeng.com\", \"tid\", \"af8fc097-6343-4b33-b7bb-1c197789eabd\"), \"team_name\", \"Zhangqi's Project\", \"tid\", \"3bf425ff-584d-4f11-abda-483a918b5897\"), \"team_name\", \"zhangping@infrawaves.com\", \"tid\", \"bb20491c-f757-4043-846b-838b7f30a8d1\"), \"team_name\", \"Vision\", \"tid\", \"899fdcc3-4702-4a27-be10-9270eaf4b1cd\"), \"team_name\", \"Tianyuhuai's Project\", \"tid\", \"fea203de-19f9-4fa4-b5c8-3f7e6b5c2606\"), \"team_name\", \"test\", \"tid\", \"9b6bc955-415e-43c4-800a-d406f7c38864\"), \"team_name\", \"system1\", \"tid\", \"955127a8-51ec-41ef-ba1a-232a3b3e201b\"), \"team_name\", \"system@localhost\", \"tid\", \"32758328-00b9-4f5b-b66d-8ea5ebd02d5c\"), \"team_name\", \"system@e2b.dev\", \"tid\", \"b1940e54-3dbb-44cd-bf26-569382921299\"), \"team_name\", \"Sunpeng's Default Team\", \"tid\", \"f7e95758-34fe-44a2-bad9-6097a14ad656\"), \"team_name\", \"Shaozhou's Project\", \"tid\", \"0ae5f9f7-d6ac-4fde-9279-92943a0b5a86\"), \"team_name\", \"Service's Project\", \"tid\", \"cdc01774-0863-42dd-8475-22aefbe90997\"), \"team_name\", \"Ruizheng's Default Team\", \"tid\", \"fb4e1d45-5ed4-474d-8144-68d4f5bc7871\"), \"team_name\", \"RL\", \"tid\", \"f081810f-4c2c-4b86-94b9-e69ebed18106\"), \"team_name\", \"pingzhang8-c@my.cityu.edu.hk\", \"tid\", \"6417ba56-ea10-4fce-aa2e-54d353d907ab\"), \"team_name\", \"Ning's Project\", \"tid\", \"004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7\"), \"team_name\", \"Liutongtong's Project\", \"tid\", \"01872fea-af86-4de1-9f38-ff439deef08d\"), \"team_name\", \"Linlizhi's Project\", \"tid\", \"c22d1774-82e6-4e16-8f24-9b0536744b18\"), \"team_name\", \"Infrawave_测试1's Project\", \"tid\", \"78c62422-584c-47b6-88c3-318266c033d2\"), \"team_name\", \"Infrawave_test3's Project\", \"tid\", \"e15b5877-779e-4359-9564-336c8cabe966\"), \"team_name\", \"Infrawave_test2's Default Team\", \"tid\", \"19ca40b0-aafb-416e-8ffa-b33f9eb940a9\"), \"team_name\", \"Infrawave_test1's Default Team\", \"tid\", \"3c17296b-964e-40a8-a2b4-ae73efcc3010\"), \"team_name\", \"Infra Team\", \"tid\", \"77a2927b-7d67-484c-8962-2d447b8179af\"), \"team_name\", \"Hanszhuang's Default Team\", \"tid\", \"2a8e0507-cbc5-4445-95dc-314347c607f4\"), \"team_name\", \"Guopinxue's Project\", \"tid\", \"9ad5ed4c-445b-4a9e-b856-d18232fa1fc6\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"tid\", \"fcae3a36-0d3f-40df-aad0-3c97b33624a5\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"tid\", \"a2bf5f96-7335-4b47-b894-39641aad6ed5\"), \"team_name\", \"e2b-rl@china-qijizhifeng.com\", \"tid\", \"fcd649c5-0175-4d1e-98a5-1c218009dee4\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"tid\", \"6e7a55f9-5db0-4938-877b-c44d86eb25ab\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"tid\", \"072e7581-1510-46cc-a875-c8f493f83179\"), \"team_name\", \"e2b-nex2@china-qijizhifeng.com\", \"tid\", \"560cc0a7-b536-419e-a038-8338148be13d\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"tid\", \"65380065-c5bd-4d9f-b81c-1ce0866db931\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"tid\", \"b9bbe0bc-8826-494b-84ca-6c3a5ff46bec\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"tid\", \"6eb3900a-1fe8-4743-bdf7-12172b9771fc\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"tid\", \"f9a89b02-0f1f-402d-9994-bc13ac9122ab\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"tid\", \"0db5fb8e-920d-4564-a712-30a345863244\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"tid\", \"5a6930b7-6ba8-49c5-b8cf-4126474cdbd3\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"tid\", \"cf6c9163-60c9-4c5d-aa08-525b08ab5aaa\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"tid\", \"9db7bc25-1324-4330-85c4-f43dcde6d66d\"), \"team_name\", \"Chenjun's Project\", \"tid\", \"4793fa63-b11e-4567-a1f0-bd5e0f93b551\"), \"team_name\", \"972963285@qq.com\", \"tid\", \"47eee04d-4660-480c-97e8-64c39934cf47\"), \"team_name\", \"972963285@qq.com\", \"tid\", \"467334dc-5de9-4ac9-a04b-d703c148f3a5\"), \"team_name\", \"9\", \"tid\", \"c5ac79f6-6155-47ac-9623-456cfb843878\"), \"team_name\", \"8\", \"tid\", \"ab785508-ba6c-4fdb-854a-2b39a2144354\"), \"team_name\", \"7\", \"tid\", \"12f3e83f-3979-4a59-b388-1effc55fa8f4\"), \"team_name\", \"6\", \"tid\", \"af487b23-9dba-4797-9627-c5b1b9ff3a42\"), \"team_name\", \"5\", \"tid\", \"1e9c4b44-fe65-4392-9de0-84542f3998cb\"), \"team_name\", \"4\", \"tid\", \"8d3b4cd8-df63-4c1a-b82b-d0139563e12e\"), \"team_name\", \"4\", \"tid\", \"c99dee1b-a997-453d-85dd-be94aef8fbed\"), \"team_name\", \"3\", \"tid\", \"ac3eeb52-7268-45e3-a373-0e195e12a294\"), \"team_name\", \"3\", \"tid\", \"3cbcdfb8-84e8-422e-9b87-21e7a50b6865\"), \"team_name\", \"3\", \"tid\", \"085a9d00-4918-42e6-a596-dbeadf54ec4d\"), \"team_name\", \"3\", \"tid\", \"a726f5e6-4237-4bb2-8ab0-13eac8180425\"), \"team_name\", \"22\", \"tid\", \"1e9c1e93-ad47-49ac-adb7-47a0606718cf\"), \"team_name\", \"2\", \"tid\", \"77b9f6a9-1672-4483-beb0-2f5b11b26801\"), \"team_name\", \"2\", \"tid\", \"07fe4160-c034-4331-94a1-9075257c62ab\"), \"team_name\", \"2\", \"tid\", \"3ae3b6d7-f308-4b08-89a3-a6f412715806\"), \"team_name\", \"11\", \"tid\", \"2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334\"), \"team_name\", \"1\", \"tid\", \"a7124f1b-476a-45fb-a6c3-68d161fdc911\"), \"team_name\", \"1\", \"tid\", \"9989897b-2fd9-45dd-a473-a6512a8cd96d\"), \"team_name\", \"1\", \"tid\", \"0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf\") or vector(0)",
+          "intervalMs": 1000,
+          "maxDataPoints": 1,
+          "queryType": "instant",
+          "refId": "B"
+        }
+      },
+      {
+        "refId": "Br",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 0,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "B",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "reducer": "last",
+          "refId": "Br",
+          "settings": {
+            "mode": "replaceNN",
+            "replaceWithValue": 0
+          },
+          "type": "reduce"
+        }
+      },
+      {
+        "refId": "E",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 0,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [
+                  0
+                ],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": [
+                  "Br"
+                ]
+              },
+              "reducer": {
+                "params": [],
+                "type": "last"
+              },
+              "type": "query"
+            }
+          ],
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "Br",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "E",
+          "type": "threshold"
+        }
+      }
+    ],
+    "updated": "2026-11-13T15:07:25+08:00",
+    "noDataState": "OK",
+    "execErrState": "KeepLast",
+    "for": "0s",
+    "keep_firing_for": "0s",
+    "annotations": {
+      "__dashboardUid__": "e2b-sbx-runtime",
+      "__panelId__": "31",
+      "summary": "沙箱磁盘不足：近5分钟出现磁盘空间不足"
+    },
+    "labels": {
+      "env": "hk-prod",
+      "service": "e2b",
+      "severity": "warning"
+    },
+    "isPaused": true,
+    "notification_settings": null,
+    "record": null
+  },
+  {
+    "id": 6,
+    "uid": "e2b-sbx-oom-disk",
+    "orgID": 1,
+    "folderUID": "efmfoahu15qtcc",
+    "ruleGroup": "e2b-sandbox-runtime",
+    "title": "E2B æ²ç®±åæ ¸OOM (OOM Killed)",
+    "condition": "E",
+    "data": [
+      {
+        "refId": "B",
+        "queryType": "instant",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "afo6wk07j06iob",
+        "model": {
+          "datasource": {
+            "type": "loki",
+            "uid": "afo6wk07j06iob"
+          },
+          "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(sum by (service_name, tid, sid, eid) (count_over_time({service_name=~`orchestrator_template-manager|envd`} |~ `Out of memory: Killed process` | label_format tid=`{{ if .teamID }}{{ .teamID }}{{ else }}{{ .team_id }}{{ end }}` | label_format sid=`{{ if .sandboxID }}{{ .sandboxID }}{{ else }}{{ .sandbox_id }}{{ end }}` | label_format eid=`{{ if .envID }}{{ .envID }}{{ else }}{{ .template_id }}{{ end }}` [5m])), \"team_name\", \"é»é»'s Default Team\", \"tid\", \"bf0cabd4-1d63-4c92-8018-56466250fc34\"), \"team_name\", \"é­å­ç¦'s Project\", \"tid\", \"4f0c2666-2773-42f9-ae24-12863e48dbce\"), \"team_name\", \"é«æ¨å¸'s Project\", \"tid\", \"c8c30b05-7068-41e6-ab31-15daeb2b94f1\"), \"team_name\", \"é·å¯é¹'s Project\", \"tid\", \"f03fb965-cfcc-4d58-94e4-9f062b09da53\"), \"team_name\", \"éç¥ç¶'s Project\", \"tid\", \"9bfcc2c7-0a17-486c-a79c-4b323eee7162\"), \"team_name\", \"é­åå­¦'s Project\", \"tid\", \"4e8177c9-134c-4311-b917-418314e587af\"), \"team_name\", \"éé's Project\", \"tid\", \"fe6493c4-af87-4f44-bf02-2acb426f1b81\"), \"team_name\", \"éæ·¼'s Project\", \"tid\", \"6f4f24b1-dba2-4cea-9daa-90a2cb06d21b\"), \"team_name\", \"è°¢å¤©èµ's Project\", \"tid\", \"a56704da-010b-48da-ab8e-d2aaaf8545e3\"), \"team_name\", \"è¡å­å¤'s Project\", \"tid\", \"c383705d-81fa-4f85-8a19-dd81ef49f3eb\"), \"team_name\", \"ç¬¦ç«ç's Project\", \"tid\", \"0ad0730c-2860-4f30-948c-acd9c4f42d29\"), \"team_name\", \"æ²è's Project\", \"tid\", \"892c82ba-e2e0-4cf1-9496-44eac15a714f\"), \"team_name\", \"ææ§'s Project\", \"tid\", \"258d442e-2159-48c9-9ac9-f3e1a0c1c452\"), \"team_name\", \"æä»¥æ¶'s Project\", \"tid\", \"7fcbdf30-b95b-4d65-acef-b81b328bc5a5\"), \"team_name\", \"æ¹åé£'s Project\", \"tid\", \"f0037e31-bd7a-4ad6-b16a-94c2790332da\"), \"team_name\", \"å¼ ç¡'s Project\", \"tid\", \"0f44e8fc-859c-4f6a-b7e4-3068de12123e\"), \"team_name\", \"å¼ æè¿'s Default Team\", \"tid\", \"f6eb883d-263d-4b71-831e-58ae7fd13878\"), \"team_name\", \"å¼ å½å¼º's Project\", \"tid\", \"4b893304-e299-4243-bea4-392feee74b7c\"), \"team_name\", \"åå®æ's Project\", \"tid\", \"31738770-b0cd-480c-8ac5-9a5bf43d100b\"), \"team_name\", \"ä½é³æ's Project\", \"tid\", \"6d4eb009-5540-4951-830a-b0e10d06ed65\"), \"team_name\", \"Zhoumaosen's Project\", \"tid\", \"e5c4b9f2-88d7-4bae-bde0-1480d82e9988\"), \"team_name\", \"Zhengmiao's Project\", \"tid\", \"b2b5b25c-5b4a-4466-8b68-779004eabba7\"), \"team_name\", \"zhaojiarong@qijizhifeng.com\", \"tid\", \"af8fc097-6343-4b33-b7bb-1c197789eabd\"), \"team_name\", \"Zhangqi's Project\", \"tid\", \"3bf425ff-584d-4f11-abda-483a918b5897\"), \"team_name\", \"zhangping@infrawaves.com\", \"tid\", \"bb20491c-f757-4043-846b-838b7f30a8d1\"), \"team_name\", \"Vision\", \"tid\", \"899fdcc3-4702-4a27-be10-9270eaf4b1cd\"), \"team_name\", \"Tianyuhuai's Project\", \"tid\", \"fea203de-19f9-4fa4-b5c8-3f7e6b5c2606\"), \"team_name\", \"test\", \"tid\", \"9b6bc955-415e-43c4-800a-d406f7c38864\"), \"team_name\", \"system1\", \"tid\", \"955127a8-51ec-41ef-ba1a-232a3b3e201b\"), \"team_name\", \"system@localhost\", \"tid\", \"32758328-00b9-4f5b-b66d-8ea5ebd02d5c\"), \"team_name\", \"system@e2b.dev\", \"tid\", \"b1940e54-3dbb-44cd-bf26-569382921299\"), \"team_name\", \"Sunpeng's Default Team\", \"tid\", \"f7e95758-34fe-44a2-bad9-6097a14ad656\"), \"team_name\", \"Shaozhou's Project\", \"tid\", \"0ae5f9f7-d6ac-4fde-9279-92943a0b5a86\"), \"team_name\", \"Service's Project\", \"tid\", \"cdc01774-0863-42dd-8475-22aefbe90997\"), \"team_name\", \"Ruizheng's Default Team\", \"tid\", \"fb4e1d45-5ed4-474d-8144-68d4f5bc7871\"), \"team_name\", \"RL\", \"tid\", \"f081810f-4c2c-4b86-94b9-e69ebed18106\"), \"team_name\", \"pingzhang8-c@my.cityu.edu.hk\", \"tid\", \"6417ba56-ea10-4fce-aa2e-54d353d907ab\"), \"team_name\", \"Ning's Project\", \"tid\", \"004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7\"), \"team_name\", \"Liutongtong's Project\", \"tid\", \"01872fea-af86-4de1-9f38-ff439deef08d\"), \"team_name\", \"Linlizhi's Project\", \"tid\", \"c22d1774-82e6-4e16-8f24-9b0536744b18\"), \"team_name\", \"Infrawave_æµè¯1's Project\", \"tid\", \"78c62422-584c-47b6-88c3-318266c033d2\"), \"team_name\", \"Infrawave_test3's Project\", \"tid\", \"e15b5877-779e-4359-9564-336c8cabe966\"), \"team_name\", \"Infrawave_test2's Default Team\", \"tid\", \"19ca40b0-aafb-416e-8ffa-b33f9eb940a9\"), \"team_name\", \"Infrawave_test1's Default Team\", \"tid\", \"3c17296b-964e-40a8-a2b4-ae73efcc3010\"), \"team_name\", \"Infra Team\", \"tid\", \"77a2927b-7d67-484c-8962-2d447b8179af\"), \"team_name\", \"Hanszhuang's Default Team\", \"tid\", \"2a8e0507-cbc5-4445-95dc-314347c607f4\"), \"team_name\", \"Guopinxue's Project\", \"tid\", \"9ad5ed4c-445b-4a9e-b856-d18232fa1fc6\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"tid\", \"fcae3a36-0d3f-40df-aad0-3c97b33624a5\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"tid\", \"a2bf5f96-7335-4b47-b894-39641aad6ed5\"), \"team_name\", \"e2b-rl@china-qijizhifeng.com\", \"tid\", \"fcd649c5-0175-4d1e-98a5-1c218009dee4\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"tid\", \"6e7a55f9-5db0-4938-877b-c44d86eb25ab\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"tid\", \"072e7581-1510-46cc-a875-c8f493f83179\"), \"team_name\", \"e2b-nex2@china-qijizhifeng.com\", \"tid\", \"560cc0a7-b536-419e-a038-8338148be13d\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"tid\", \"65380065-c5bd-4d9f-b81c-1ce0866db931\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"tid\", \"b9bbe0bc-8826-494b-84ca-6c3a5ff46bec\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"tid\", \"6eb3900a-1fe8-4743-bdf7-12172b9771fc\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"tid\", \"f9a89b02-0f1f-402d-9994-bc13ac9122ab\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"tid\", \"0db5fb8e-920d-4564-a712-30a345863244\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"tid\", \"5a6930b7-6ba8-49c5-b8cf-4126474cdbd3\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"tid\", \"cf6c9163-60c9-4c5d-aa08-525b08ab5aaa\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"tid\", \"9db7bc25-1324-4330-85c4-f43dcde6d66d\"), \"team_name\", \"Chenjun's Project\", \"tid\", \"4793fa63-b11e-4567-a1f0-bd5e0f93b551\"), \"team_name\", \"972963285@qq.com\", \"tid\", \"47eee04d-4660-480c-97e8-64c39934cf47\"), \"team_name\", \"972963285@qq.com\", \"tid\", \"467334dc-5de9-4ac9-a04b-d703c148f3a5\"), \"team_name\", \"9\", \"tid\", \"c5ac79f6-6155-47ac-9623-456cfb843878\"), \"team_name\", \"8\", \"tid\", \"ab785508-ba6c-4fdb-854a-2b39a2144354\"), \"team_name\", \"7\", \"tid\", \"12f3e83f-3979-4a59-b388-1effc55fa8f4\"), \"team_name\", \"6\", \"tid\", \"af487b23-9dba-4797-9627-c5b1b9ff3a42\"), \"team_name\", \"5\", \"tid\", \"1e9c4b44-fe65-4392-9de0-84542f3998cb\"), \"team_name\", \"4\", \"tid\", \"8d3b4cd8-df63-4c1a-b82b-d0139563e12e\"), \"team_name\", \"4\", \"tid\", \"c99dee1b-a997-453d-85dd-be94aef8fbed\"), \"team_name\", \"3\", \"tid\", \"ac3eeb52-7268-45e3-a373-0e195e12a294\"), \"team_name\", \"3\", \"tid\", \"3cbcdfb8-84e8-422e-9b87-21e7a50b6865\"), \"team_name\", \"3\", \"tid\", \"085a9d00-4918-42e6-a596-dbeadf54ec4d\"), \"team_name\", \"3\", \"tid\", \"a726f5e6-4237-4bb2-8ab0-13eac8180425\"), \"team_name\", \"22\", \"tid\", \"1e9c1e93-ad47-49ac-adb7-47a0606718cf\"), \"team_name\", \"2\", \"tid\", \"77b9f6a9-1672-4483-beb0-2f5b11b26801\"), \"team_name\", \"2\", \"tid\", \"07fe4160-c034-4331-94a1-9075257c62ab\"), \"team_name\", \"2\", \"tid\", \"3ae3b6d7-f308-4b08-89a3-a6f412715806\"), \"team_name\", \"11\", \"tid\", \"2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334\"), \"team_name\", \"1\", \"tid\", \"a7124f1b-476a-45fb-a6c3-68d161fdc911\"), \"team_name\", \"1\", \"tid\", \"9989897b-2fd9-45dd-a473-a6512a8cd96d\"), \"team_name\", \"1\", \"tid\", \"0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf\") or vector(0)",
+          "intervalMs": 1000,
+          "maxDataPoints": 1,
+          "queryType": "instant",
+          "refId": "B"
+        }
+      },
+      {
+        "refId": "Br",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 0,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "B",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "reducer": "last",
+          "refId": "Br",
+          "settings": {
+            "mode": "replaceNN",
+            "replaceWithValue": 0
+          },
+          "type": "reduce"
+        }
+      },
+      {
+        "refId": "E",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 0,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [
+                  0
+                ],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": [
+                  "Br"
+                ]
+              },
+              "reducer": {
+                "params": [],
+                "type": "last"
+              },
+              "type": "query"
+            }
+          ],
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "Br",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "E",
+          "type": "threshold"
+        }
+      }
+    ],
+    "updated": "2026-11-13T16:07:35+08:00",
+    "noDataState": "OK",
+    "execErrState": "KeepLast",
+    "for": "0s",
+    "keep_firing_for": "0s",
+    "annotations": {
+      "__dashboardUid__": "e2b-sbx-runtime",
+      "__panelId__": "31",
+      "summary": "æ²ç®±åæ ¸OOMï¼è¿5åéåºç°åæ ¸ OOM Killer ç»æ­¢è¿ç¨"
+    },
+    "labels": {
+      "env": "hk-prod",
+      "service": "e2b",
+      "severity": "warning"
+    },
+    "provenance": "api",
+    "isPaused": true,
+    "notification_settings": null,
+    "record": null
+  }
+]
