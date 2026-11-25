@@ -9,9 +9,7 @@
       "receiver": "feishu-e2b-sandbox",
       "group_by": [
         "alertname",
-        "tid",
-        "sid",
-        "eid"
+        "tid"
       ],
       "object_matchers": [
         [
