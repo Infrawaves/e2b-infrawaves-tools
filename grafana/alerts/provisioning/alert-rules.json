@@ -214,7 +214,7 @@
         }
       }
     ],
-    "updated": "2026-11-23T19:45:47+08:00",
+    "updated": "2026-11-25T17:05:00+08:00",
     "noDataState": "OK",
     "execErrState": "KeepLast",
     "for": "1m",
@@ -1025,7 +1025,7 @@
         }
       }
     ],
-    "updated": "2026-09-28T20:29:45+08:00",
+    "updated": "2026-11-25T17:29:50+08:00",
     "noDataState": "OK",
     "execErrState": "KeepLast",
     "for": "0s",
@@ -1142,7 +1142,7 @@
         }
       }
     ],
-    "updated": "2026-11-23T19:45:05+08:00",
+    "updated": "2026-11-25T17:29:50+08:00",
     "noDataState": "OK",
     "execErrState": "KeepLast",
     "for": "0s",
@@ -1158,7 +1158,6 @@
       "service": "e2b",
       "severity": "warning"
     },
-    "provenance": "api",
     "isPaused": false,
     "notification_settings": null,
     "record": null
@@ -1169,7 +1168,7 @@
     "orgID": 1,
     "folderUID": "efmfoahu15qtcc",
     "ruleGroup": "e2b-sandbox-runtime",
-    "title": "E2B 沙箱内核OOM (OOM Killed)",
+    "title": "E2B 沙箱内进程被 OOM 终止（非沙箱退出）",
     "condition": "E",
     "data": [
       {
@@ -1185,7 +1184,7 @@
             "type": "loki",
             "uid": "afo6wk07j06iob"
           },
-          "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(sum by (service_name, tid, sid, eid) (count_over_time({service_name=~`orchestrator_template-manager|envd`} |~ `Out of memory: Killed process` | label_format tid=`{{ if .teamID }}{{ .teamID }}{{ else }}{{ .team_id }}{{ end }}` | label_format sid=`{{ if .sandboxID }}{{ .sandboxID }}{{ else }}{{ .sandbox_id }}{{ end }}` | label_format eid=`{{ if .envID }}{{ .envID }}{{ else }}{{ .template_id }}{{ end }}` [5m])), \"team_name\", \"é»é»'s Default Team\", \"tid\", \"bf0cabd4-1d63-4c92-8018-56466250fc34\"), \"team_name\", \"é­å­ç¦'s Project\", \"tid\", \"4f0c2666-2773-42f9-ae24-12863e48dbce\"), \"team_name\", \"é«æ¨å¸'s Project\", \"tid\", \"c8c30b05-7068-41e6-ab31-15daeb2b94f1\"), \"team_name\", \"é·å¯é¹'s Project\", \"tid\", \"f03fb965-cfcc-4d58-94e4-9f062b09da53\"), \"team_name\", \"éç¥ç¶'s Project\", \"tid\", \"9bfcc2c7-0a17-486c-a79c-4b323eee7162\"), \"team_name\", \"é­åå­¦'s Project\", \"tid\", \"4e8177c9-134c-4311-b917-418314e587af\"), \"team_name\", \"éé's Project\", \"tid\", \"fe6493c4-af87-4f44-bf02-2acb426f1b81\"), \"team_name\", \"éæ·¼'s Project\", \"tid\", \"6f4f24b1-dba2-4cea-9daa-90a2cb06d21b\"), \"team_name\", \"è°¢å¤©èµ's Project\", \"tid\", \"a56704da-010b-48da-ab8e-d2aaaf8545e3\"), \"team_name\", \"è¡å­å¤'s Project\", \"tid\", \"c383705d-81fa-4f85-8a19-dd81ef49f3eb\"), \"team_name\", \"ç¬¦ç«ç's Project\", \"tid\", \"0ad0730c-2860-4f30-948c-acd9c4f42d29\"), \"team_name\", \"æ²è's Project\", \"tid\", \"892c82ba-e2e0-4cf1-9496-44eac15a714f\"), \"team_name\", \"ææ§'s Project\", \"tid\", \"258d442e-2159-48c9-9ac9-f3e1a0c1c452\"), \"team_name\", \"æä»¥æ¶'s Project\", \"tid\", \"7fcbdf30-b95b-4d65-acef-b81b328bc5a5\"), \"team_name\", \"æ¹åé£'s Project\", \"tid\", \"f0037e31-bd7a-4ad6-b16a-94c2790332da\"), \"team_name\", \"å¼ ç¡'s Project\", \"tid\", \"0f44e8fc-859c-4f6a-b7e4-3068de12123e\"), \"team_name\", \"å¼ æè¿'s Default Team\", \"tid\", \"f6eb883d-263d-4b71-831e-58ae7fd13878\"), \"team_name\", \"å¼ å½å¼º's Project\", \"tid\", \"4b893304-e299-4243-bea4-392feee74b7c\"), \"team_name\", \"åå®æ's Project\", \"tid\", \"31738770-b0cd-480c-8ac5-9a5bf43d100b\"), \"team_name\", \"ä½é³æ's Project\", \"tid\", \"6d4eb009-5540-4951-830a-b0e10d06ed65\"), \"team_name\", \"Zhoumaosen's Project\", \"tid\", \"e5c4b9f2-88d7-4bae-bde0-1480d82e9988\"), \"team_name\", \"Zhengmiao's Project\", \"tid\", \"b2b5b25c-5b4a-4466-8b68-779004eabba7\"), \"team_name\", \"zhaojiarong@qijizhifeng.com\", \"tid\", \"af8fc097-6343-4b33-b7bb-1c197789eabd\"), \"team_name\", \"Zhangqi's Project\", \"tid\", \"3bf425ff-584d-4f11-abda-483a918b5897\"), \"team_name\", \"zhangping@infrawaves.com\", \"tid\", \"bb20491c-f757-4043-846b-838b7f30a8d1\"), \"team_name\", \"Vision\", \"tid\", \"899fdcc3-4702-4a27-be10-9270eaf4b1cd\"), \"team_name\", \"Tianyuhuai's Project\", \"tid\", \"fea203de-19f9-4fa4-b5c8-3f7e6b5c2606\"), \"team_name\", \"test\", \"tid\", \"9b6bc955-415e-43c4-800a-d406f7c38864\"), \"team_name\", \"system1\", \"tid\", \"955127a8-51ec-41ef-ba1a-232a3b3e201b\"), \"team_name\", \"system@localhost\", \"tid\", \"32758328-00b9-4f5b-b66d-8ea5ebd02d5c\"), \"team_name\", \"system@e2b.dev\", \"tid\", \"b1940e54-3dbb-44cd-bf26-569382921299\"), \"team_name\", \"Sunpeng's Default Team\", \"tid\", \"f7e95758-34fe-44a2-bad9-6097a14ad656\"), \"team_name\", \"Shaozhou's Project\", \"tid\", \"0ae5f9f7-d6ac-4fde-9279-92943a0b5a86\"), \"team_name\", \"Service's Project\", \"tid\", \"cdc01774-0863-42dd-8475-22aefbe90997\"), \"team_name\", \"Ruizheng's Default Team\", \"tid\", \"fb4e1d45-5ed4-474d-8144-68d4f5bc7871\"), \"team_name\", \"RL\", \"tid\", \"f081810f-4c2c-4b86-94b9-e69ebed18106\"), \"team_name\", \"pingzhang8-c@my.cityu.edu.hk\", \"tid\", \"6417ba56-ea10-4fce-aa2e-54d353d907ab\"), \"team_name\", \"Ning's Project\", \"tid\", \"004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7\"), \"team_name\", \"Liutongtong's Project\", \"tid\", \"01872fea-af86-4de1-9f38-ff439deef08d\"), \"team_name\", \"Linlizhi's Project\", \"tid\", \"c22d1774-82e6-4e16-8f24-9b0536744b18\"), \"team_name\", \"Infrawave_æµè¯1's Project\", \"tid\", \"78c62422-584c-47b6-88c3-318266c033d2\"), \"team_name\", \"Infrawave_test3's Project\", \"tid\", \"e15b5877-779e-4359-9564-336c8cabe966\"), \"team_name\", \"Infrawave_test2's Default Team\", \"tid\", \"19ca40b0-aafb-416e-8ffa-b33f9eb940a9\"), \"team_name\", \"Infrawave_test1's Default Team\", \"tid\", \"3c17296b-964e-40a8-a2b4-ae73efcc3010\"), \"team_name\", \"Infra Team\", \"tid\", \"77a2927b-7d67-484c-8962-2d447b8179af\"), \"team_name\", \"Hanszhuang's Default Team\", \"tid\", \"2a8e0507-cbc5-4445-95dc-314347c607f4\"), \"team_name\", \"Guopinxue's Project\", \"tid\", \"9ad5ed4c-445b-4a9e-b856-d18232fa1fc6\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"tid\", \"fcae3a36-0d3f-40df-aad0-3c97b33624a5\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"tid\", \"a2bf5f96-7335-4b47-b894-39641aad6ed5\"), \"team_name\", \"e2b-rl@china-qijizhifeng.com\", \"tid\", \"fcd649c5-0175-4d1e-98a5-1c218009dee4\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"tid\", \"6e7a55f9-5db0-4938-877b-c44d86eb25ab\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"tid\", \"072e7581-1510-46cc-a875-c8f493f83179\"), \"team_name\", \"e2b-nex2@china-qijizhifeng.com\", \"tid\", \"560cc0a7-b536-419e-a038-8338148be13d\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"tid\", \"65380065-c5bd-4d9f-b81c-1ce0866db931\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"tid\", \"b9bbe0bc-8826-494b-84ca-6c3a5ff46bec\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"tid\", \"6eb3900a-1fe8-4743-bdf7-12172b9771fc\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"tid\", \"f9a89b02-0f1f-402d-9994-bc13ac9122ab\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"tid\", \"0db5fb8e-920d-4564-a712-30a345863244\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"tid\", \"5a6930b7-6ba8-49c5-b8cf-4126474cdbd3\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"tid\", \"cf6c9163-60c9-4c5d-aa08-525b08ab5aaa\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"tid\", \"9db7bc25-1324-4330-85c4-f43dcde6d66d\"), \"team_name\", \"Chenjun's Project\", \"tid\", \"4793fa63-b11e-4567-a1f0-bd5e0f93b551\"), \"team_name\", \"972963285@qq.com\", \"tid\", \"47eee04d-4660-480c-97e8-64c39934cf47\"), \"team_name\", \"972963285@qq.com\", \"tid\", \"467334dc-5de9-4ac9-a04b-d703c148f3a5\"), \"team_name\", \"9\", \"tid\", \"c5ac79f6-6155-47ac-9623-456cfb843878\"), \"team_name\", \"8\", \"tid\", \"ab785508-ba6c-4fdb-854a-2b39a2144354\"), \"team_name\", \"7\", \"tid\", \"12f3e83f-3979-4a59-b388-1effc55fa8f4\"), \"team_name\", \"6\", \"tid\", \"af487b23-9dba-4797-9627-c5b1b9ff3a42\"), \"team_name\", \"5\", \"tid\", \"1e9c4b44-fe65-4392-9de0-84542f3998cb\"), \"team_name\", \"4\", \"tid\", \"8d3b4cd8-df63-4c1a-b82b-d0139563e12e\"), \"team_name\", \"4\", \"tid\", \"c99dee1b-a997-453d-85dd-be94aef8fbed\"), \"team_name\", \"3\", \"tid\", \"ac3eeb52-7268-45e3-a373-0e195e12a294\"), \"team_name\", \"3\", \"tid\", \"3cbcdfb8-84e8-422e-9b87-21e7a50b6865\"), \"team_name\", \"3\", \"tid\", \"085a9d00-4918-42e6-a596-dbeadf54ec4d\"), \"team_name\", \"3\", \"tid\", \"a726f5e6-4237-4bb2-8ab0-13eac8180425\"), \"team_name\", \"22\", \"tid\", \"1e9c1e93-ad47-49ac-adb7-47a0606718cf\"), \"team_name\", \"2\", \"tid\", \"77b9f6a9-1672-4483-beb0-2f5b11b26801\"), \"team_name\", \"2\", \"tid\", \"07fe4160-c034-4331-94a1-9075257c62ab\"), \"team_name\", \"2\", \"tid\", \"3ae3b6d7-f308-4b08-89a3-a6f412715806\"), \"team_name\", \"11\", \"tid\", \"2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334\"), \"team_name\", \"1\", \"tid\", \"a7124f1b-476a-45fb-a6c3-68d161fdc911\"), \"team_name\", \"1\", \"tid\", \"9989897b-2fd9-45dd-a473-a6512a8cd96d\"), \"team_name\", \"1\", \"tid\", \"0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf\") or vector(0)",
+          "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(sum by (service_name, tid, sid, eid, proc) (count_over_time({service_name=~`orchestrator_template-manager|envd`} |~ `Out of memory: Killed process` | regexp `Killed process \\d+ \\((?P<proc>[^)]+)\\)` | label_format tid=`{{ if .teamID }}{{ .teamID }}{{ else }}{{ .team_id }}{{ end }}` | label_format sid=`{{ if .sandboxID }}{{ .sandboxID }}{{ else }}{{ .sandbox_id }}{{ end }}` | label_format eid=`{{ if .envID }}{{ .envID }}{{ else }}{{ .template_id }}{{ end }}` [5m])), \"team_name\", \"默默's Default Team\", \"tid\", \"bf0cabd4-1d63-4c92-8018-56466250fc34\"), \"team_name\", \"魏存琦's Project\", \"tid\", \"4f0c2666-2773-42f9-ae24-12863e48dbce\"), \"team_name\", \"高杨帆's Project\", \"tid\", \"c8c30b05-7068-41e6-ab31-15daeb2b94f1\"), \"team_name\", \"雷可鹏's Project\", \"tid\", \"f03fb965-cfcc-4d58-94e4-9f062b09da53\"), \"team_name\", \"锁祎然's Project\", \"tid\", \"9bfcc2c7-0a17-486c-a79c-4b323eee7162\"), \"team_name\", \"郭品学's Project\", \"tid\", \"4e8177c9-134c-4311-b917-418314e587af\"), \"team_name\", \"郑锐's Project\", \"tid\", \"fe6493c4-af87-4f44-bf02-2acb426f1b81\"), \"team_name\", \"郑淼's Project\", \"tid\", \"6f4f24b1-dba2-4cea-9daa-90a2cb06d21b\"), \"team_name\", \"谢天赐's Project\", \"tid\", \"a56704da-010b-48da-ab8e-d2aaaf8545e3\"), \"team_name\", \"蔡子坤's Project\", \"tid\", \"c383705d-81fa-4f85-8a19-dd81ef49f3eb\"), \"team_name\", \"符炫炜's Project\", \"tid\", \"0ad0730c-2860-4f30-948c-acd9c4f42d29\"), \"team_name\", \"沈蔚's Project\", \"tid\", \"892c82ba-e2e0-4cf1-9496-44eac15a714f\"), \"team_name\", \"李慧's Project\", \"tid\", \"258d442e-2159-48c9-9ac9-f3e1a0c1c452\"), \"team_name\", \"李以时's Project\", \"tid\", \"7fcbdf30-b95b-4d65-acef-b81b328bc5a5\"), \"team_name\", \"曹倚飞's Project\", \"tid\", \"f0037e31-bd7a-4ad6-b16a-94c2790332da\"), \"team_name\", \"张硕's Project\", \"tid\", \"0f44e8fc-859c-4f6a-b7e4-3068de12123e\"), \"team_name\", \"张朝运's Default Team\", \"tid\", \"f6eb883d-263d-4b71-831e-58ae7fd13878\"), \"team_name\", \"张国强's Project\", \"tid\", \"4b893304-e299-4243-bea4-392feee74b7c\"), \"team_name\", \"刘官明's Project\", \"tid\", \"31738770-b0cd-480c-8ac5-9a5bf43d100b\"), \"team_name\", \"何阳极's Project\", \"tid\", \"6d4eb009-5540-4951-830a-b0e10d06ed65\"), \"team_name\", \"Zhoumaosen's Project\", \"tid\", \"e5c4b9f2-88d7-4bae-bde0-1480d82e9988\"), \"team_name\", \"Zhengmiao's Project\", \"tid\", \"b2b5b25c-5b4a-4466-8b68-779004eabba7\"), \"team_name\", \"zhaojiarong@qijizhifeng.com\", \"tid\", \"af8fc097-6343-4b33-b7bb-1c197789eabd\"), \"team_name\", \"Zhangqi's Project\", \"tid\", \"3bf425ff-584d-4f11-abda-483a918b5897\"), \"team_name\", \"zhangping@infrawaves.com\", \"tid\", \"bb20491c-f757-4043-846b-838b7f30a8d1\"), \"team_name\", \"Vision\", \"tid\", \"899fdcc3-4702-4a27-be10-9270eaf4b1cd\"), \"team_name\", \"Tianyuhuai's Project\", \"tid\", \"fea203de-19f9-4fa4-b5c8-3f7e6b5c2606\"), \"team_name\", \"test\", \"tid\", \"9b6bc955-415e-43c4-800a-d406f7c38864\"), \"team_name\", \"system1\", \"tid\", \"955127a8-51ec-41ef-ba1a-232a3b3e201b\"), \"team_name\", \"system@localhost\", \"tid\", \"32758328-00b9-4f5b-b66d-8ea5ebd02d5c\"), \"team_name\", \"system@e2b.dev\", \"tid\", \"b1940e54-3dbb-44cd-bf26-569382921299\"), \"team_name\", \"Sunpeng's Default Team\", \"tid\", \"f7e95758-34fe-44a2-bad9-6097a14ad656\"), \"team_name\", \"Shaozhou's Project\", \"tid\", \"0ae5f9f7-d6ac-4fde-9279-92943a0b5a86\"), \"team_name\", \"Service's Project\", \"tid\", \"cdc01774-0863-42dd-8475-22aefbe90997\"), \"team_name\", \"Ruizheng's Default Team\", \"tid\", \"fb4e1d45-5ed4-474d-8144-68d4f5bc7871\"), \"team_name\", \"RL\", \"tid\", \"f081810f-4c2c-4b86-94b9-e69ebed18106\"), \"team_name\", \"pingzhang8-c@my.cityu.edu.hk\", \"tid\", \"6417ba56-ea10-4fce-aa2e-54d353d907ab\"), \"team_name\", \"Ning's Project\", \"tid\", \"004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7\"), \"team_name\", \"Liutongtong's Project\", \"tid\", \"01872fea-af86-4de1-9f38-ff439deef08d\"), \"team_name\", \"Linlizhi's Project\", \"tid\", \"c22d1774-82e6-4e16-8f24-9b0536744b18\"), \"team_name\", \"Infrawave_测试1's Project\", \"tid\", \"78c62422-584c-47b6-88c3-318266c033d2\"), \"team_name\", \"Infrawave_test3's Project\", \"tid\", \"e15b5877-779e-4359-9564-336c8cabe966\"), \"team_name\", \"Infrawave_test2's Default Team\", \"tid\", \"19ca40b0-aafb-416e-8ffa-b33f9eb940a9\"), \"team_name\", \"Infrawave_test1's Default Team\", \"tid\", \"3c17296b-964e-40a8-a2b4-ae73efcc3010\"), \"team_name\", \"Infra Team\", \"tid\", \"77a2927b-7d67-484c-8962-2d447b8179af\"), \"team_name\", \"Hanszhuang's Default Team\", \"tid\", \"2a8e0507-cbc5-4445-95dc-314347c607f4\"), \"team_name\", \"Guopinxue's Project\", \"tid\", \"9ad5ed4c-445b-4a9e-b856-d18232fa1fc6\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"tid\", \"fcae3a36-0d3f-40df-aad0-3c97b33624a5\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"tid\", \"a2bf5f96-7335-4b47-b894-39641aad6ed5\"), \"team_name\", \"e2b-rl@china-qijizhifeng.com\", \"tid\", \"fcd649c5-0175-4d1e-98a5-1c218009dee4\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"tid\", \"6e7a55f9-5db0-4938-877b-c44d86eb25ab\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"tid\", \"072e7581-1510-46cc-a875-c8f493f83179\"), \"team_name\", \"e2b-nex2@china-qijizhifeng.com\", \"tid\", \"560cc0a7-b536-419e-a038-8338148be13d\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"tid\", \"65380065-c5bd-4d9f-b81c-1ce0866db931\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"tid\", \"b9bbe0bc-8826-494b-84ca-6c3a5ff46bec\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"tid\", \"6eb3900a-1fe8-4743-bdf7-12172b9771fc\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"tid\", \"f9a89b02-0f1f-402d-9994-bc13ac9122ab\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"tid\", \"0db5fb8e-920d-4564-a712-30a345863244\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"tid\", \"5a6930b7-6ba8-49c5-b8cf-4126474cdbd3\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"tid\", \"cf6c9163-60c9-4c5d-aa08-525b08ab5aaa\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"tid\", \"9db7bc25-1324-4330-85c4-f43dcde6d66d\"), \"team_name\", \"Chenjun's Project\", \"tid\", \"4793fa63-b11e-4567-a1f0-bd5e0f93b551\"), \"team_name\", \"972963285@qq.com\", \"tid\", \"47eee04d-4660-480c-97e8-64c39934cf47\"), \"team_name\", \"972963285@qq.com\", \"tid\", \"467334dc-5de9-4ac9-a04b-d703c148f3a5\"), \"team_name\", \"9\", \"tid\", \"c5ac79f6-6155-47ac-9623-456cfb843878\"), \"team_name\", \"8\", \"tid\", \"ab785508-ba6c-4fdb-854a-2b39a2144354\"), \"team_name\", \"7\", \"tid\", \"12f3e83f-3979-4a59-b388-1effc55fa8f4\"), \"team_name\", \"6\", \"tid\", \"af487b23-9dba-4797-9627-c5b1b9ff3a42\"), \"team_name\", \"5\", \"tid\", \"1e9c4b44-fe65-4392-9de0-84542f3998cb\"), \"team_name\", \"4\", \"tid\", \"8d3b4cd8-df63-4c1a-b82b-d0139563e12e\"), \"team_name\", \"4\", \"tid\", \"c99dee1b-a997-453d-85dd-be94aef8fbed\"), \"team_name\", \"3\", \"tid\", \"ac3eeb52-7268-45e3-a373-0e195e12a294\"), \"team_name\", \"3\", \"tid\", \"3cbcdfb8-84e8-422e-9b87-21e7a50b6865\"), \"team_name\", \"3\", \"tid\", \"085a9d00-4918-42e6-a596-dbeadf54ec4d\"), \"team_name\", \"3\", \"tid\", \"a726f5e6-4237-4bb2-8ab0-13eac8180425\"), \"team_name\", \"22\", \"tid\", \"1e9c1e93-ad47-49ac-adb7-47a0606718cf\"), \"team_name\", \"2\", \"tid\", \"77b9f6a9-1672-4483-beb0-2f5b11b26801\"), \"team_name\", \"2\", \"tid\", \"07fe4160-c034-4331-94a1-9075257c62ab\"), \"team_name\", \"2\", \"tid\", \"3ae3b6d7-f308-4b08-89a3-a6f412715806\"), \"team_name\", \"11\", \"tid\", \"2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334\"), \"team_name\", \"1\", \"tid\", \"a7124f1b-476a-45fb-a6c3-68d161fdc911\"), \"team_name\", \"1\", \"tid\", \"9989897b-2fd9-45dd-a473-a6512a8cd96d\"), \"team_name\", \"1\", \"tid\", \"0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf\") or vector(0)",
           "intervalMs": 1000,
           "maxDataPoints": 1,
           "queryType": "instant",
@@ -1261,7 +1260,7 @@
         }
       }
     ],
-    "updated": "2026-11-23T19:45:06+08:00",
+    "updated": "2026-11-25T17:29:50+08:00",
     "noDataState": "OK",
     "execErrState": "KeepLast",
     "for": "0s",
@@ -1269,7 +1268,7 @@
     "annotations": {
       "__dashboardUid__": "e2b-sbx-runtime",
       "__panelId__": "31",
-      "summary": "沙箱内核OOM：近5分钟出现内核 OOM Killer 终止进程"
+      "summary": "沙箱 guest 内核 OOM Killer 终止了某个用户进程（沙箱本身通常未退出）。近5分钟出现。此规则已停用，沙箱因 OOM 真正挂掉请看「E2B 沙箱因 OOM 挂掉」告警。"
     },
     "labels": {
       "alert_kind": "sandbox-runtime",
@@ -1277,7 +1276,124 @@
       "service": "e2b",
       "severity": "warning"
     },
-    "provenance": "api",
+    "isPaused": true,
+    "notification_settings": null,
+    "record": null
+  },
+  {
+    "id": 15,
+    "uid": "e2b-sbx-oom-killed",
+    "orgID": 1,
+    "folderUID": "efmfoahu15qtcc",
+    "ruleGroup": "e2b-sandbox-runtime",
+    "title": "E2B 沙箱因 OOM 挂掉",
+    "condition": "E",
+    "data": [
+      {
+        "refId": "B",
+        "queryType": "instant",
+        "relativeTimeRange": {
+          "from": 300,
+          "to": 0
+        },
+        "datasourceUid": "afo6wk07j06iob",
+        "model": {
+          "datasource": {
+            "type": "loki",
+            "uid": "afo6wk07j06iob"
+          },
+          "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(sum by (service_name, tid, sid, eid) (count_over_time({service_name=~`orchestrator_template-manager|envd`} |~ `Out of memory: Killed process 1 \\(|Out of memory: Killed process [0-9]+ \\((init|systemd|firecracker)\\)|Kernel panic - not syncing|Attempted to kill init` | label_format tid=`{{ if .teamID }}{{ .teamID }}{{ else }}{{ .team_id }}{{ end }}` | label_format sid=`{{ if .sandboxID }}{{ .sandboxID }}{{ else }}{{ .sandbox_id }}{{ end }}` | label_format eid=`{{ if .envID }}{{ .envID }}{{ else }}{{ .template_id }}{{ end }}` [5m])), \"team_name\", \"默默's Default Team\", \"tid\", \"bf0cabd4-1d63-4c92-8018-56466250fc34\"), \"team_name\", \"魏存琦's Project\", \"tid\", \"4f0c2666-2773-42f9-ae24-12863e48dbce\"), \"team_name\", \"高杨帆's Project\", \"tid\", \"c8c30b05-7068-41e6-ab31-15daeb2b94f1\"), \"team_name\", \"雷可鹏's Project\", \"tid\", \"f03fb965-cfcc-4d58-94e4-9f062b09da53\"), \"team_name\", \"锁祎然's Project\", \"tid\", \"9bfcc2c7-0a17-486c-a79c-4b323eee7162\"), \"team_name\", \"郭品学's Project\", \"tid\", \"4e8177c9-134c-4311-b917-418314e587af\"), \"team_name\", \"郑锐's Project\", \"tid\", \"fe6493c4-af87-4f44-bf02-2acb426f1b81\"), \"team_name\", \"郑淼's Project\", \"tid\", \"6f4f24b1-dba2-4cea-9daa-90a2cb06d21b\"), \"team_name\", \"谢天赐's Project\", \"tid\", \"a56704da-010b-48da-ab8e-d2aaaf8545e3\"), \"team_name\", \"蔡子坤's Project\", \"tid\", \"c383705d-81fa-4f85-8a19-dd81ef49f3eb\"), \"team_name\", \"符炫炜's Project\", \"tid\", \"0ad0730c-2860-4f30-948c-acd9c4f42d29\"), \"team_name\", \"沈蔚's Project\", \"tid\", \"892c82ba-e2e0-4cf1-9496-44eac15a714f\"), \"team_name\", \"李慧's Project\", \"tid\", \"258d442e-2159-48c9-9ac9-f3e1a0c1c452\"), \"team_name\", \"李以时's Project\", \"tid\", \"7fcbdf30-b95b-4d65-acef-b81b328bc5a5\"), \"team_name\", \"曹倚飞's Project\", \"tid\", \"f0037e31-bd7a-4ad6-b16a-94c2790332da\"), \"team_name\", \"张硕's Project\", \"tid\", \"0f44e8fc-859c-4f6a-b7e4-3068de12123e\"), \"team_name\", \"张朝运's Default Team\", \"tid\", \"f6eb883d-263d-4b71-831e-58ae7fd13878\"), \"team_name\", \"张国强's Project\", \"tid\", \"4b893304-e299-4243-bea4-392feee74b7c\"), \"team_name\", \"刘官明's Project\", \"tid\", \"31738770-b0cd-480c-8ac5-9a5bf43d100b\"), \"team_name\", \"何阳极's Project\", \"tid\", \"6d4eb009-5540-4951-830a-b0e10d06ed65\"), \"team_name\", \"Zhoumaosen's Project\", \"tid\", \"e5c4b9f2-88d7-4bae-bde0-1480d82e9988\"), \"team_name\", \"Zhengmiao's Project\", \"tid\", \"b2b5b25c-5b4a-4466-8b68-779004eabba7\"), \"team_name\", \"zhaojiarong@qijizhifeng.com\", \"tid\", \"af8fc097-6343-4b33-b7bb-1c197789eabd\"), \"team_name\", \"Zhangqi's Project\", \"tid\", \"3bf425ff-584d-4f11-abda-483a918b5897\"), \"team_name\", \"zhangping@infrawaves.com\", \"tid\", \"bb20491c-f757-4043-846b-838b7f30a8d1\"), \"team_name\", \"Vision\", \"tid\", \"899fdcc3-4702-4a27-be10-9270eaf4b1cd\"), \"team_name\", \"Tianyuhuai's Project\", \"tid\", \"fea203de-19f9-4fa4-b5c8-3f7e6b5c2606\"), \"team_name\", \"test\", \"tid\", \"9b6bc955-415e-43c4-800a-d406f7c38864\"), \"team_name\", \"system1\", \"tid\", \"955127a8-51ec-41ef-ba1a-232a3b3e201b\"), \"team_name\", \"system@localhost\", \"tid\", \"32758328-00b9-4f5b-b66d-8ea5ebd02d5c\"), \"team_name\", \"system@e2b.dev\", \"tid\", \"b1940e54-3dbb-44cd-bf26-569382921299\"), \"team_name\", \"Sunpeng's Default Team\", \"tid\", \"f7e95758-34fe-44a2-bad9-6097a14ad656\"), \"team_name\", \"Shaozhou's Project\", \"tid\", \"0ae5f9f7-d6ac-4fde-9279-92943a0b5a86\"), \"team_name\", \"Service's Project\", \"tid\", \"cdc01774-0863-42dd-8475-22aefbe90997\"), \"team_name\", \"Ruizheng's Default Team\", \"tid\", \"fb4e1d45-5ed4-474d-8144-68d4f5bc7871\"), \"team_name\", \"RL\", \"tid\", \"f081810f-4c2c-4b86-94b9-e69ebed18106\"), \"team_name\", \"pingzhang8-c@my.cityu.edu.hk\", \"tid\", \"6417ba56-ea10-4fce-aa2e-54d353d907ab\"), \"team_name\", \"Ning's Project\", \"tid\", \"004f3f7c-e4aa-48c4-b713-7a6f82a9f1a7\"), \"team_name\", \"Liutongtong's Project\", \"tid\", \"01872fea-af86-4de1-9f38-ff439deef08d\"), \"team_name\", \"Linlizhi's Project\", \"tid\", \"c22d1774-82e6-4e16-8f24-9b0536744b18\"), \"team_name\", \"Infrawave_测试1's Project\", \"tid\", \"78c62422-584c-47b6-88c3-318266c033d2\"), \"team_name\", \"Infrawave_test3's Project\", \"tid\", \"e15b5877-779e-4359-9564-336c8cabe966\"), \"team_name\", \"Infrawave_test2's Default Team\", \"tid\", \"19ca40b0-aafb-416e-8ffa-b33f9eb940a9\"), \"team_name\", \"Infrawave_test1's Default Team\", \"tid\", \"3c17296b-964e-40a8-a2b4-ae73efcc3010\"), \"team_name\", \"Infra Team\", \"tid\", \"77a2927b-7d67-484c-8962-2d447b8179af\"), \"team_name\", \"Hanszhuang's Default Team\", \"tid\", \"2a8e0507-cbc5-4445-95dc-314347c607f4\"), \"team_name\", \"Guopinxue's Project\", \"tid\", \"9ad5ed4c-445b-4a9e-b856-d18232fa1fc6\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"tid\", \"fcae3a36-0d3f-40df-aad0-3c97b33624a5\"), \"team_name\", \"e2b-xiaobei@china-qijizhifeng.com\", \"tid\", \"a2bf5f96-7335-4b47-b894-39641aad6ed5\"), \"team_name\", \"e2b-rl@china-qijizhifeng.com\", \"tid\", \"fcd649c5-0175-4d1e-98a5-1c218009dee4\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"tid\", \"6e7a55f9-5db0-4938-877b-c44d86eb25ab\"), \"team_name\", \"e2b-nexau@china-qijizhifeng.com\", \"tid\", \"072e7581-1510-46cc-a875-c8f493f83179\"), \"team_name\", \"e2b-nex2@china-qijizhifeng.com\", \"tid\", \"560cc0a7-b536-419e-a038-8338148be13d\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"tid\", \"65380065-c5bd-4d9f-b81c-1ce0866db931\"), \"team_name\", \"e2b-nex@china-qijizhifeng.com\", \"tid\", \"b9bbe0bc-8826-494b-84ca-6c3a5ff46bec\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"tid\", \"6eb3900a-1fe8-4743-bdf7-12172b9771fc\"), \"team_name\", \"e2b-infrawaves@china-qijizhifeng.com\", \"tid\", \"f9a89b02-0f1f-402d-9994-bc13ac9122ab\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"tid\", \"0db5fb8e-920d-4564-a712-30a345863244\"), \"team_name\", \"e2b-infra@china-qijizhifeng.com\", \"tid\", \"5a6930b7-6ba8-49c5-b8cf-4126474cdbd3\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"tid\", \"cf6c9163-60c9-4c5d-aa08-525b08ab5aaa\"), \"team_name\", \"e2b-fde@china-qijizhifeng.com\", \"tid\", \"9db7bc25-1324-4330-85c4-f43dcde6d66d\"), \"team_name\", \"Chenjun's Project\", \"tid\", \"4793fa63-b11e-4567-a1f0-bd5e0f93b551\"), \"team_name\", \"972963285@qq.com\", \"tid\", \"47eee04d-4660-480c-97e8-64c39934cf47\"), \"team_name\", \"972963285@qq.com\", \"tid\", \"467334dc-5de9-4ac9-a04b-d703c148f3a5\"), \"team_name\", \"9\", \"tid\", \"c5ac79f6-6155-47ac-9623-456cfb843878\"), \"team_name\", \"8\", \"tid\", \"ab785508-ba6c-4fdb-854a-2b39a2144354\"), \"team_name\", \"7\", \"tid\", \"12f3e83f-3979-4a59-b388-1effc55fa8f4\"), \"team_name\", \"6\", \"tid\", \"af487b23-9dba-4797-9627-c5b1b9ff3a42\"), \"team_name\", \"5\", \"tid\", \"1e9c4b44-fe65-4392-9de0-84542f3998cb\"), \"team_name\", \"4\", \"tid\", \"8d3b4cd8-df63-4c1a-b82b-d0139563e12e\"), \"team_name\", \"4\", \"tid\", \"c99dee1b-a997-453d-85dd-be94aef8fbed\"), \"team_name\", \"3\", \"tid\", \"ac3eeb52-7268-45e3-a373-0e195e12a294\"), \"team_name\", \"3\", \"tid\", \"3cbcdfb8-84e8-422e-9b87-21e7a50b6865\"), \"team_name\", \"3\", \"tid\", \"085a9d00-4918-42e6-a596-dbeadf54ec4d\"), \"team_name\", \"3\", \"tid\", \"a726f5e6-4237-4bb2-8ab0-13eac8180425\"), \"team_name\", \"22\", \"tid\", \"1e9c1e93-ad47-49ac-adb7-47a0606718cf\"), \"team_name\", \"2\", \"tid\", \"77b9f6a9-1672-4483-beb0-2f5b11b26801\"), \"team_name\", \"2\", \"tid\", \"07fe4160-c034-4331-94a1-9075257c62ab\"), \"team_name\", \"2\", \"tid\", \"3ae3b6d7-f308-4b08-89a3-a6f412715806\"), \"team_name\", \"11\", \"tid\", \"2ba8b18f-3feb-4bc4-8b36-7b0cf9f1d334\"), \"team_name\", \"1\", \"tid\", \"a7124f1b-476a-45fb-a6c3-68d161fdc911\"), \"team_name\", \"1\", \"tid\", \"9989897b-2fd9-45dd-a473-a6512a8cd96d\"), \"team_name\", \"1\", \"tid\", \"0cbaa95f-bb4b-4f32-ab82-fcb12872a9cf\") or vector(0)",
+          "intervalMs": 1000,
+          "maxDataPoints": 1,
+          "queryType": "instant",
+          "refId": "B"
+        }
+      },
+      {
+        "refId": "Br",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 0,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "B",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "reducer": "last",
+          "refId": "Br",
+          "settings": {
+            "mode": "replaceNN",
+            "replaceWithValue": 0
+          },
+          "type": "reduce"
+        }
+      },
+      {
+        "refId": "E",
+        "queryType": "",
+        "relativeTimeRange": {
+          "from": 0,
+          "to": 0
+        },
+        "datasourceUid": "__expr__",
+        "model": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [
+                  0
+                ],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": [
+                  "Br"
+                ]
+              },
+              "reducer": {
+                "params": [],
+                "type": "last"
+              },
+              "type": "query"
+            }
+          ],
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "Br",
+          "intervalMs": 1000,
+          "maxDataPoints": 43200,
+          "refId": "E",
+          "type": "threshold"
+        }
+      }
+    ],
+    "updated": "2026-11-25T17:29:50+08:00",
+    "noDataState": "OK",
+    "execErrState": "KeepLast",
+    "for": "0s",
+    "keep_firing_for": "0s",
+    "annotations": {
+      "__dashboardUid__": "e2b-sbx-runtime",
+      "__panelId__": "31",
+      "summary": "沙箱因 OOM 整体挂掉：PID1/init 被 OOM 杀、主进程(init/systemd/firecracker)被 OOM 杀、或 guest kernel panic。近5分钟出现。"
+    },
+    "labels": {
+      "alert_kind": "sandbox-runtime",
+      "env": "hk-prod",
+      "service": "e2b",
+      "severity": "critical"
+    },
     "isPaused": false,
     "notification_settings": null,
     "record": null
